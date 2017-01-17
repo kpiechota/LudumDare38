@@ -1,5 +1,6 @@
 #include "headers.h"
 #include "render.h"
+
 #include <Windows.h>
 
 LRESULT CALLBACK WindowProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)

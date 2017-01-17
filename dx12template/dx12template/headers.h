@@ -1,4 +1,5 @@
 #pragma once
+#pragma comment( lib, "../lib/FreeImage" )
 #pragma comment( lib, "d3d12" )
 #pragma comment( lib, "dxgi" )
 #pragma comment( lib, "d3dcompiler" )
