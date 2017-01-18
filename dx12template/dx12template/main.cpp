@@ -76,7 +76,7 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, PSTR pCmdLine, 
 
 		GRender.DrawFrame();
 	}
-	GRender.Release();
 
+	GRender.Release();
 	return 0;
 }
