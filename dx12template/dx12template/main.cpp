@@ -1,5 +1,6 @@
 #include "headers.h"
 #include "render.h"
+#include "soundEngine.h"
 
 #include <Windows.h>
 
@@ -34,6 +35,8 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, PSTR pCmdLine, 
 
 	int const width = 720;
 	int const height = 480;
+
+	GSoundEngine.Init();
 
 	GRender.SetWindowWidth(width);
 	GRender.SetWindowHeight(height);
@@ -78,5 +81,6 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, PSTR pCmdLine, 
 	}
 
 	GRender.Release();
+	GSoundEngine.Release();
 	return 0;
 }

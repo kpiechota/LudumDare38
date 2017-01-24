@@ -24,6 +24,9 @@
     <ClCompile Include="helpers.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="soundEngine.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="headers.h">
@@ -33,6 +36,9 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="utility\FreeImage.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="soundEngine.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

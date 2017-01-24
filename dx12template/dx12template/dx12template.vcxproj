@@ -121,10 +121,12 @@
     <ClCompile Include="helpers.cpp" />
     <ClCompile Include="main.cpp" />
     <ClCompile Include="render.cpp" />
+    <ClCompile Include="soundEngine.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="headers.h" />
     <ClInclude Include="render.h" />
+    <ClInclude Include="soundEngine.h" />
     <ClInclude Include="utility\FreeImage.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
