@@ -26,7 +26,7 @@ D3D12_HEAP_PROPERTIES const GHeapPropertiesUpload =
 	/*VisibleNodeMask*/			,1
 };
 
-extern std::vector< SGameObject > GGameObjects;
+extern std::vector< SRenderObject > GRenderObjects[RL_MAX];
 extern Matrix3x3 GScreenMatrix;
 CRender GRender;
 
@@ -345,20 +345,24 @@ void CRender::DrawFrame()
 	commandList->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLESTRIP);
 	D3D12_GPU_DESCRIPTOR_HANDLE texturesHandle = m_texturesDH->GetGPUDescriptorHandleForHeapStart();
 
-	unsigned int const objectsNum = GGameObjects.size();
-	CBObject* currCBObject = m_frameData[m_frameID].m_pResourceData;
-	for (unsigned int objectID = 0; objectID < objectsNum; ++objectID)
+	unsigned int renderObjectID = 0;
+	for (unsigned int layerID = 0; layerID < RL_MAX; ++layerID)
 	{
-		SGameObject const& gameObject = GGameObjects[objectID];
-		currCBObject->m_objectToScreen = Mul(GScreenMatrix, Matrix3x3::GetTranslateRotationSize(gameObject.m_positionWS, gameObject.m_rotation, gameObject.m_size));
+		unsigned int const objectsNum = GRenderObjects[layerID].size();
+		for (unsigned int objectID = 0; objectID < objectsNum; ++objectID)
+		{
+			CBObject& cbObject = m_frameData[m_frameID].m_pResourceData[renderObjectID];
+			SRenderObject const& gameObject = GRenderObjects[layerID][objectID];
+			cbObject.m_objectToScreen = Mul(GScreenMatrix, Matrix3x3::GetTranslateRotationSize(gameObject.m_positionWS, gameObject.m_rotation, gameObject.m_size));
 
-		commandList->SetGraphicsRootConstantBufferView(0, m_frameData[m_frameID].m_frameResource->GetGPUVirtualAddress() + (D3D12_GPU_VIRTUAL_ADDRESS)(objectID * sizeof(CBObject)));
-		D3D12_GPU_DESCRIPTOR_HANDLE texture = texturesHandle;
-		texture.ptr += m_srvDescriptorHandleIncrementSize * gameObject.m_texutreID;
+			commandList->SetGraphicsRootConstantBufferView(0, m_frameData[m_frameID].m_frameResource->GetGPUVirtualAddress() + (D3D12_GPU_VIRTUAL_ADDRESS)(renderObjectID * sizeof(CBObject)));
+			D3D12_GPU_DESCRIPTOR_HANDLE texture = texturesHandle;
+			texture.ptr += m_srvDescriptorHandleIncrementSize * gameObject.m_texutreID;
 
-		commandList->SetGraphicsRootDescriptorTable(1, texture);
-		commandList->DrawInstanced(4, 1, 0, 0);
-		++currCBObject;
+			commandList->SetGraphicsRootDescriptorTable(1, texture);
+			commandList->DrawInstanced(4, 1, 0, 0);
+			++renderObjectID;
+		}
 	}
 
 	renderTargetBarrier.Transition.StateAfter = D3D12_RESOURCE_STATE_PRESENT;

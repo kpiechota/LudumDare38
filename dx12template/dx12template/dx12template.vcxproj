@@ -122,8 +122,10 @@
     <ClCompile Include="helpers.cpp" />
     <ClCompile Include="main.cpp" />
     <ClCompile Include="math.cpp" />
+    <ClCompile Include="playerObject.cpp" />
     <ClCompile Include="render.cpp" />
     <ClCompile Include="soundEngine.cpp" />
+    <ClCompile Include="staticObject.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="constantBuffer.h" />
@@ -131,8 +133,10 @@
     <ClInclude Include="headers.h" />
     <ClInclude Include="input.h" />
     <ClInclude Include="math.h" />
+    <ClInclude Include="playerObject.h" />
     <ClInclude Include="render.h" />
     <ClInclude Include="soundEngine.h" />
+    <ClInclude Include="staticObject.h" />
     <ClInclude Include="texture.h" />
     <ClInclude Include="timer.h" />
     <ClInclude Include="types.h" />

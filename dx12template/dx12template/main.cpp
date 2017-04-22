@@ -5,17 +5,21 @@
 #include "input.h"
 #include "utility/FreeImage.h"
 
+#include "playerObject.h"
+#include "staticObject.h"
+
 #include <Windows.h>
 
 CInputManager GInputManager;
 CSystemInput GSystemInput;
 CTimer GTimer;
 
-std::vector< SGameObject > GGameObjects;
+std::vector< SRenderObject > GRenderObjects[ RL_MAX ];
+std::vector< CGameObject* > GGameObjects;
 
-int const width = 800;
-int const height = 800;
-Matrix3x3 GScreenMatrix = Matrix3x3::GetOrthogonalMatrix(-0.5f * ((float)width), 0.5f * (float)width);
+int const GWidth = 800;
+int const GHeight = 800;
+Matrix3x3 GScreenMatrix = Matrix3x3::GetOrthogonalMatrix(-0.5f * ((float)GWidth), 0.5f * (float)GHeight);
 
 DXGI_FORMAT GFreeImageToDXGI[] =
 {
@@ -27,13 +31,6 @@ DXGI_FORMAT GFreeImageToDXGI[] =
 	DXGI_FORMAT_UNKNOWN				
 };
 
-enum ETextures
-{
-	T_PLAYER,
-	T_BACKGROUND,
-	T_ISLAND,
-	T_GENERATOR,
-};
 
 int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, PSTR pCmdLine, INT nCmdShow)
 {
@@ -53,15 +50,15 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, PSTR pCmdLine, 
 
 	GSoundEngine.Init();
 
-	GRender.SetWindowWidth(width);
-	GRender.SetWindowHeight(height);
+	GRender.SetWindowWidth(GWidth);
+	GRender.SetWindowHeight(GHeight);
 
 	HWND hwnd = CreateWindow(
 		L"WindowClass",
 		L"Engine",
 		WS_OVERLAPPEDWINDOW,
 		CW_USEDEFAULT, CW_USEDEFAULT,
-		width, height,
+		GWidth, GHeight,
 		NULL, NULL,
 		hInstance,
 		NULL);
@@ -129,23 +126,23 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, PSTR pCmdLine, 
 
 	float timeToRender = 0.f;
 
-	SGameObject gameObject;
-	gameObject.m_size.Set(400.f, 400.f);
+	SRenderObject gameObject;
+	gameObject.m_size = 400.f;
 	gameObject.m_texutreID = T_BACKGROUND;
-	GGameObjects.push_back(gameObject);
+	GRenderObjects[RL_BACKGROUND_STATIC].push_back(gameObject);
 
-	gameObject.m_size.Set(350.f, 350.f);
+	gameObject.m_size = 350.f;
 	gameObject.m_texutreID = T_ISLAND;
-	GGameObjects.push_back(gameObject);
+	GRenderObjects[RL_BACKGROUND_STATIC].push_back(gameObject);
 
-	gameObject.m_size.Set(16.f, 16.f);
+	CPlayerObject* pPlayer = new CPlayerObject();
+	GGameObjects.push_back(pPlayer);
+
+	gameObject.m_size = 16.f;
 	gameObject.m_texutreID = T_GENERATOR;
-	GGameObjects.push_back(gameObject);
 
-	gameObject.m_positionWS.Set(0.f, 16.f + 12.f);
-	gameObject.m_size.Set(12.f, 12.f);
-	gameObject.m_texutreID = T_PLAYER;
-	GGameObjects.push_back(gameObject);
+	CStaticObject* pStaticObject = new CStaticObject(gameObject);
+	GGameObjects.push_back(pStaticObject);
 
 	GRender.WaitForResourcesLoad();
 
@@ -153,6 +150,7 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, PSTR pCmdLine, 
 	bool run = true;
 	while (run)
 	{
+		unsigned int const gameObjectsNum = GGameObjects.size();
 		GTimer.Tick();
 
 		while (PeekMessage(&msg, NULL, 0, 0, PM_REMOVE))
@@ -166,12 +164,33 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, PSTR pCmdLine, 
 			}
 		}
 
+
+		for (unsigned int gameObjectID = 0; gameObjectID < gameObjectsNum; ++gameObjectID)
+		{
+			GGameObjects[gameObjectID]->Update();
+		}
+
 		timeToRender -= GTimer.Delta();
 		if (timeToRender < 0.f)
 		{
+			for (unsigned int gameObjectID = 0; gameObjectID < gameObjectsNum; ++gameObjectID)
+			{
+				GGameObjects[gameObjectID]->FillRenderData();
+			}
 			GRender.DrawFrame();
 			timeToRender = 1.f / 60.f;
 		}
+
+		for (unsigned int layerID = 1; layerID < RL_MAX; ++layerID)
+		{
+			GRenderObjects[layerID].clear();
+		}
+	}
+
+	unsigned int const gameObjectsNum = GGameObjects.size();
+	for (unsigned int gameObjectID = 0; gameObjectID < gameObjectsNum; ++gameObjectID)
+	{
+		delete GGameObjects[gameObjectID];
 	}
 
 	GRender.Release();

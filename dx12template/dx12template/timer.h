@@ -11,7 +11,8 @@ private:
 
 public:
 	CTimer()
-		: m_lastDelta( 0 )
+		: m_lastDelta(0)
+		, m_gameScale(1.f)
 	{
 		m_lastTime = clock();
 		m_startTime = clock();

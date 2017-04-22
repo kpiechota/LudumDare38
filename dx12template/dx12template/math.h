@@ -37,6 +37,51 @@ struct Vec2
 		this->x = x;
 		this->y = y;
 	}
+
+	void Normalize()
+	{
+		float const radius2 = x * x + y * y;
+		if (0.f < radius2)
+		{
+			float const invRadius = 1.f / sqrt(radius2);
+			x *= invRadius;
+			y *= invRadius;
+		}
+	}
+
+	Vec2 operator*(float const a) const
+	{
+		return Vec2(x * a, y * a);
+	}
+
+	Vec2 operator-(Vec2 const v) const
+	{
+		return Vec2(x - v.x, y - v.y);
+	}
+
+	void operator*=(float const a)
+	{
+		x *= a;
+		y *= a;
+	}
+
+	void operator/=(float const a)
+	{
+		x /= a;
+		y /= a;
+	}
+
+	void operator+=(Vec2 const v)
+	{
+		x += v.x;
+		y += v.y;
+	}
+
+	void operator-=(Vec2 const v)
+	{
+		x -= v.x;
+		y -= v.y;
+	}
 };
 
 struct Vec2i
@@ -66,6 +111,11 @@ struct Vec2i
 	{
 		x -= v.x;
 		y -= v.y;
+	}
+
+	operator Vec2() const
+	{
+		return Vec2((float)x, (float)y);
 	}
 };
 
@@ -203,11 +253,11 @@ struct Matrix3x3
 		m_a20 = 0.f;	m_a21 = 0.f;	m_a22 = 1.f;
 	}
 
-	static Matrix3x3 GetTranslateRotationSize(Vec2 const translate, Vec2 const rotation, Vec2 const size)
+	static Matrix3x3 GetTranslateRotationSize(Vec2 const translate, Vec2 const rotation, float const size)
 	{
 		Matrix3x3 mat;
-		mat.m_a00 = +rotation.x * size.x;	mat.m_a01 = -rotation.y * size.x;	mat.m_a02 = translate.x;
-		mat.m_a10 = rotation.y * size.y;	mat.m_a11 = rotation.x * size.y;	mat.m_a12 = translate.y;
+		mat.m_a00 = +rotation.x * size;		mat.m_a01 = -rotation.y * size;		mat.m_a02 = translate.x;
+		mat.m_a10 = rotation.y * size;		mat.m_a11 = rotation.x * size;		mat.m_a12 = translate.y;
 		mat.m_a20 = 0.f;					mat.m_a21 = 0.f;					mat.m_a22 = 1.f;
 
 		return mat;

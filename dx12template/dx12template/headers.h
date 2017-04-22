@@ -21,5 +21,8 @@
 
 #include "gameObject.h"
 
+extern const int GWidth;
+extern const int GHeight;
+
 void CheckResult(HRESULT result);
 void CheckResult(HRESULT result, ID3DBlob* errorBlob);
