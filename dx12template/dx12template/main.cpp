@@ -6,14 +6,17 @@
 #include "utility/FreeImage.h"
 
 #include "playerObject.h"
-#include "enemy.h"
 #include "staticObject.h"
+
+#include "enemySpawner.h"
 
 #include <Windows.h>
 
 CInputManager GInputManager;
 CSystemInput GSystemInput;
 CTimer GTimer;
+CEnemySpawner GEnemySpawner;
+CPlayerObject* GPlayer;
 
 std::vector< SRenderObject > GRenderObjects[ RL_MAX ];
 std::vector< CGameObject* > GGameObjects[2];
@@ -23,6 +26,7 @@ std::vector< CGameObject* > GGameObjectsToDelete;
 unsigned int GGameObjectArray = 0;
 int const GWidth = 800;
 int const GHeight = 800;
+float const GIslandSize = 350.f;
 Matrix3x3 GScreenMatrix = Matrix3x3::GetOrthogonalMatrix(-0.5f * ((float)GWidth), 0.5f * (float)GHeight);
 
 DXGI_FORMAT GFreeImageToDXGI[] =
@@ -38,6 +42,7 @@ DXGI_FORMAT GFreeImageToDXGI[] =
 
 int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, PSTR pCmdLine, INT nCmdShow)
 {
+	srand(time(NULL));
 	WNDCLASS windowClass = { 0 };
 
 	windowClass.style = CS_HREDRAW | CS_VREDRAW;
@@ -85,6 +90,8 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, PSTR pCmdLine, 
 		"../content/bullet_0.png",
 		"../content/bullet_1.png",
 		"../content/enemy.png",
+		"../content/turret.png",
+		"../content/health.png",
 	};
 
 	GRender.Init();
@@ -138,23 +145,19 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, PSTR pCmdLine, 
 	gameObject.m_texutreID = T_BACKGROUND;
 	GRenderObjects[RL_BACKGROUND_STATIC].push_back(gameObject);
 
-	gameObject.m_size = 350.f;
+	gameObject.m_size = GIslandSize;
 	gameObject.m_texutreID = T_ISLAND;
 	GRenderObjects[RL_BACKGROUND_STATIC].push_back(gameObject);
 
-	CPlayerObject* pPlayer = new CPlayerObject();
-	GGameObjects[GGameObjectArray].push_back(pPlayer);
+	GPlayer = new CPlayerObject();
+	GGameObjects[GGameObjectArray].push_back(GPlayer);
 
 	gameObject.m_size = 16.f;
 	gameObject.m_texutreID = T_GENERATOR;
 
 	CStaticObject* pStaticObject = new CStaticObject(gameObject);
 	GGameObjects[GGameObjectArray].push_back(pStaticObject);
-
-	CEnemyObject* pEnemy = new CEnemyObject();
-	pEnemy->SetPosition(Vec2(-300.f, 0.f));
-	GGameObjects[GGameObjectArray].push_back(pEnemy);
-
+	
 	GRender.WaitForResourcesLoad();
 
 	MSG msg = { 0 };
@@ -165,6 +168,7 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, PSTR pCmdLine, 
 
 		unsigned int const gameObjectsNum = currentGameObjectArray.size();
 		GTimer.Tick();
+		GEnemySpawner.Update();
 
 		while (PeekMessage(&msg, NULL, 0, 0, PM_REMOVE))
 		{

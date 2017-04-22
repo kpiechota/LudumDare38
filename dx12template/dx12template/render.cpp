@@ -142,7 +142,7 @@ void CRender::InitRootSignatures()
 
 	rootParameters[0].ParameterType = D3D12_ROOT_PARAMETER_TYPE_CBV;
 	rootParameters[0].Descriptor = {0, 0};
-	rootParameters[0].ShaderVisibility = D3D12_SHADER_VISIBILITY_VERTEX;
+	rootParameters[0].ShaderVisibility = D3D12_SHADER_VISIBILITY_ALL;
 
 	rootParameters[1].ParameterType = D3D12_ROOT_PARAMETER_TYPE_DESCRIPTOR_TABLE;
 	rootParameters[1].DescriptorTable = { 1, descriptorRange };
@@ -354,6 +354,7 @@ void CRender::DrawFrame()
 			CBObject& cbObject = m_frameData[m_frameID].m_pResourceData[renderObjectID];
 			SRenderObject const& gameObject = GRenderObjects[layerID][objectID];
 			cbObject.m_objectToScreen = Mul(GScreenMatrix, Matrix3x3::GetTranslateRotationSize(gameObject.m_positionWS, gameObject.m_rotation, gameObject.m_size));
+			cbObject.m_colorScale = gameObject.m_colorScale;
 
 			commandList->SetGraphicsRootConstantBufferView(0, m_frameData[m_frameID].m_frameResource->GetGPUVirtualAddress() + (D3D12_GPU_VIRTUAL_ADDRESS)(renderObjectID * sizeof(CBObject)));
 			D3D12_GPU_DESCRIPTOR_HANDLE texture = texturesHandle;

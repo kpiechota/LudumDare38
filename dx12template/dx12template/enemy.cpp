@@ -1,7 +1,10 @@
 #include "enemy.h"
 #include "timer.h"
 #include "bullet.h"
+#include "enemySpawner.h"
+
 extern CTimer GTimer;
+extern CEnemySpawner GEnemySpawner;
 
 inline void CEnemyObject::CollisionTest()
 {
@@ -31,7 +34,7 @@ inline void CEnemyObject::CollisionTest()
 	}
 }
 
-inline Vec2 CEnemyObject::FindNearestObject()
+inline Vec2 CEnemyObject::FindNearestObject() const
 {
 	Vec2 nearest;
 	float nearestMagnitude2 = -1.f;
@@ -70,7 +73,7 @@ CEnemyObject::CEnemyObject()
 	: m_speed(70.f)
 	, m_shootSpeed(0.2f)
 	, m_lastShoot(0.f)
-	, m_shootRadius2( 100.f * 100.f)
+	, m_shootRadius2( 150.f * 150.f)
 	, m_health( 1.f )
 {
 	m_collisionMask = (Byte)(CF_ENEMY | CF_PLAYER_BULLET | CF_PLAYER);
@@ -132,4 +135,9 @@ bool CEnemyObject::NeedDelete() const
 void CEnemyObject::TakeDamage(float const damage)
 {
 	m_health -= damage;
+
+	if (m_health < 0.f)
+	{
+		GEnemySpawner.EnemyKilled();
+	}
 }

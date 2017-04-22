@@ -121,6 +121,7 @@
   <ItemGroup>
     <ClCompile Include="bullet.cpp" />
     <ClCompile Include="enemy.cpp" />
+    <ClCompile Include="enemySpawner.cpp" />
     <ClCompile Include="helpers.cpp" />
     <ClCompile Include="main.cpp" />
     <ClCompile Include="math.cpp" />
@@ -128,11 +129,13 @@
     <ClCompile Include="render.cpp" />
     <ClCompile Include="soundEngine.cpp" />
     <ClCompile Include="staticObject.cpp" />
+    <ClCompile Include="turretObject.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="bullet.h" />
     <ClInclude Include="constantBuffer.h" />
     <ClInclude Include="enemy.h" />
+    <ClInclude Include="enemySpawner.h" />
     <ClInclude Include="gameObject.h" />
     <ClInclude Include="headers.h" />
     <ClInclude Include="input.h" />
@@ -143,6 +146,7 @@
     <ClInclude Include="staticObject.h" />
     <ClInclude Include="texture.h" />
     <ClInclude Include="timer.h" />
+    <ClInclude Include="turretObject.h" />
     <ClInclude Include="types.h" />
     <ClInclude Include="utility\FreeImage.h" />
   </ItemGroup>

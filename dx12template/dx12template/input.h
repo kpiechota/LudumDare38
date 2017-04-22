@@ -21,6 +21,8 @@ enum EKeys
 	K_S = 's',
 	K_D = 'd',
 	K_A = 'a',
+	K_Q = 'q',
+	K_E = 'e',
 	K_LESS = 44,
 	K_MORE = 46,
 	K_LEFTM = 100,
@@ -60,6 +62,8 @@ public:
 		m_keys.push_back( tKeyState( 'A',		false ) );
 		m_keys.push_back( tKeyState( 'S',		false ) );
 		m_keys.push_back( tKeyState( 'D',		false ) );
+		m_keys.push_back( tKeyState( 'Q',		false ) );
+		m_keys.push_back( tKeyState( 'E',		false ) );
 		m_keys.push_back( tKeyState( ' ',		false ) );
 		m_keys.push_back( tKeyState( K_LEFTM,	false ) );
 	}

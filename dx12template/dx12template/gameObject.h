@@ -9,6 +9,8 @@ enum ETextures
 	T_BULLET0,
 	T_BULLET1,
 	T_ENEMY,
+	T_TURRET,
+	T_HEALTH,
 };
 
 enum ERenderLayer
@@ -30,6 +32,7 @@ enum ECollisionFlag
 
 struct SRenderObject
 {
+	Vec4 m_colorScale;
 	Vec2 m_positionWS;
 	Vec2 m_rotation;
 	float m_size;
@@ -37,7 +40,8 @@ struct SRenderObject
 	Byte m_texutreID;
 
 	SRenderObject()
-		: m_positionWS( 0.f, 0.f )
+		: m_colorScale( 1.f, 1.f, 1.f, 1.f )
+		, m_positionWS( 0.f, 0.f )
 		, m_rotation( 1.f, 0.f )
 		, m_size( 1.f )
 		, m_texutreID( 0 )

@@ -1,24 +1,20 @@
 #pragma once
 #include "headers.h"
 
-class CEnemyObject : public CGameObject
+class CTurretObject : public CGameObject
 {
 private:
 	SRenderObject m_renderObject;
-	float m_speed;
 	float m_shootSpeed;
 	float m_lastShoot;
 	float m_shootRadius2;
 	float m_health;
 
 private:
-	inline void CollisionTest();
 	inline Vec2 FindNearestObject() const;
 
 public:
-	CEnemyObject();
-
-	void SetPosition(Vec2 const position) { m_renderObject.m_positionWS = position; }
+	CTurretObject( SRenderObject const& renderObject );
 
 	virtual void Update() override;
 	virtual void FillRenderData() const override;

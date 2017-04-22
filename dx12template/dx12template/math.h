@@ -104,6 +104,21 @@ struct Vec2
 		x -= v.x;
 		y -= v.y;
 	}
+
+	static Vec2 GetRandomInCircle()
+	{
+		float const x = ((float)rand()) / ((float)RAND_MAX) * 2.f - 1.f;
+		float const y = ((float)rand()) / ((float)RAND_MAX) * -2.f + 1.f;
+
+		Vec2 position(x, y);
+		float const magnitude2 = position.Magnitude2();
+		if (1.f < magnitude2)
+		{
+			position /= magnitude2;
+		}
+
+		return position;
+	}
 };
 
 struct Vec2i

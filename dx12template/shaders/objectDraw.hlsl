@@ -1,6 +1,7 @@
 cbuffer objectBuffer : register(b0)
 {
 	float4x4 ObjectToScreen;
+	float4 ColorScale;
 }
 
 Texture2D DiffTex : register(t0);
@@ -32,5 +33,5 @@ float4 psMain(PSInput input) : SV_TARGET0
 	
 	clip(color.a - 0.1f);
 	
-	return color;
+	return color * ColorScale;
 }

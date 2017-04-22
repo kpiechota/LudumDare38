@@ -2,12 +2,13 @@
 #include "timer.h"
 #include "input.h"
 #include "bullet.h"
+#include "turretObject.h"
 extern CTimer GTimer;
 
 inline void CPlayerObject::CollisionTest()
 {
 	float const magnitudeFromCenter2 = m_renderObject.m_positionWS.x * m_renderObject.m_positionWS.x + m_renderObject.m_positionWS.y * m_renderObject.m_positionWS.y;
-	float const centerRadius = 350.f - m_renderObject.m_size;
+	float const centerRadius = GIslandSize - m_renderObject.m_size;
 	float const centerRadius2 = centerRadius * centerRadius;
 
 	if (centerRadius2 < magnitudeFromCenter2)
@@ -49,17 +50,40 @@ CPlayerObject::CPlayerObject()
 	: m_speed( 100.f )
 	, m_shootSpeed( 0.1f )
 	, m_lastShoot( 0.f )
+	, m_energyValue( 0.f )
 {
 	m_collisionMask = (Byte)(CF_ENEMY | CF_ENEMY_BULLET);
 
 	m_renderObject.m_positionWS.Set(0.f, 16.f + 12.f);
 	m_renderObject.m_size = 12.f;
 	m_renderObject.m_texutreID = T_PLAYER;
+
+	float const iconY = -0.5f * ((float)GHeight) + 35.f;
+
+	m_renderObjectTurret.m_positionWS.Set(-35.f, iconY);
+	m_renderObjectTurret.m_rotation.Set(0.f, 1.f);
+	m_renderObjectTurret.m_size = 32.f;
+	m_renderObjectTurret.m_texutreID = T_TURRET;
+
+	m_renderObjectHealth.m_positionWS.Set(35.f, iconY);
+	m_renderObjectHealth.m_size = 32.f;
+	m_renderObjectHealth.m_texutreID = T_HEALTH;
+}
+
+void CPlayerObject::AddEnergy()
+{
+	m_energyValue = min(1.f, m_energyValue + 0.1f);
 }
 
 void CPlayerObject::FillRenderData() const
 {
 	GRenderObjects[RL_FOREGROUND].push_back(m_renderObject);
+
+	float const iconColor = (m_energyValue < 1.f) ? 0.5f : 1.f;
+	GRenderObjects[RL_OVERLAY].push_back(m_renderObjectTurret);
+	GRenderObjects[RL_OVERLAY].back().m_colorScale.Set(iconColor, iconColor, iconColor, 1.f);
+	GRenderObjects[RL_OVERLAY].push_back(m_renderObjectHealth);
+	GRenderObjects[RL_OVERLAY].back().m_colorScale.Set(iconColor, iconColor, iconColor, 1.f);
 }
 
 void CPlayerObject::Update()
@@ -114,6 +138,23 @@ void CPlayerObject::Update()
 		GGameObjectsToSpawn.push_back(bullet);
 
 		m_lastShoot = m_shootSpeed;
+	}
+
+	if (1.f == m_energyValue )
+	{
+		if (GInputManager.IsKeyDown('Q'))
+		{
+			m_energyValue = 0.f;
+
+			SRenderObject turretObject;
+			turretObject.m_positionWS = m_renderObject.m_positionWS + m_renderObject.m_rotation * m_renderObject.m_size;
+			turretObject.m_rotation = m_renderObject.m_rotation;
+			turretObject.m_size = 12.f;
+			turretObject.m_texutreID = T_TURRET;
+
+			CTurretObject* turret = new CTurretObject(turretObject);
+			GGameObjectsToSpawn.push_back(turret);
+		}
 	}
 }
 

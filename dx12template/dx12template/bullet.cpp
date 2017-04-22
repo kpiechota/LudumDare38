@@ -10,7 +10,7 @@ void CBullet::CollisionTest()
 	{
 		CGameObject* pGameObject = currentGameObjectArray[gameObjectID];
 
-		if (pGameObject != this && pGameObject->CollideWith(m_bulletType))
+		if (pGameObject != this && pGameObject->CollideWith(m_bulletType) && !pGameObject->NeedDelete())
 		{
 			Vec2 vectorTo = pGameObject->GetPosition() - m_renderObject.m_positionWS;
 			float const magnitude2 = vectorTo.x * vectorTo.x + vectorTo.y * vectorTo.y;
