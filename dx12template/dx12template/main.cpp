@@ -15,7 +15,7 @@ std::vector< SGameObject > GGameObjects;
 
 int const width = 800;
 int const height = 800;
-Matrix3x3 GScreenMatrix = Matrix3x3::GetOrthogonalMatrix(-((float)width), (float)width);
+Matrix3x3 GScreenMatrix = Matrix3x3::GetOrthogonalMatrix(-0.5f * ((float)width), 0.5f * (float)width);
 
 DXGI_FORMAT GFreeImageToDXGI[] =
 {
@@ -32,6 +32,7 @@ enum ETextures
 	T_PLAYER,
 	T_BACKGROUND,
 	T_ISLAND,
+	T_GENERATOR,
 };
 
 int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, PSTR pCmdLine, INT nCmdShow)
@@ -78,7 +79,8 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, PSTR pCmdLine, 
 	{
 		"../content/player.png",
 		"../content/background.png",
-		"../content/island.png"
+		"../content/island.png",
+		"../content/generator.png"
 	};
 
 	GRender.Init();
@@ -128,15 +130,20 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, PSTR pCmdLine, 
 	float timeToRender = 0.f;
 
 	SGameObject gameObject;
-	gameObject.m_size.Set(800.f, 800.f);
+	gameObject.m_size.Set(400.f, 400.f);
 	gameObject.m_texutreID = T_BACKGROUND;
 	GGameObjects.push_back(gameObject);
 
-	gameObject.m_size.Set(700.f, 700.f);
+	gameObject.m_size.Set(350.f, 350.f);
 	gameObject.m_texutreID = T_ISLAND;
 	GGameObjects.push_back(gameObject);
 
-	gameObject.m_size.Set(32.f, 32.f);
+	gameObject.m_size.Set(16.f, 16.f);
+	gameObject.m_texutreID = T_GENERATOR;
+	GGameObjects.push_back(gameObject);
+
+	gameObject.m_positionWS.Set(0.f, 16.f + 12.f);
+	gameObject.m_size.Set(12.f, 12.f);
 	gameObject.m_texutreID = T_PLAYER;
 	GGameObjects.push_back(gameObject);
 

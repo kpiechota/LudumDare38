@@ -350,7 +350,7 @@ void CRender::DrawFrame()
 	for (unsigned int objectID = 0; objectID < objectsNum; ++objectID)
 	{
 		SGameObject const& gameObject = GGameObjects[objectID];
-		currCBObject->m_objectToScreen = Mul(Matrix3x3::GetTranslateRotationSize(gameObject.m_positionWS, gameObject.m_rotation, gameObject.m_size), GScreenMatrix);
+		currCBObject->m_objectToScreen = Mul(GScreenMatrix, Matrix3x3::GetTranslateRotationSize(gameObject.m_positionWS, gameObject.m_rotation, gameObject.m_size));
 
 		commandList->SetGraphicsRootConstantBufferView(0, m_frameData[m_frameID].m_frameResource->GetGPUVirtualAddress() + (D3D12_GPU_VIRTUAL_ADDRESS)(objectID * sizeof(CBObject)));
 		D3D12_GPU_DESCRIPTOR_HANDLE texture = texturesHandle;
