@@ -18,9 +18,9 @@ private:
 		MAX_OBJECTS = 1024
 	};
 
-//#ifdef _DEBUG
+#ifdef _DEBUG
 	ID3D12Debug*					m_debugController;
-//#endif
+#endif
 
 	ID3D12Device*					m_device;
 	IDXGIFactory4*					m_factor;
@@ -32,7 +32,14 @@ private:
 	D3D12_VIEWPORT					m_viewport;
 	D3D12_RECT						m_scissorRect;
 
+	ID3D12CommandQueue*				m_copyCQ;
+	ID3D12CommandAllocator*			m_copyCA;
+	ID3D12GraphicsCommandList*		m_copyCL;
+
 	ID3D12CommandQueue*				m_mainCQ;
+	ID3D12CommandAllocator*			m_mainCA;
+	ID3D12GraphicsCommandList*		m_mainCL;
+
 	IDXGISwapChain3*				m_swapChain;
 
 	ID3D12DescriptorHeap*			m_renderTargetDH;
@@ -43,12 +50,17 @@ private:
 	ID3D12RootSignature*			m_mainRS;
 	ID3D12PipelineState*			m_mainPSO;
 
+	ID3D12DescriptorHeap*			m_texturesDH;
+	std::vector< ID3D12Resource* >	m_texturesResources;
+	std::vector< ID3D12Resource* >	m_texturesUploadResources;
+
 	int								m_wndWidth;
 	int								m_wndHeight;
 	HWND							m_hwnd;
 	UINT							m_frameID;
 
 	UINT							m_rtvDescriptorHandleIncrementSize;
+	UINT							m_srvDescriptorHandleIncrementSize;
 
 private:
 	void InitCommands();
@@ -65,6 +77,11 @@ public:
 	void Init();
 	void DrawFrame();
 	void Release();
+
+	void BeginLoadResources(unsigned int const textureNum);
+	void LoadResource(STexture const& texture);
+	void EndLoadResources();
+	void WaitForResourcesLoad();
 
 public: //Getters\setters
 	void SetWindowWidth(int const wndWidth) { m_wndWidth = wndWidth; }

@@ -88,7 +88,7 @@
       <WarningLevel>Level3</WarningLevel>
       <Optimization>Disabled</Optimization>
       <SDLCheck>true</SDLCheck>
-      <PreprocessorDefinitions>_DEBUG;_UNICODE;UNICODE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>_UNICODE;UNICODE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
     </ClCompile>
     <Link />
   </ItemDefinitionGroup>
@@ -133,6 +133,7 @@
     <ClInclude Include="math.h" />
     <ClInclude Include="render.h" />
     <ClInclude Include="soundEngine.h" />
+    <ClInclude Include="texture.h" />
     <ClInclude Include="timer.h" />
     <ClInclude Include="types.h" />
     <ClInclude Include="utility\FreeImage.h" />

@@ -37,6 +37,25 @@ void CRender::InitCommands()
 	descCQ.Type = D3D12_COMMAND_LIST_TYPE_DIRECT;
 	CheckResult(m_device->CreateCommandQueue(&descCQ, IID_PPV_ARGS(&m_mainCQ)));
 	m_mainCQ->SetName(L"MainCommandQueue");
+
+	CheckResult(m_device->CreateCommandAllocator(D3D12_COMMAND_LIST_TYPE_DIRECT, IID_PPV_ARGS(&m_mainCA)));
+	m_mainCA->SetName(L"MainCommandAllocator");
+
+	CheckResult(m_device->CreateCommandList(0, D3D12_COMMAND_LIST_TYPE_DIRECT, m_mainCA, nullptr, IID_PPV_ARGS(&m_mainCL)));
+	m_mainCL->SetName(L"MainCommandList");
+	CheckResult(m_mainCL->Close());
+
+	descCQ.Flags = D3D12_COMMAND_QUEUE_FLAG_NONE;
+	descCQ.Type = D3D12_COMMAND_LIST_TYPE_COPY;
+	CheckResult(m_device->CreateCommandQueue(&descCQ, IID_PPV_ARGS(&m_copyCQ)));
+	m_copyCQ->SetName(L"CopyCommandQueue");
+
+	CheckResult(m_device->CreateCommandAllocator(D3D12_COMMAND_LIST_TYPE_COPY, IID_PPV_ARGS(&m_copyCA)));
+	m_copyCA->SetName(L"CopyCommandAllocator");
+
+	CheckResult(m_device->CreateCommandList(0, D3D12_COMMAND_LIST_TYPE_COPY, m_copyCA, nullptr, IID_PPV_ARGS(&m_copyCL)));
+	m_copyCL->SetName(L"CopyCommandList");
+	CheckResult(m_copyCL->Close());
 }
 
 void CRender::InitFrameData()
@@ -114,17 +133,45 @@ void CRender::InitRenderTargets()
 
 void CRender::InitRootSignatures()
 {
-	D3D12_ROOT_PARAMETER rootParameters[1];
+	D3D12_DESCRIPTOR_RANGE descriptorRange[] =
+	{
+		{ D3D12_DESCRIPTOR_RANGE_TYPE_SRV, 1, 0, 0, D3D12_DESCRIPTOR_RANGE_OFFSET_APPEND }
+	};
+
+	D3D12_ROOT_PARAMETER rootParameters[2];
 
 	rootParameters[0].ParameterType = D3D12_ROOT_PARAMETER_TYPE_CBV;
 	rootParameters[0].Descriptor = {0, 0};
 	rootParameters[0].ShaderVisibility = D3D12_SHADER_VISIBILITY_VERTEX;
 
+	rootParameters[1].ParameterType = D3D12_ROOT_PARAMETER_TYPE_DESCRIPTOR_TABLE;
+	rootParameters[1].DescriptorTable = { 1, descriptorRange };
+	rootParameters[1].ShaderVisibility = D3D12_SHADER_VISIBILITY_PIXEL;
+
+	D3D12_STATIC_SAMPLER_DESC samplers[] =
+	{
+		{
+		/*Filter*/				D3D12_FILTER_MIN_MAG_MIP_POINT
+		/*AddressU*/			,D3D12_TEXTURE_ADDRESS_MODE_WRAP
+		/*AddressV*/			,D3D12_TEXTURE_ADDRESS_MODE_WRAP
+		/*AddressW*/			,D3D12_TEXTURE_ADDRESS_MODE_WRAP
+		/*MipLODBias*/			,0
+		/*MaxAnisotropy*/		,0
+		/*ComparisonFunc*/		,D3D12_COMPARISON_FUNC_NEVER
+		/*BorderColor*/			,D3D12_STATIC_BORDER_COLOR_TRANSPARENT_BLACK
+		/*MinLOD*/				,0.f
+		/*MaxLOD*/				,D3D12_FLOAT32_MAX
+		/*ShaderRegister*/		,0
+		/*RegisterSpace*/		,0
+		/*ShaderVisibility*/	,D3D12_SHADER_VISIBILITY_PIXEL
+		}
+	};
+
 	D3D12_ROOT_SIGNATURE_DESC descRootSignature;
-	descRootSignature.NumParameters = 1;
+	descRootSignature.NumParameters = 2;
 	descRootSignature.pParameters = rootParameters;
-	descRootSignature.NumStaticSamplers = 0;
-	descRootSignature.pStaticSamplers = nullptr;
+	descRootSignature.NumStaticSamplers = 1;
+	descRootSignature.pStaticSamplers = samplers;
 	descRootSignature.Flags = D3D12_ROOT_SIGNATURE_FLAG_ALLOW_INPUT_ASSEMBLER_INPUT_LAYOUT | D3D12_ROOT_SIGNATURE_FLAG_DENY_GEOMETRY_SHADER_ROOT_ACCESS | D3D12_ROOT_SIGNATURE_FLAG_DENY_DOMAIN_SHADER_ROOT_ACCESS | D3D12_ROOT_SIGNATURE_FLAG_DENY_HULL_SHADER_ROOT_ACCESS;
 
 	ID3DBlob* signature;
@@ -239,10 +286,10 @@ void CRender::Init()
 
 	m_fenceValue = 0;
 
-//#ifdef _DEBUG
+#ifdef _DEBUG
 	CheckResult(D3D12GetDebugInterface(IID_PPV_ARGS(&m_debugController)));
 	m_debugController->EnableDebugLayer();
-//#endif
+#endif
 
 	CheckResult(CreateDXGIFactory1(IID_PPV_ARGS(&m_factor)));
 	CheckResult(D3D12CreateDevice(nullptr, D3D_FEATURE_LEVEL_11_0, IID_PPV_ARGS(&m_device)));
@@ -293,11 +340,10 @@ void CRender::DrawFrame()
 	commandList->RSSetScissorRects(1, &m_scissorRect);
 	commandList->RSSetViewports(1, &m_viewport);
 
-	float clearColor[] = { 0.f, 0.f, 0.f, 1.f };
-	commandList->ClearRenderTargetView(renderTargetDH, clearColor, 0, nullptr);
-
 	commandList->SetGraphicsRootSignature(m_mainRS);
+	commandList->SetDescriptorHeaps(1, &m_texturesDH);
 	commandList->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLESTRIP);
+	D3D12_GPU_DESCRIPTOR_HANDLE texturesHandle = m_texturesDH->GetGPUDescriptorHandleForHeapStart();
 
 	unsigned int const objectsNum = GGameObjects.size();
 	CBObject* currCBObject = m_frameData[m_frameID].m_pResourceData;
@@ -307,7 +353,12 @@ void CRender::DrawFrame()
 		currCBObject->m_objectToScreen = Mul(Matrix3x3::GetTranslateRotationSize(gameObject.m_positionWS, gameObject.m_rotation, gameObject.m_size), GScreenMatrix);
 
 		commandList->SetGraphicsRootConstantBufferView(0, m_frameData[m_frameID].m_frameResource->GetGPUVirtualAddress() + (D3D12_GPU_VIRTUAL_ADDRESS)(objectID * sizeof(CBObject)));
+		D3D12_GPU_DESCRIPTOR_HANDLE texture = texturesHandle;
+		texture.ptr += m_srvDescriptorHandleIncrementSize * gameObject.m_texutreID;
+
+		commandList->SetGraphicsRootDescriptorTable(1, texture);
 		commandList->DrawInstanced(4, 1, 0, 0);
+		++currCBObject;
 	}
 
 	renderTargetBarrier.Transition.StateAfter = D3D12_RESOURCE_STATE_PRESENT;
@@ -330,9 +381,18 @@ void CRender::Release()
 	++m_fenceValue;
 	WaitForSingleObject(m_fenceEvent, INFINITE);
 
+	m_copyCQ->Release();
+	m_copyCA->Release();
+	m_copyCL->Release();
+
 	m_mainCQ->Release();
+	m_mainCA->Release();
+	m_mainCL->Release();
+
 	m_mainPSO->Release();
+	m_mainRS->Release();
 	m_renderTargetDH->Release();
+	m_texturesDH->Release();
 	for (UINT frameID = 0; frameID < FRAME_NUM; ++frameID)
 	{
 		m_rederTarget[frameID]->Release();
@@ -345,12 +405,154 @@ void CRender::Release()
 		frameData.m_pResourceData = nullptr;
 	}
 
+	unsigned int const texutreNum = m_texturesResources.size();
+	for (unsigned int texutreID = 0; texutreID < texutreNum; ++texutreID)
+	{
+		m_texturesResources[texutreID]->Release();
+	}
+
 	m_swapChain->Release();
 	m_fence->Release();
 	m_factor->Release();
 	m_device->Release();
 
-//#ifdef _DEBUG
+#ifdef _DEBUG
 	m_debugController->Release();
-//#endif
+#endif
+}
+
+void CRender::BeginLoadResources(unsigned int const textureNum)
+{
+	m_srvDescriptorHandleIncrementSize = m_device->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV);
+
+	D3D12_DESCRIPTOR_HEAP_DESC textureHeapDesc = {};
+	textureHeapDesc.NumDescriptors = textureNum;
+	textureHeapDesc.Type = D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV;
+	textureHeapDesc.Flags = D3D12_DESCRIPTOR_HEAP_FLAG_SHADER_VISIBLE;
+	CheckResult(m_device->CreateDescriptorHeap(&textureHeapDesc, IID_PPV_ARGS(&m_texturesDH)));
+
+	m_copyCA->Reset();
+	m_copyCL->Reset(m_copyCA, nullptr);
+}
+
+void CRender::LoadResource(STexture const& texture)
+{
+	D3D12_RESOURCE_DESC descTexture = {};
+	descTexture.DepthOrArraySize = 1;
+	descTexture.SampleDesc.Count = 1;
+	descTexture.Flags = D3D12_RESOURCE_FLAG_NONE;
+	descTexture.Dimension = D3D12_RESOURCE_DIMENSION_TEXTURE2D;
+	descTexture.Layout = D3D12_TEXTURE_LAYOUT_UNKNOWN;
+	descTexture.MipLevels = 1;
+	descTexture.Width = texture.m_width;
+	descTexture.Height = texture.m_height;
+	descTexture.Format = texture.m_format;
+
+	ID3D12Resource* textureRes;
+	CheckResult(m_device->CreateCommittedResource(&GHeapPropertiesGPUOnly, D3D12_HEAP_FLAG_NONE, &descTexture, D3D12_RESOURCE_STATE_COPY_DEST, nullptr, IID_PPV_ARGS(&textureRes)));
+	m_texturesResources.push_back(textureRes);
+
+
+	UINT64 bufferSize;
+	D3D12_PLACED_SUBRESOURCE_FOOTPRINT footprints;
+	UINT numRows = 0;
+	UINT64 rowPitches = 0;
+	m_device->GetCopyableFootprints(&descTexture, 0, 1, 0, &footprints, &numRows, &rowPitches, &bufferSize);
+
+	descTexture.Dimension = D3D12_RESOURCE_DIMENSION_BUFFER;
+	descTexture.Format = DXGI_FORMAT_UNKNOWN;
+	descTexture.Layout = D3D12_TEXTURE_LAYOUT_ROW_MAJOR;
+	descTexture.MipLevels = 1;
+	descTexture.Height = 1;
+	descTexture.Width = bufferSize;
+
+	ID3D12Resource* textureUploadRes;
+	CheckResult(m_device->CreateCommittedResource(&GHeapPropertiesUpload, D3D12_HEAP_FLAG_NONE, &descTexture, D3D12_RESOURCE_STATE_GENERIC_READ, nullptr, IID_PPV_ARGS(&textureUploadRes)));
+	m_texturesUploadResources.push_back(textureUploadRes);
+
+	void* pGPU;
+	textureUploadRes->Map(0, nullptr, &pGPU);
+
+	for (UINT rowID = 0; rowID < numRows; ++rowID)
+	{
+		memcpy((BYTE*)pGPU + footprints.Offset + rowID * footprints.Footprint.RowPitch, texture.m_data + rowID * rowPitches, rowPitches);
+	}
+
+	D3D12_TEXTURE_COPY_LOCATION dst;
+	dst.pResource = textureRes;
+	dst.Type = D3D12_TEXTURE_COPY_TYPE_SUBRESOURCE_INDEX;
+	dst.SubresourceIndex = 0;
+
+	D3D12_TEXTURE_COPY_LOCATION src;
+	src.pResource = textureUploadRes;
+	src.Type = D3D12_TEXTURE_COPY_TYPE_PLACED_FOOTPRINT;
+	src.PlacedFootprint = footprints;
+
+	m_copyCL->CopyTextureRegion(&dst, 0, 0, 0, &src, nullptr);
+
+	textureUploadRes->Unmap(0, nullptr);
+}
+
+void CRender::EndLoadResources()
+{
+	m_copyCL->Close();
+	m_copyCQ->ExecuteCommandLists(1, (ID3D12CommandList**)(&m_copyCL));
+}
+
+void CRender::WaitForResourcesLoad()
+{
+	std::vector< D3D12_RESOURCE_BARRIER > resourcesBarruers;
+
+	m_mainCA->Reset();
+	m_mainCL->Reset(m_mainCA, nullptr);
+
+	unsigned int const texutreNum = m_texturesResources.size();
+	for (unsigned int texutreID = 0; texutreID < texutreNum; ++texutreID)
+	{
+		D3D12_RESOURCE_BARRIER barrier;
+		barrier.Type = D3D12_RESOURCE_BARRIER_TYPE_TRANSITION;
+		barrier.Flags = D3D12_RESOURCE_BARRIER_FLAG_NONE;
+		barrier.Transition.pResource = m_texturesResources[texutreID];
+		barrier.Transition.StateBefore = D3D12_RESOURCE_STATE_COPY_DEST;
+		barrier.Transition.StateAfter = D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE;
+		barrier.Transition.Subresource = D3D12_RESOURCE_BARRIER_ALL_SUBRESOURCES;
+
+		resourcesBarruers.push_back(barrier);
+	}
+
+	m_mainCL->ResourceBarrier(resourcesBarruers.size(), resourcesBarruers.data());
+	m_mainCL->Close();
+
+	CheckResult(m_copyCQ->Signal(m_fence, m_fenceValue));
+	CheckResult(m_fence->SetEventOnCompletion(m_fenceValue, m_fenceEvent));
+	++m_fenceValue;
+	WaitForSingleObject(m_fenceEvent, INFINITE);
+
+	m_mainCQ->ExecuteCommandLists(1, (ID3D12CommandList**)(&m_mainCL));
+
+	CheckResult(m_mainCQ->Signal(m_fence, m_fenceValue));
+	CheckResult(m_fence->SetEventOnCompletion(m_fenceValue, m_fenceEvent));
+	++m_fenceValue;
+	WaitForSingleObject(m_fenceEvent, INFINITE);
+
+	D3D12_CPU_DESCRIPTOR_HANDLE textureDH = m_texturesDH->GetCPUDescriptorHandleForHeapStart();
+
+	D3D12_SHADER_RESOURCE_VIEW_DESC srvDesc = {};
+	srvDesc.ViewDimension = D3D12_SRV_DIMENSION_TEXTURE2D;
+	srvDesc.Shader4ComponentMapping = D3D12_DEFAULT_SHADER_4_COMPONENT_MAPPING;
+	srvDesc.Texture2D.MipLevels = 1;
+	srvDesc.Texture2D.MostDetailedMip = 0;
+
+	for (unsigned int texutreID = 0; texutreID < texutreNum; ++texutreID)
+	{
+		srvDesc.Format = m_texturesResources[texutreID]->GetDesc().Format;
+		m_device->CreateShaderResourceView(m_texturesResources[texutreID], &srvDesc, textureDH);
+
+		textureDH.ptr += m_srvDescriptorHandleIncrementSize;
+
+		m_texturesUploadResources[texutreID]->Release();
+	}
+
+	m_texturesUploadResources.clear();
+	m_texturesUploadResources.shrink_to_fit();
 }

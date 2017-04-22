@@ -16,6 +16,7 @@
 
 #include "types.h"
 #include "math.h"
+#include "texture.h"
 #include "constantBuffer.h"
 
 #include "gameObject.h"
