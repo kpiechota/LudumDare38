@@ -6,6 +6,7 @@
 #include "utility/FreeImage.h"
 
 #include "playerObject.h"
+#include "enemy.h"
 #include "staticObject.h"
 
 #include <Windows.h>
@@ -17,6 +18,7 @@ CTimer GTimer;
 std::vector< SRenderObject > GRenderObjects[ RL_MAX ];
 std::vector< CGameObject* > GGameObjects[2];
 std::vector< CGameObject* > GGameObjectsToSpawn;
+std::vector< CGameObject* > GGameObjectsToDelete;
 
 unsigned int GGameObjectArray = 0;
 int const GWidth = 800;
@@ -81,6 +83,8 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, PSTR pCmdLine, 
 		"../content/island.png",
 		"../content/generator.png",
 		"../content/bullet_0.png",
+		"../content/bullet_1.png",
+		"../content/enemy.png",
 	};
 
 	GRender.Init();
@@ -147,6 +151,10 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, PSTR pCmdLine, 
 	CStaticObject* pStaticObject = new CStaticObject(gameObject);
 	GGameObjects[GGameObjectArray].push_back(pStaticObject);
 
+	CEnemyObject* pEnemy = new CEnemyObject();
+	pEnemy->SetPosition(Vec2(-300.f, 0.f));
+	GGameObjects[GGameObjectArray].push_back(pEnemy);
+
 	GRender.WaitForResourcesLoad();
 
 	MSG msg = { 0 };
@@ -191,6 +199,13 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, PSTR pCmdLine, 
 			GRenderObjects[layerID].clear();
 		}
 
+		unsigned int const objectToDeleteNum = GGameObjectsToDelete.size();
+		for (unsigned int gameObjectID = 0; gameObjectID < objectToDeleteNum; ++gameObjectID)
+		{
+			delete GGameObjectsToDelete[gameObjectID];
+		}
+		GGameObjectsToDelete.clear();
+
 		unsigned int const nextGameObjectArray = (GGameObjectArray + 1) % 2;
 		for (unsigned int gameObjectID = 0; gameObjectID < gameObjectsNum; ++gameObjectID)
 		{
@@ -200,7 +215,7 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, PSTR pCmdLine, 
 			}
 			else
 			{
-				delete currentGameObjectArray[gameObjectID];
+				GGameObjectsToDelete.push_back( currentGameObjectArray[gameObjectID] );
 			}
 		}
 
@@ -215,6 +230,11 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, PSTR pCmdLine, 
 		GGameObjectArray = nextGameObjectArray;
 	}
 
+	unsigned int const objectToDeleteNum = GGameObjectsToDelete.size();
+	for (unsigned int gameObjectID = 0; gameObjectID < objectToDeleteNum; ++gameObjectID)
+	{
+		delete GGameObjectsToDelete[gameObjectID];
+	}
 	unsigned int const gameObjectsNum = GGameObjects[GGameObjectArray].size();
 	for (unsigned int gameObjectID = 0; gameObjectID < gameObjectsNum; ++gameObjectID)
 	{

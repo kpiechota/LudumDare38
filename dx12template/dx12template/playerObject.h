@@ -20,4 +20,5 @@ public:
 	virtual Vec2 GetPosition() const override;
 	virtual float GetSize() const override;
 	virtual bool NeedDelete() const override { return false; }
+	virtual void TakeDamage(float const damage) override;
 };

@@ -6,11 +6,24 @@ extern CTimer GTimer;
 
 inline void CPlayerObject::CollisionTest()
 {
-	std::vector< CGameObject* >& currentGameObjectArray = GGameObjects[GGameObjectArray];
+	float const magnitudeFromCenter2 = m_renderObject.m_positionWS.x * m_renderObject.m_positionWS.x + m_renderObject.m_positionWS.y * m_renderObject.m_positionWS.y;
+	float const centerRadius = 350.f - m_renderObject.m_size;
+	float const centerRadius2 = centerRadius * centerRadius;
+
+	if (centerRadius2 < magnitudeFromCenter2)
+	{
+		float const magnitudeFromCenter = sqrt(magnitudeFromCenter2);
+		float const invMagnitude = 1.f / magnitudeFromCenter2;
+		Vec2 vectorTo = m_renderObject.m_positionWS * invMagnitude;
+		Vec2 const offset = vectorTo * (centerRadius2 - magnitudeFromCenter2);
+		m_renderObject.m_positionWS += offset;
+	}
+
+	std::vector< CGameObject* > const& currentGameObjectArray = GGameObjects[GGameObjectArray];
 	unsigned int const gameObjectsNum = currentGameObjectArray.size();
 	for (unsigned int gameObjectID = 0; gameObjectID < gameObjectsNum; ++gameObjectID)
 	{
-		CGameObject* pGameObject = currentGameObjectArray[gameObjectID];
+		CGameObject const * const pGameObject = currentGameObjectArray[gameObjectID];
 
 		if (pGameObject != this && pGameObject->CollideWith(CF_PLAYER))
 		{
@@ -82,7 +95,7 @@ void CPlayerObject::Update()
 	Vec2i mouseScreenPos;
 	GInputManager.GetMousePosition(mouseScreenPos);
 
-	Vec2 mouseWorldPos = Vec2(mouseScreenPos) - Vec2(GWidth >> 1, GHeight >> 1);
+	Vec2 mouseWorldPos = Vec2(mouseScreenPos) - Vec2((float)(GWidth) * 0.5f, (float)(GHeight) * 0.5f);
 	mouseWorldPos.y = -mouseWorldPos.y;
 
 	m_renderObject.m_rotation = mouseWorldPos - m_renderObject.m_positionWS;
@@ -97,7 +110,7 @@ void CPlayerObject::Update()
 		bulletObject.m_size = 2.f;
 		bulletObject.m_texutreID = T_BULLET0;
 
-		CBullet* bullet = new CBullet(bulletObject);
+		CBullet* bullet = new CBullet(bulletObject, 0.3f, CF_PLAYER_BULLET);
 		GGameObjectsToSpawn.push_back(bullet);
 
 		m_lastShoot = m_shootSpeed;
@@ -112,4 +125,8 @@ Vec2 CPlayerObject::GetPosition() const
 float CPlayerObject::GetSize() const
 {
 	return m_renderObject.m_size;
+}
+
+void CPlayerObject::TakeDamage(float const damage)
+{
 }

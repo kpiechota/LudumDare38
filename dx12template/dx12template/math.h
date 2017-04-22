@@ -38,6 +38,11 @@ struct Vec2
 		this->y = y;
 	}
 
+	inline float Magnitude2() const
+	{
+		return x * x + y * y;
+	}
+
 	void Normalize()
 	{
 		float const radius2 = x * x + y * y;
@@ -47,6 +52,18 @@ struct Vec2
 			x *= invRadius;
 			y *= invRadius;
 		}
+	}
+
+	Vec2 GetNormalized() const
+	{
+		float const radius2 = x * x + y * y;
+		if (0.f < radius2)
+		{
+			float const invRadius = 1.f / sqrt(radius2);
+			return Vec2(x * invRadius, y * invRadius);
+		}
+
+		return Vec2(1.f, 0.f);
 	}
 
 	Vec2 operator*(float const a) const

@@ -120,6 +120,7 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="bullet.cpp" />
+    <ClCompile Include="enemy.cpp" />
     <ClCompile Include="helpers.cpp" />
     <ClCompile Include="main.cpp" />
     <ClCompile Include="math.cpp" />
@@ -131,6 +132,7 @@
   <ItemGroup>
     <ClInclude Include="bullet.h" />
     <ClInclude Include="constantBuffer.h" />
+    <ClInclude Include="enemy.h" />
     <ClInclude Include="gameObject.h" />
     <ClInclude Include="headers.h" />
     <ClInclude Include="input.h" />

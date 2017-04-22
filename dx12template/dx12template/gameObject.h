@@ -7,6 +7,8 @@ enum ETextures
 	T_ISLAND,
 	T_GENERATOR,
 	T_BULLET0,
+	T_BULLET1,
+	T_ENEMY,
 };
 
 enum ERenderLayer
@@ -48,7 +50,6 @@ protected:
 	Byte m_collisionMask;
 
 public:
-
 	bool CollideWith( ECollisionFlag const collisionType ) const { return m_collisionMask & collisionType; }
 
 	virtual void Update() = 0;
@@ -56,6 +57,7 @@ public:
 	virtual Vec2 GetPosition() const = 0;
 	virtual float GetSize() const = 0;
 	virtual bool NeedDelete() const = 0;
+	virtual void TakeDamage(float const damage) = 0;
 };
 
 extern unsigned int GGameObjectArray;
