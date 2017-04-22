@@ -1,4 +1,5 @@
 #pragma once
+
 typedef unsigned char Byte;
 
 template<class Key, class Value>

@@ -6,6 +6,7 @@ enum ETextures
 	T_BACKGROUND,
 	T_ISLAND,
 	T_GENERATOR,
+	T_BULLET0,
 };
 
 enum ERenderLayer
@@ -54,7 +55,10 @@ public:
 	virtual void FillRenderData() const = 0;
 	virtual Vec2 GetPosition() const = 0;
 	virtual float GetSize() const = 0;
+	virtual bool NeedDelete() const = 0;
 };
 
-extern std::vector< CGameObject* > GGameObjects;
+extern unsigned int GGameObjectArray;
+extern std::vector< CGameObject* > GGameObjects[2];
+extern std::vector< CGameObject* > GGameObjectsToSpawn;
 extern std::vector< SRenderObject > GRenderObjects[RL_MAX];

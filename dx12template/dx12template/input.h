@@ -22,7 +22,8 @@ enum EKeys
 	K_D = 'd',
 	K_A = 'a',
 	K_LESS = 44,
-	K_MORE = 46
+	K_MORE = 46,
+	K_LEFTM = 100,
 };
 
 
@@ -55,11 +56,12 @@ private:
 public:
 	void Init()
 	{
-		m_keys.push_back( tKeyState( 'W', false ) );
-		m_keys.push_back( tKeyState( 'A', false ) );
-		m_keys.push_back( tKeyState( 'S', false ) );
-		m_keys.push_back( tKeyState( 'D', false ) );
-		m_keys.push_back( tKeyState( ' ', false ) );
+		m_keys.push_back( tKeyState( 'W',		false ) );
+		m_keys.push_back( tKeyState( 'A',		false ) );
+		m_keys.push_back( tKeyState( 'S',		false ) );
+		m_keys.push_back( tKeyState( 'D',		false ) );
+		m_keys.push_back( tKeyState( ' ',		false ) );
+		m_keys.push_back( tKeyState( K_LEFTM,	false ) );
 	}
 	bool IsKeyDown( char const& key )
 	{
@@ -134,6 +136,12 @@ public:
 			}
 			break;
 		}
+		case WM_LBUTTONDOWN:
+			GInputManager.SetKey(K_LEFTM, true);
+			break;
+		case WM_LBUTTONUP:
+			GInputManager.SetKey(K_LEFTM, false);
+			break;
 		case WM_CHAR:
 		{
 			for ( IInputObserver* observer : GInputManager.m_observers )

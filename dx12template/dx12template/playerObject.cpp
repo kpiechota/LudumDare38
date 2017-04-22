@@ -1,15 +1,16 @@
 #include "playerObject.h"
 #include "timer.h"
 #include "input.h"
-
+#include "bullet.h"
 extern CTimer GTimer;
 
 inline void CPlayerObject::CollisionTest()
 {
-	unsigned int const gameObjectsNum = GGameObjects.size();
+	std::vector< CGameObject* >& currentGameObjectArray = GGameObjects[GGameObjectArray];
+	unsigned int const gameObjectsNum = currentGameObjectArray.size();
 	for (unsigned int gameObjectID = 0; gameObjectID < gameObjectsNum; ++gameObjectID)
 	{
-		CGameObject* pGameObject = GGameObjects[gameObjectID];
+		CGameObject* pGameObject = currentGameObjectArray[gameObjectID];
 
 		if (pGameObject != this && pGameObject->CollideWith(CF_PLAYER))
 		{
@@ -33,6 +34,8 @@ inline void CPlayerObject::CollisionTest()
 
 CPlayerObject::CPlayerObject()
 	: m_speed( 100.f )
+	, m_shootSpeed( 0.1f )
+	, m_lastShoot( 0.f )
 {
 	m_collisionMask = (Byte)(CF_ENEMY | CF_ENEMY_BULLET);
 
@@ -84,6 +87,21 @@ void CPlayerObject::Update()
 
 	m_renderObject.m_rotation = mouseWorldPos - m_renderObject.m_positionWS;
 	m_renderObject.m_rotation.Normalize();
+
+	m_lastShoot -= GTimer.GameDelta();
+	if (m_lastShoot < 0.f && GInputManager.IsKeyDown(K_LEFTM))
+	{
+		SRenderObject bulletObject;
+		bulletObject.m_positionWS = m_renderObject.m_positionWS + m_renderObject.m_rotation * m_renderObject.m_size;
+		bulletObject.m_rotation = m_renderObject.m_rotation;
+		bulletObject.m_size = 2.f;
+		bulletObject.m_texutreID = T_BULLET0;
+
+		CBullet* bullet = new CBullet(bulletObject);
+		GGameObjectsToSpawn.push_back(bullet);
+
+		m_lastShoot = m_shootSpeed;
+	}
 }
 
 Vec2 CPlayerObject::GetPosition() const

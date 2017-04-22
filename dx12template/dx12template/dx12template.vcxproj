@@ -119,6 +119,7 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="bullet.cpp" />
     <ClCompile Include="helpers.cpp" />
     <ClCompile Include="main.cpp" />
     <ClCompile Include="math.cpp" />
@@ -128,6 +129,7 @@
     <ClCompile Include="staticObject.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="bullet.h" />
     <ClInclude Include="constantBuffer.h" />
     <ClInclude Include="gameObject.h" />
     <ClInclude Include="headers.h" />

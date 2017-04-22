@@ -54,6 +54,11 @@ struct Vec2
 		return Vec2(x * a, y * a);
 	}
 
+	Vec2 operator+(Vec2 const v) const
+	{
+		return Vec2(x + v.x, y + v.y);
+	}
+
 	Vec2 operator-(Vec2 const v) const
 	{
 		return Vec2(x - v.x, y - v.y);

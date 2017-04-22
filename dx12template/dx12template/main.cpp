@@ -15,8 +15,10 @@ CSystemInput GSystemInput;
 CTimer GTimer;
 
 std::vector< SRenderObject > GRenderObjects[ RL_MAX ];
-std::vector< CGameObject* > GGameObjects;
+std::vector< CGameObject* > GGameObjects[2];
+std::vector< CGameObject* > GGameObjectsToSpawn;
 
+unsigned int GGameObjectArray = 0;
 int const GWidth = 800;
 int const GHeight = 800;
 Matrix3x3 GScreenMatrix = Matrix3x3::GetOrthogonalMatrix(-0.5f * ((float)GWidth), 0.5f * (float)GHeight);
@@ -77,7 +79,8 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, PSTR pCmdLine, 
 		"../content/player.png",
 		"../content/background.png",
 		"../content/island.png",
-		"../content/generator.png"
+		"../content/generator.png",
+		"../content/bullet_0.png",
 	};
 
 	GRender.Init();
@@ -136,13 +139,13 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, PSTR pCmdLine, 
 	GRenderObjects[RL_BACKGROUND_STATIC].push_back(gameObject);
 
 	CPlayerObject* pPlayer = new CPlayerObject();
-	GGameObjects.push_back(pPlayer);
+	GGameObjects[GGameObjectArray].push_back(pPlayer);
 
 	gameObject.m_size = 16.f;
 	gameObject.m_texutreID = T_GENERATOR;
 
 	CStaticObject* pStaticObject = new CStaticObject(gameObject);
-	GGameObjects.push_back(pStaticObject);
+	GGameObjects[GGameObjectArray].push_back(pStaticObject);
 
 	GRender.WaitForResourcesLoad();
 
@@ -150,7 +153,9 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, PSTR pCmdLine, 
 	bool run = true;
 	while (run)
 	{
-		unsigned int const gameObjectsNum = GGameObjects.size();
+		std::vector< CGameObject* >& currentGameObjectArray = GGameObjects[GGameObjectArray];
+
+		unsigned int const gameObjectsNum = currentGameObjectArray.size();
 		GTimer.Tick();
 
 		while (PeekMessage(&msg, NULL, 0, 0, PM_REMOVE))
@@ -167,7 +172,7 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, PSTR pCmdLine, 
 
 		for (unsigned int gameObjectID = 0; gameObjectID < gameObjectsNum; ++gameObjectID)
 		{
-			GGameObjects[gameObjectID]->Update();
+			currentGameObjectArray[gameObjectID]->Update();
 		}
 
 		timeToRender -= GTimer.Delta();
@@ -175,7 +180,7 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, PSTR pCmdLine, 
 		{
 			for (unsigned int gameObjectID = 0; gameObjectID < gameObjectsNum; ++gameObjectID)
 			{
-				GGameObjects[gameObjectID]->FillRenderData();
+				currentGameObjectArray[gameObjectID]->FillRenderData();
 			}
 			GRender.DrawFrame();
 			timeToRender = 1.f / 60.f;
@@ -185,12 +190,40 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, PSTR pCmdLine, 
 		{
 			GRenderObjects[layerID].clear();
 		}
+
+		unsigned int const nextGameObjectArray = (GGameObjectArray + 1) % 2;
+		for (unsigned int gameObjectID = 0; gameObjectID < gameObjectsNum; ++gameObjectID)
+		{
+			if (!currentGameObjectArray[gameObjectID]->NeedDelete())
+			{
+				GGameObjects[nextGameObjectArray].push_back(currentGameObjectArray[gameObjectID]);
+			}
+			else
+			{
+				delete currentGameObjectArray[gameObjectID];
+			}
+		}
+
+		unsigned int const objectToSpawnNum = GGameObjectsToSpawn.size();
+		for (unsigned int gameObjectID = 0; gameObjectID < objectToSpawnNum; ++gameObjectID)
+		{
+			GGameObjects[nextGameObjectArray].push_back(GGameObjectsToSpawn[gameObjectID]);
+		}
+
+		GGameObjectsToSpawn.clear();
+		currentGameObjectArray.clear();
+		GGameObjectArray = nextGameObjectArray;
 	}
 
-	unsigned int const gameObjectsNum = GGameObjects.size();
+	unsigned int const gameObjectsNum = GGameObjects[GGameObjectArray].size();
 	for (unsigned int gameObjectID = 0; gameObjectID < gameObjectsNum; ++gameObjectID)
 	{
-		delete GGameObjects[gameObjectID];
+		delete GGameObjects[GGameObjectArray][gameObjectID];
+	}
+	unsigned int const objectToSpawnNum = GGameObjectsToSpawn.size();
+	for (unsigned int gameObjectID = 0; gameObjectID < objectToSpawnNum; ++gameObjectID)
+	{
+		delete GGameObjectsToSpawn[gameObjectID];
 	}
 
 	GRender.Release();
