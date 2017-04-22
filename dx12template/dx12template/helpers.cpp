@@ -6,7 +6,7 @@ void CheckResult(HRESULT result)
 	{
 		_com_error err(result);
 		::OutputDebugString(err.ErrorMessage());
-		throw;
+		__debugbreak();
 	}
 }
 void CheckResult(HRESULT result, ID3DBlob* errorBlob)
@@ -17,7 +17,7 @@ void CheckResult(HRESULT result, ID3DBlob* errorBlob)
 		::OutputDebugString(err.ErrorMessage());
 		::OutputDebugStringA("\n");
 		::OutputDebugStringA((LPCSTR)errorBlob->GetBufferPointer());
-		throw;
+		__debugbreak();
 	}
 	if (errorBlob && 0 < errorBlob->GetBufferSize())
 	{
