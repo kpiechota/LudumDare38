@@ -1,5 +1,6 @@
 #include "turretObject.h"
 #include "timer.h"
+#include "soundEngine.h"
 #include "bullet.h"
 
 extern CTimer GTimer;
@@ -63,7 +64,7 @@ CTurretObject::CTurretObject(SRenderObject const& renderObject)
 	, m_shootSpeed(0.3f)
 	, m_lastShoot(0.f)
 	, m_shootRadius2(150.f * 150.f)
-	, m_maxHealth(2.f)
+	, m_maxHealth(5.f)
 	, m_health(m_maxHealth)
 	, m_collisionSize( 12.f )
 {
@@ -94,6 +95,7 @@ void CTurretObject::Update()
 			GGameObjectsToSpawn.push_back(bullet);
 
 			m_lastShoot = m_shootSpeed;
+			GSoundEngine.Play2DSound(GSounds[SET_SHOOT1]);
 		}
 	}
 }
@@ -123,4 +125,8 @@ bool CTurretObject::NeedDelete() const
 void CTurretObject::TakeDamage(float const damage)
 {
 	m_health = max(0.f, min(m_maxHealth, m_health - damage));
+	if (m_health <= 0.f)
+	{
+		GSoundEngine.Play2DSound(GSounds[SET_EXPLOSION]);
+	}
 }

@@ -23,5 +23,5 @@ public:
 	virtual Vec2 GetPosition() const override;
 	virtual Vec2 GetSize() const override;
 	virtual bool NeedDelete() const override { return m_health < 0.f; }
-	virtual void TakeDamage(float const damage) override { m_health = max( 0.f, min(m_maxHealth, m_health - damage) ); }
+	virtual void TakeDamage(float const damage) override;
 };

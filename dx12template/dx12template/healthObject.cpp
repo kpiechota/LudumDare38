@@ -2,6 +2,7 @@
 #include "healthEffectObject.h"
 #include "staticObject.h"
 #include "timer.h"
+#include "soundEngine.h"
 
 extern CTimer GTimer;
 
@@ -55,6 +56,7 @@ void CHealthObject::Update()
 		CHealthEffectObject* healthEffect = new CHealthEffectObject(m_healthEffectObject, .5f);
 		GGameObjectsToSpawn.push_back(healthEffect);
 
+		GSoundEngine.Play2DSound(GSounds[SET_HEAL]);
 		m_lastHeal = m_healSpeed;
 		std::vector< CGameObject* > const& currentGameObjectArray = GGameObjects[GGameObjectArray];
 		unsigned int const gameObjectsNum = currentGameObjectArray.size();
@@ -64,7 +66,7 @@ void CHealthObject::Update()
 
 			if (pGameObject != this && pGameObject->CollideWith(CF_ENEMY_BULLET) && !pGameObject->NeedDelete() && (pGameObject->GetPosition() - m_renderObject.m_positionWS).Magnitude2() < m_healRadius2 )
 			{
-				pGameObject->TakeDamage(-1.5f);
+				pGameObject->TakeDamage(-0.5f);
 			}
 		}
 	}
@@ -115,4 +117,8 @@ bool CHealthObject::NeedDelete() const
 void CHealthObject::TakeDamage(float const damage)
 {
 	m_health = max( 0.f, min(m_maxHealth, m_health - damage) );
+	if (m_health <= 0.f)
+	{
+		GSoundEngine.Play2DSound(GSounds[SET_EXPLOSION]);
+	}
 }

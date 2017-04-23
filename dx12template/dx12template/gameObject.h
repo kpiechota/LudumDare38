@@ -40,6 +40,17 @@ enum ERenderLayer
 	RL_MAX
 };
 
+enum ESoundEffectType
+{
+	SET_SHOOT0,
+	SET_SHOOT1,
+	SET_SHOOT2,
+	SET_HEAL,
+	SET_EXPLOSION,
+
+	SET_MAX
+};
+
 enum ECollisionFlag
 {
 	CF_PLAYER			= 1 << 0,

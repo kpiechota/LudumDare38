@@ -1,6 +1,7 @@
 #include "generatorObject.h"
 #include "staticObject.h"
 #include "timer.h"
+#include "soundEngine.h"
 
 extern CTimer GTimer;
 
@@ -72,4 +73,13 @@ Vec2 CGeneratorObject::GetPosition() const
 Vec2 CGeneratorObject::GetSize() const
 {
 	return m_renderObject.m_size;
+}
+
+void CGeneratorObject::TakeDamage(float const damage)
+{
+	m_health = max(0.f, min(m_maxHealth, m_health - damage));
+	if (m_health <= 0.f)
+	{
+		GSoundEngine.Play2DSound(GSounds[SET_EXPLOSION]);
+	}
 }

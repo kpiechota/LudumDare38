@@ -1,5 +1,6 @@
 #include "playerObject.h"
 #include "timer.h"
+#include "soundEngine.h"
 #include "input.h"
 #include "bullet.h"
 #include "turretObject.h"
@@ -185,6 +186,8 @@ void CPlayerObject::Update()
 			GGameObjectsToSpawn.push_back(bullet);
 
 			m_lastShoot = m_shootSpeed;
+
+			GSoundEngine.Play2DSound(GSounds[SET_SHOOT0]);
 		}
 
 		if (1.f == m_energyValue)

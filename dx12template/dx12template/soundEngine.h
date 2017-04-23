@@ -34,3 +34,4 @@ public:
 };
 
 extern CSoundEngine GSoundEngine;
+extern CStaticSound GSounds[];

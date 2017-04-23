@@ -24,6 +24,7 @@ std::vector< SRenderObject > GRenderObjects[ RL_MAX ];
 std::vector< CGameObject* > GGameObjects[2];
 std::vector< CGameObject* > GGameObjectsToSpawn;
 std::vector< CGameObject* > GGameObjectsToDelete;
+CStaticSound GSounds[SET_MAX];
 
 unsigned int GGameObjectArray = 0;
 int const GWidth = 800;
@@ -197,6 +198,20 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, PSTR pCmdLine, 
 	float timeToRender = 0.f;
 
 	InitGame();
+
+	char const* sounds[] =
+	{
+		"../content/shoot0.wav",
+		"../content/shoot1.wav",
+		"../content/shoot2.wav",
+		"../content/heal.wav",
+		"../content/explosion.wav",
+	};
+
+	for (unsigned int soundID = 0; soundID < SET_MAX; ++soundID)
+	{
+		GSounds[soundID] = GSoundEngine.CreateStaticSound(sounds[soundID]);
+	}
 
 	GRender.WaitForResourcesLoad();
 

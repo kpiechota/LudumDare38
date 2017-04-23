@@ -1,5 +1,6 @@
 #include "enemy.h"
 #include "timer.h"
+#include "soundEngine.h"
 #include "bullet.h"
 #include "enemySpawner.h"
 
@@ -122,7 +123,8 @@ void CEnemyObject::Update()
 			GGameObjectsToSpawn.push_back(bullet);
 
 			m_lastShoot = m_shootSpeed;
-		}
+			GSoundEngine.Play2DSound(GSounds[SET_SHOOT2]);
+		}			
 	}
 	else
 	{
