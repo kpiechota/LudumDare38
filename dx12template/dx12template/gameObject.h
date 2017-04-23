@@ -47,6 +47,7 @@ enum ESoundEffectType
 	SET_SHOOT2,
 	SET_HEAL,
 	SET_EXPLOSION,
+	SET_BUILD,
 
 	SET_MAX
 };

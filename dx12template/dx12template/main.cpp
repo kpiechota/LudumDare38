@@ -206,6 +206,7 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, PSTR pCmdLine, 
 		"../content/shoot2.wav",
 		"../content/heal.wav",
 		"../content/explosion.wav",
+		"../content/build.wav",
 	};
 
 	for (unsigned int soundID = 0; soundID < SET_MAX; ++soundID)

@@ -204,6 +204,7 @@ void CPlayerObject::Update()
 
 				CTurretObject* turret = new CTurretObject(turretObject);
 				GGameObjectsToSpawn.push_back(turret);
+				GSoundEngine.Play2DSound(GSounds[SET_BUILD]);
 			}
 			else if (GInputManager.IsKeyDown('E'))
 			{
@@ -216,6 +217,7 @@ void CPlayerObject::Update()
 
 				CHealthObject* health = new CHealthObject(healthObject);
 				GGameObjectsToSpawn.push_back(health);
+				GSoundEngine.Play2DSound(GSounds[SET_BUILD]);
 			}
 		}
 	}
