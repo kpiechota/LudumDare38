@@ -6,6 +6,25 @@
 extern CTimer GTimer;
 extern CEnemySpawner GEnemySpawner;
 
+void CEnemyObject::DrawHealthBar() const
+{
+	SRenderObject healthBarBackground;
+	healthBarBackground.m_colorScale.Set(0.f, 0.f, 0.f, 1.f);
+	healthBarBackground.m_positionWS = m_renderObject.m_positionWS + Vec2(0.f, 12.f + 3.f);
+	healthBarBackground.m_size.Set(12.f, 2.f);
+	healthBarBackground.m_texutreID = T_BLANK;
+
+	SRenderObject healthBar;
+	healthBar.m_colorScale.Set(0.f, 1.f, 0.f, 1.f);
+	healthBar.m_positionWS = m_renderObject.m_positionWS + Vec2(-12.f, 12.f + 3.f);
+	healthBar.m_size.Set(12.f * (m_health / m_maxHealth), 2.f);
+	healthBar.m_offset.Set(1.f, 0.f);
+	healthBar.m_texutreID = T_BLANK;
+
+	GRenderObjects[RL_OVERLAY0].push_back(healthBarBackground);
+	GRenderObjects[RL_OVERLAY0].push_back(healthBar);
+}
+
 inline void CEnemyObject::CollisionTest()
 {
 	std::vector< CGameObject* > const& currentGameObjectArray = GGameObjects[GGameObjectArray];
@@ -18,7 +37,7 @@ inline void CEnemyObject::CollisionTest()
 		{
 			Vec2 vectorTo = pGameObject->GetPosition() - m_renderObject.m_positionWS;
 			float const magnitude2 = vectorTo.x * vectorTo.x + vectorTo.y * vectorTo.y;
-			float const radius = m_renderObject.m_size + pGameObject->GetSize();
+			float const radius = m_renderObject.m_size.x + pGameObject->GetSize().x;
 			float const radius2 = radius * radius;
 
 			if (magnitude2 < radius2 && 0.f < magnitude2)
@@ -74,7 +93,8 @@ CEnemyObject::CEnemyObject()
 	, m_shootSpeed(0.2f)
 	, m_lastShoot(0.f)
 	, m_shootRadius2( 150.f * 150.f)
-	, m_health( 1.f )
+	, m_maxHealth(1.f)
+	, m_health(1.f)
 {
 	m_collisionMask = (Byte)(CF_ENEMY | CF_PLAYER_BULLET | CF_PLAYER);
 
@@ -115,6 +135,8 @@ void CEnemyObject::Update()
 void CEnemyObject::FillRenderData() const
 {
 	GRenderObjects[RL_FOREGROUND].push_back(m_renderObject);
+
+	DrawHealthBar();
 }
 
 Vec2 CEnemyObject::GetPosition() const
@@ -122,7 +144,7 @@ Vec2 CEnemyObject::GetPosition() const
 	return m_renderObject.m_positionWS;
 }
 
-float CEnemyObject::GetSize() const
+Vec2 CEnemyObject::GetSize() const
 {
 	return m_renderObject.m_size;
 }

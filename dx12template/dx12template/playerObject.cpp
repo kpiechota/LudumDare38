@@ -3,12 +3,14 @@
 #include "input.h"
 #include "bullet.h"
 #include "turretObject.h"
+#include "healthObject.h"
+
 extern CTimer GTimer;
 
 inline void CPlayerObject::CollisionTest()
 {
 	float const magnitudeFromCenter2 = m_renderObject.m_positionWS.x * m_renderObject.m_positionWS.x + m_renderObject.m_positionWS.y * m_renderObject.m_positionWS.y;
-	float const centerRadius = GIslandSize - m_renderObject.m_size;
+	float const centerRadius = GIslandSize - m_renderObject.m_size.x;
 	float const centerRadius2 = centerRadius * centerRadius;
 
 	if (centerRadius2 < magnitudeFromCenter2)
@@ -30,7 +32,7 @@ inline void CPlayerObject::CollisionTest()
 		{
 			Vec2 vectorTo = pGameObject->GetPosition() - m_renderObject.m_positionWS;
 			float const magnitude2 = vectorTo.x * vectorTo.x + vectorTo.y * vectorTo.y;
-			float const radius = m_renderObject.m_size + pGameObject->GetSize();
+			float const radius = m_renderObject.m_size.x + pGameObject->GetSize().x;
 			float const radius2 = radius * radius;
 
 			if (magnitude2 < radius2 && 0.f < magnitude2 )
@@ -46,11 +48,32 @@ inline void CPlayerObject::CollisionTest()
 	}
 }
 
+void CPlayerObject::DrawHealthBar() const
+{
+	SRenderObject healthBarBackground;
+	healthBarBackground.m_colorScale.Set(0.f, 0.f, 0.f, 1.f);
+	healthBarBackground.m_positionWS = m_renderObject.m_positionWS + Vec2(0.f, 12.f + 3.f);
+	healthBarBackground.m_size.Set(12.f, 2.f);
+	healthBarBackground.m_texutreID = T_BLANK;
+
+	SRenderObject healthBar;
+	healthBar.m_colorScale.Set(0.f, 1.f, 0.f, 1.f);
+	healthBar.m_positionWS = m_renderObject.m_positionWS + Vec2(-12.f, 12.f + 3.f);
+	healthBar.m_size.Set(12.f * (m_health/m_maxHealth), 2.f);
+	healthBar.m_offset.Set(1.f, 0.f);
+	healthBar.m_texutreID = T_BLANK;
+
+	GRenderObjects[RL_OVERLAY0].push_back(healthBarBackground);
+	GRenderObjects[RL_OVERLAY0].push_back(healthBar);
+}
+
 CPlayerObject::CPlayerObject()
 	: m_speed( 100.f )
 	, m_shootSpeed( 0.1f )
 	, m_lastShoot( 0.f )
 	, m_energyValue( 0.f )
+	, m_maxHealth(5.f)
+	, m_health(5.f)
 {
 	m_collisionMask = (Byte)(CF_ENEMY | CF_ENEMY_BULLET);
 
@@ -79,11 +102,13 @@ void CPlayerObject::FillRenderData() const
 {
 	GRenderObjects[RL_FOREGROUND].push_back(m_renderObject);
 
+	DrawHealthBar();
+
 	float const iconColor = (m_energyValue < 1.f) ? 0.5f : 1.f;
-	GRenderObjects[RL_OVERLAY].push_back(m_renderObjectTurret);
-	GRenderObjects[RL_OVERLAY].back().m_colorScale.Set(iconColor, iconColor, iconColor, 1.f);
-	GRenderObjects[RL_OVERLAY].push_back(m_renderObjectHealth);
-	GRenderObjects[RL_OVERLAY].back().m_colorScale.Set(iconColor, iconColor, iconColor, 1.f);
+	GRenderObjects[RL_OVERLAY1].push_back(m_renderObjectTurret);
+	GRenderObjects[RL_OVERLAY1].back().m_colorScale.Set(iconColor, iconColor, iconColor, 1.f);
+	GRenderObjects[RL_OVERLAY1].push_back(m_renderObjectHealth);
+	GRenderObjects[RL_OVERLAY1].back().m_colorScale.Set(iconColor, iconColor, iconColor, 1.f);
 }
 
 void CPlayerObject::Update()
@@ -155,6 +180,18 @@ void CPlayerObject::Update()
 			CTurretObject* turret = new CTurretObject(turretObject);
 			GGameObjectsToSpawn.push_back(turret);
 		}
+		else if (GInputManager.IsKeyDown('E'))
+		{
+			m_energyValue = 0.f;
+
+			SRenderObject healthObject;
+			healthObject.m_positionWS = m_renderObject.m_positionWS + m_renderObject.m_rotation * m_renderObject.m_size;
+			healthObject.m_size = 12.f;
+			healthObject.m_texutreID = T_HEALTH;
+
+			CHealthObject* health = new CHealthObject(healthObject);
+			GGameObjectsToSpawn.push_back(health);
+		}
 	}
 }
 
@@ -163,11 +200,12 @@ Vec2 CPlayerObject::GetPosition() const
 	return m_renderObject.m_positionWS;
 }
 
-float CPlayerObject::GetSize() const
+Vec2 CPlayerObject::GetSize() const
 {
 	return m_renderObject.m_size;
 }
 
 void CPlayerObject::TakeDamage(float const damage)
 {
+	m_health = max( 0.f, min(m_maxHealth, m_health - damage) );
 }

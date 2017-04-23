@@ -14,7 +14,7 @@ void CBullet::CollisionTest()
 		{
 			Vec2 vectorTo = pGameObject->GetPosition() - m_renderObject.m_positionWS;
 			float const magnitude2 = vectorTo.x * vectorTo.x + vectorTo.y * vectorTo.y;
-			float const radius = m_renderObject.m_size + pGameObject->GetSize();
+			float const radius = m_renderObject.m_size.x + pGameObject->GetSize().x;
 			float const radius2 = radius * radius;
 
 			if (magnitude2 < radius2 && 0.f < magnitude2)
@@ -54,7 +54,7 @@ Vec2 CBullet::GetPosition() const
 	return m_renderObject.m_positionWS;
 }
 
-float CBullet::GetSize() const
+Vec2 CBullet::GetSize() const
 {
 	return m_renderObject.m_size;
 }

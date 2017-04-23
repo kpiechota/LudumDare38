@@ -19,7 +19,7 @@ public:
 	virtual void Update() override;
 	virtual void FillRenderData() const override;
 	virtual Vec2 GetPosition() const override;
-	virtual float GetSize() const override;
+	virtual Vec2 GetSize() const override;
 	virtual bool NeedDelete() const override;
 	virtual void TakeDamage(float const damage) override {}
 };

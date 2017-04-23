@@ -1,22 +1,21 @@
 #pragma once
 #include "headers.h"
 
-class CTurretObject : public CGameObject
+class CHealthObject : public CGameObject
 {
 private:
 	SRenderObject m_renderObject;
-	float m_shootSpeed;
-	float m_lastShoot;
-	float m_shootRadius2;
+	float m_healSpeed;
+	float m_lastHeal;
+	float m_healRadius2;
 	float m_maxHealth;
 	float m_health;
 
 private:
 	inline void DrawHealthBar() const;
-	inline Vec2 FindNearestObject() const;
 
 public:
-	CTurretObject( SRenderObject const& renderObject );
+	CHealthObject(SRenderObject const& renderObject);
 
 	virtual void Update() override;
 	virtual void FillRenderData() const override;

@@ -355,6 +355,7 @@ void CRender::DrawFrame()
 			SRenderObject const& gameObject = GRenderObjects[layerID][objectID];
 			cbObject.m_objectToScreen = Mul(GScreenMatrix, Matrix3x3::GetTranslateRotationSize(gameObject.m_positionWS, gameObject.m_rotation, gameObject.m_size));
 			cbObject.m_colorScale = gameObject.m_colorScale;
+			cbObject.m_offset = gameObject.m_offset;
 
 			commandList->SetGraphicsRootConstantBufferView(0, m_frameData[m_frameID].m_frameResource->GetGPUVirtualAddress() + (D3D12_GPU_VIRTUAL_ADDRESS)(renderObjectID * sizeof(CBObject)));
 			D3D12_GPU_DESCRIPTOR_HANDLE texture = texturesHandle;

@@ -16,7 +16,7 @@ Vec2 CStaticObject::GetPosition() const
 	return m_renderObject.m_positionWS;
 }
 
-float CStaticObject::GetSize() const
+Vec2 CStaticObject::GetSize() const
 {
 	return m_renderObject.m_size;
 }

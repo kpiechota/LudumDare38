@@ -83,6 +83,7 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, PSTR pCmdLine, 
 
 	char const* textures[] =
 	{
+		"../content/blank.png",
 		"../content/player.png",
 		"../content/background.png",
 		"../content/island.png",

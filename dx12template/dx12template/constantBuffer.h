@@ -5,4 +5,5 @@ struct CBObject
 {
 	Matrix4x4 m_objectToScreen;
 	Vec4 m_colorScale;
+	Vec2 m_offset;
 };

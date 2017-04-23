@@ -14,8 +14,12 @@ private:
 	float m_lastShoot;
 	float m_energyValue;
 
+	float m_health;
+	float m_maxHealth;
+
 private:
 	inline void CollisionTest();
+	inline void DrawHealthBar() const;
 
 public:
 	CPlayerObject();
@@ -25,7 +29,7 @@ public:
 	virtual void FillRenderData() const override;
 	virtual void Update() override;
 	virtual Vec2 GetPosition() const override;
-	virtual float GetSize() const override;
+	virtual Vec2 GetSize() const override;
 	virtual bool NeedDelete() const override { return false; }
 	virtual void TakeDamage(float const damage) override;
 };

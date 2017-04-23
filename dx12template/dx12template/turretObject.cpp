@@ -4,6 +4,25 @@
 
 extern CTimer GTimer;
 
+void CTurretObject::DrawHealthBar() const
+{
+	SRenderObject healthBarBackground;
+	healthBarBackground.m_colorScale.Set(0.f, 0.f, 0.f, 1.f);
+	healthBarBackground.m_positionWS = m_renderObject.m_positionWS + Vec2(0.f, 12.f + 3.f);
+	healthBarBackground.m_size.Set(12.f, 2.f);
+	healthBarBackground.m_texutreID = T_BLANK;
+
+	SRenderObject healthBar;
+	healthBar.m_colorScale.Set(0.f, 1.f, 0.f, 1.f);
+	healthBar.m_positionWS = m_renderObject.m_positionWS + Vec2(-12.f, 12.f + 3.f);
+	healthBar.m_size.Set(12.f * (m_health / m_maxHealth), 2.f);
+	healthBar.m_offset.Set(1.f, 0.f);
+	healthBar.m_texutreID = T_BLANK;
+
+	GRenderObjects[RL_OVERLAY0].push_back(healthBarBackground);
+	GRenderObjects[RL_OVERLAY0].push_back(healthBar);
+}
+
 Vec2 CTurretObject::FindNearestObject() const
 {
 	Vec2 nearest;
@@ -44,7 +63,8 @@ CTurretObject::CTurretObject(SRenderObject const& renderObject)
 	, m_shootSpeed(0.3f)
 	, m_lastShoot(0.f)
 	, m_shootRadius2(150.f * 150.f)
-	, m_health(30.f)
+	, m_maxHealth(30.f)
+	, m_health(m_maxHealth)
 {
 	m_collisionMask = (Byte)(CF_ENEMY | CF_ENEMY_BULLET | CF_PLAYER);
 
@@ -80,6 +100,8 @@ void CTurretObject::Update()
 void CTurretObject::FillRenderData() const
 {
 	GRenderObjects[RL_FOREGROUND].push_back(m_renderObject);
+
+	DrawHealthBar();
 }
 
 Vec2 CTurretObject::GetPosition() const
@@ -87,7 +109,7 @@ Vec2 CTurretObject::GetPosition() const
 	return m_renderObject.m_positionWS;
 }
 
-float CTurretObject::GetSize() const
+Vec2 CTurretObject::GetSize() const
 {
 	return m_renderObject.m_size;
 }
@@ -99,5 +121,5 @@ bool CTurretObject::NeedDelete() const
 
 void CTurretObject::TakeDamage(float const damage)
 {
-	m_health -= damage;
+	m_health = max(0.f, min(m_maxHealth, m_health - damage));
 }
