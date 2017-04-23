@@ -94,6 +94,8 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, PSTR pCmdLine, 
 		"../content/turret.png",
 		"../content/health.png",
 		"../content/healthEffect.tif",
+		"../content/turretIcon.png",
+		"../content/healthIcon.png",
 	};
 
 	GRender.Init();

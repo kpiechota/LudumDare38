@@ -93,13 +93,12 @@ CPlayerObject::CPlayerObject()
 	float const iconY = -0.5f * ((float)GHeight) + 35.f;
 
 	m_renderObjectTurret.m_positionWS.Set(-35.f, iconY);
-	m_renderObjectTurret.m_rotation.Set(0.f, 1.f);
 	m_renderObjectTurret.m_size = 32.f;
-	m_renderObjectTurret.m_texutreID = T_TURRET;
+	m_renderObjectTurret.m_texutreID = T_TURRET_ICON;
 
 	m_renderObjectHealth.m_positionWS.Set(35.f, iconY);
 	m_renderObjectHealth.m_size = 32.f;
-	m_renderObjectHealth.m_texutreID = T_HEALTH;
+	m_renderObjectHealth.m_texutreID = T_HEALTH_ICON;
 }
 
 void CPlayerObject::AddEnergy()

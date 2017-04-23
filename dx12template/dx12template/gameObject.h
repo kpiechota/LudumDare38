@@ -21,6 +21,8 @@ enum ETextures
 	T_TURRET,
 	T_HEALTH,
 	T_HEALTH_EFFECT,
+	T_TURRET_ICON,
+	T_HEALTH_ICON,
 };
 
 enum ERenderLayer
