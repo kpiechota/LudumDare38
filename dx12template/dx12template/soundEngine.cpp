@@ -5,7 +5,6 @@ CSoundEngine GSoundEngine;
 void CSoundEngine::Init()
 {
 	m_irrklangEngine = irrklang::createIrrKlangDevice();
-	m_irrklangEngine->setSoundVolume(0.f);
 }
 
 void CSoundEngine::Release()
