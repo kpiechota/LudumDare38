@@ -63,7 +63,7 @@ CTurretObject::CTurretObject(SRenderObject const& renderObject)
 	, m_shootSpeed(0.3f)
 	, m_lastShoot(0.f)
 	, m_shootRadius2(150.f * 150.f)
-	, m_maxHealth(10.f)
+	, m_maxHealth(3.f)
 	, m_health(m_maxHealth)
 	, m_collisionSize( 12.f )
 {
