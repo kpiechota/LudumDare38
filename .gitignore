@@ -243,3 +243,8 @@ ModelManifest.xml
 
 # FAKE - F# Make
 .fake/
+dx12template/SmallWorld.zip
+dx12template/content/blood0.tif
+dx12template/content/blood1.tif
+dx12template/content/blood2.tif
+dx12template/content/blood3.tif

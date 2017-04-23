@@ -124,8 +124,8 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, PSTR pCmdLine, 
 
 	HWND hwnd = CreateWindow(
 		L"WindowClass",
-		L"Engine",
-		WS_OVERLAPPEDWINDOW,
+		L"Small World",
+		WS_OVERLAPPED | WS_CAPTION | WS_SYSMENU,
 		CW_USEDEFAULT, CW_USEDEFAULT,
 		GWidth, GHeight,
 		NULL, NULL,

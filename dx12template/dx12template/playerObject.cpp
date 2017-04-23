@@ -116,7 +116,7 @@ CPlayerObject::CPlayerObject()
 
 void CPlayerObject::AddEnergy()
 {
-	m_energyValue = min(1.f, m_energyValue + 0.1f);
+	m_energyValue = min(1.f, m_energyValue + 0.2f);
 }
 
 void CPlayerObject::FillRenderData() const

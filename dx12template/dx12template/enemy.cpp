@@ -168,7 +168,7 @@ void CEnemyObject::TakeDamage(Vec2 const rotation, float const damage)
 		deadObject.m_texutreID = T_DEAD_ENEMY;
 		deadObject.m_rotation.Set(rotation.y, -rotation.x);
 		deadObject.m_offset.Set(0.f, 1.f);
-		deadObject.m_size.Set(15.f, 30.f);
+		deadObject.m_size.Set(25.f, 50.f);
 		deadObject.m_uvTile.x = (rand() % 2) ? -1.f : 1.f;
 
 		GBakeObjects.push_back(deadObject);
