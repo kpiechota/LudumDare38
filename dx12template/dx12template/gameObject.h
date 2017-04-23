@@ -25,6 +25,7 @@ enum ETextures
 	T_HEALTH_ICON,
 	T_VEINS,
 	T_INIT_SCREEN,
+	T_DEATH_SCREEN,
 };
 
 enum ERenderLayer

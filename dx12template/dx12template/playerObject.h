@@ -27,6 +27,7 @@ public:
 	CPlayerObject();
 
 	void AddEnergy();
+	float GetHealth() const { return m_health; }
 
 	virtual void FillRenderData() const override;
 	virtual void Update() override;

@@ -7,14 +7,18 @@ extern CTimer GTimer;
 extern CPlayerObject* GPlayer;
 
 CEnemySpawner::CEnemySpawner()
-	: m_aliveEnemy( 0 )
-	, m_maxEnemySpawn( 5 )
-	, m_maxAliveEnemy( 100 )
-	, m_spawnTime( 5.f )
-	, m_lastSpawn(m_spawnTime)
-	, m_spawnIncTime(15.f)
-	, m_lastSpawnInc(m_spawnIncTime)
 {}
+
+void CEnemySpawner::Init()
+{
+	m_aliveEnemy = 0;
+	m_maxEnemySpawn = 5;
+	m_maxAliveEnemy = 100;
+	m_spawnTime = 5.f;
+	m_lastSpawn = m_spawnTime;
+	m_spawnIncTime = 15.f;
+	m_lastSpawnInc = m_spawnIncTime;
+}
 
 void CEnemySpawner::Update()
 {

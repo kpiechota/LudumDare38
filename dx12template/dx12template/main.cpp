@@ -39,6 +39,53 @@ DXGI_FORMAT GFreeImageToDXGI[] =
 	DXGI_FORMAT_UNKNOWN				
 };
 
+void InitGame()
+{
+	unsigned int const objectToDeleteNum = GGameObjectsToDelete.size();
+	for (unsigned int gameObjectID = 0; gameObjectID < objectToDeleteNum; ++gameObjectID)
+	{
+		delete GGameObjectsToDelete[gameObjectID];
+	}
+	unsigned int const gameObjectsNum = GGameObjects[GGameObjectArray].size();
+	for (unsigned int gameObjectID = 0; gameObjectID < gameObjectsNum; ++gameObjectID)
+	{
+		delete GGameObjects[GGameObjectArray][gameObjectID];
+	}
+	unsigned int const objectToSpawnNum = GGameObjectsToSpawn.size();
+	for (unsigned int gameObjectID = 0; gameObjectID < objectToSpawnNum; ++gameObjectID)
+	{
+		delete GGameObjectsToSpawn[gameObjectID];
+	}
+
+	for (unsigned int layerID = 0; layerID < RL_MAX; ++layerID)
+	{
+		GRenderObjects[layerID].clear();
+	}
+
+	GGameObjectsToDelete.clear();
+	GGameObjectsToSpawn.clear();
+	GGameObjects[GGameObjectArray].clear();
+
+	SRenderObject gameObject;
+	gameObject.m_size = 400.f;
+	gameObject.m_texutreID = T_BACKGROUND;
+	GRenderObjects[RL_BACKGROUND_STATIC].push_back(gameObject);
+
+	gameObject.m_size = GIslandSize;
+	gameObject.m_texutreID = T_ISLAND;
+	GRenderObjects[RL_BACKGROUND_STATIC].push_back(gameObject);
+
+	GPlayer = new CPlayerObject();
+	GGameObjects[GGameObjectArray].push_back(GPlayer);
+
+	gameObject.m_size = 16.f;
+	gameObject.m_texutreID = T_GENERATOR;
+
+	CStaticObject* pStaticObject = new CStaticObject(gameObject, 10000000.f, (Byte)(CF_ENEMY | CF_ENEMY_BULLET | CF_PLAYER), RL_FOREGROUND0);
+	GGameObjects[GGameObjectArray].push_back(pStaticObject);
+
+	GEnemySpawner.Init();
+}
 
 int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, PSTR pCmdLine, INT nCmdShow)
 {
@@ -98,6 +145,7 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, PSTR pCmdLine, 
 		"../content/healthIcon.png",
 		"../content/veins.tif",
 		"../content/initScreen.tif",
+		"../content/deathScreen.tif",
 	};
 
 	GRender.Init();
@@ -146,25 +194,11 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, PSTR pCmdLine, 
 
 	float timeToRender = 0.f;
 
-	SRenderObject gameObject;
-	gameObject.m_size = 400.f;
-	gameObject.m_texutreID = T_BACKGROUND;
-	GRenderObjects[RL_BACKGROUND_STATIC].push_back(gameObject);
-
-	gameObject.m_size = GIslandSize;
-	gameObject.m_texutreID = T_ISLAND;
-	GRenderObjects[RL_BACKGROUND_STATIC].push_back(gameObject);
-
-	GPlayer = new CPlayerObject();
-	GGameObjects[GGameObjectArray].push_back(GPlayer);
-
-	gameObject.m_size = 16.f;
-	gameObject.m_texutreID = T_GENERATOR;
-
-	CStaticObject* pStaticObject = new CStaticObject(gameObject, 10000000.f, (Byte)(CF_ENEMY | CF_ENEMY_BULLET | CF_PLAYER), RL_FOREGROUND0 );
-	GGameObjects[GGameObjectArray].push_back(pStaticObject);
+	InitGame();
 
 	GRender.WaitForResourcesLoad();
+
+	CStaticObject* pDeathScreen = nullptr;
 
 	MSG msg = { 0 };
 	bool run = true;
@@ -238,6 +272,27 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, PSTR pCmdLine, 
 		GGameObjectsToSpawn.clear();
 		currentGameObjectArray.clear();
 		GGameObjectArray = nextGameObjectArray;
+
+		if (GPlayer->GetHealth() <= 0.f)
+		{
+			if (!pDeathScreen)
+			{
+				SRenderObject initDeathObject;
+				initDeathObject.m_shaderID = ST_OBJECT_DRAW_BLEND;
+				initDeathObject.m_texutreID = T_DEATH_SCREEN;
+				initDeathObject.m_size = 400.f;
+
+				pDeathScreen = new CStaticObject(initDeathObject, -1.f, 0, RL_OVERLAY2);
+				GGameObjectsToSpawn.push_back(pDeathScreen);
+
+				GTimer.SetGameScale(0.1f);
+			}
+			else if (GInputManager.IsKeyDown(' ' ))
+			{
+				InitGame();
+				pDeathScreen = nullptr;
+			}
+		}
 	}
 
 	unsigned int const objectToDeleteNum = GGameObjectsToDelete.size();

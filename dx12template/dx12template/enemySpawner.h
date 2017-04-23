@@ -17,6 +17,7 @@ private:
 public:
 	CEnemySpawner();
 
+	void Init();
 	void Update();
 	void EnemyKilled();
 };

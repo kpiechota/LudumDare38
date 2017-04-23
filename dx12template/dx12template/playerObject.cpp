@@ -133,7 +133,7 @@ void CPlayerObject::FillRenderData() const
 
 void CPlayerObject::Update()
 {
-	if ( !m_initScreen )
+	if ( !m_initScreen && 0.f < m_health )
 	{
 		Vec2 moveDir;
 
@@ -216,14 +216,11 @@ void CPlayerObject::Update()
 			}
 		}
 	}
-	else
+	else if (m_initScreen && GInputManager.IsKeyDown(' '))
 	{
-		if (GInputManager.IsKeyDown(' '))
-		{
-			m_initScreen->ForceDelete();
-			m_initScreen = nullptr;
-			GTimer.SetGameScale(1.f);
-		}
+		m_initScreen->ForceDelete();
+		m_initScreen = nullptr;
+		GTimer.SetGameScale(1.f);
 	}
 }
 
