@@ -76,6 +76,11 @@ struct Vec2
 		return Vec2(x * v.x, y * v.y);
 	}
 
+	Vec2 operator/(Vec2 const v) const
+	{
+		return Vec2(x / v.x, y / v.y);
+	}
+
 	Vec2 operator*(float const a) const
 	{
 		return Vec2(x * a, y * a);
@@ -327,17 +332,21 @@ struct Matrix3x3
 		return mat;
 	}
 
-	static Matrix3x3 GetOrthogonalMatrix(float const negative, float const positive)
+	static Matrix3x3 GetOrthogonalMatrix(float const left, float const right, float const bottom, float const top)
 	{
 		Matrix3x3 mat;
 
-		float const d = 1.f / (negative - positive);
-		float const a = -2.f * d;
-		float const b = (negative + positive) * d;
+		float const dX = 1.f / (left - right);
+		float const aX = -2.f * dX;
+		float const bX = (left + right) * dX;
 
-		mat.m_a00 = a;		mat.m_a01 = 0.f;	mat.m_a02 = 0.f;
-		mat.m_a10 = 0.f;	mat.m_a11 = a;		mat.m_a12 = 0.f;
-		mat.m_a20 = b;		mat.m_a21 = b;		mat.m_a22 = 1.f;
+		float const dY = 1.f / (bottom - top);
+		float const aY = -2.f * dY;
+		float const bY = (bottom + top) * dY;
+
+		mat.m_a00 = aX;		mat.m_a01 = 0.f;	mat.m_a02 = bX;
+		mat.m_a10 = 0.f;	mat.m_a11 = aY;		mat.m_a12 = bY;
+		mat.m_a20 = 0.f;		mat.m_a21 = 0.f;		mat.m_a22 = 1.f;
 
 		return mat;
 	}

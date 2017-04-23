@@ -22,8 +22,8 @@
 
 #include "gameObject.h"
 
-extern const int GWidth;
-extern const int GHeight;
+extern int GWidth;
+extern int GHeight;
 
 extern float const GIslandSize;
 

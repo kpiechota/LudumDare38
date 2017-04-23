@@ -183,6 +183,7 @@ public:
 	{
 		switch (key)
 		{
+		case K_ESCAPE:
 		case MSG_DESTROY:
 			PostQuitMessage(0);
 			break;

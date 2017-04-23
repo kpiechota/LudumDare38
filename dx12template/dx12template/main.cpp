@@ -28,10 +28,10 @@ std::vector< CGameObject* > GGameObjectsToDelete;
 CStaticSound GSounds[SET_MAX];
 
 unsigned int GGameObjectArray = 0;
-int const GWidth = 800;
-int const GHeight = 800;
+int GWidth = 800;
+int GHeight = 800;
 float const GIslandSize = 350.f;
-Matrix3x3 GScreenMatrix = Matrix3x3::GetOrthogonalMatrix(-0.5f * ((float)GWidth), 0.5f * (float)GHeight);
+Matrix3x3 GScreenMatrix;
 
 DXGI_FORMAT GFreeImageToDXGI[] =
 {
@@ -117,10 +117,7 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, PSTR pCmdLine, 
 		MessageBox(0, L"RegisterClass FAILED", 0, 0);
 	}
 
-	GSoundEngine.Init();
-
-	GRender.SetWindowWidth(GWidth);
-	GRender.SetWindowHeight(GHeight);
+	
 
 	HWND hwnd = CreateWindow(
 		L"WindowClass",
@@ -136,10 +133,20 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, PSTR pCmdLine, 
 	{
 		MessageBox(0, L"CreateWindow FAILED", 0, 0);
 	}
-
-	GRender.SetHWND(hwnd);
-
+	
 	ShowWindow(hwnd, nCmdShow);
+
+	RECT clientRect;
+	GetClientRect(hwnd, &clientRect);
+	GWidth = clientRect.right - clientRect.left;
+	GHeight = clientRect.bottom - clientRect.top;
+	GScreenMatrix = Matrix3x3::GetOrthogonalMatrix(-0.5f * ((float)GWidth), 0.5f * ((float)GWidth), -0.5f * ((float)GHeight), 0.5f * ((float)GHeight));
+
+	GSoundEngine.Init();
+
+	GRender.SetWindowWidth(GWidth);
+	GRender.SetWindowHeight(GHeight);
+	GRender.SetHWND(hwnd);
 
 	char const* textures[] =
 	{

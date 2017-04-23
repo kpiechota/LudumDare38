@@ -15,7 +15,7 @@ private:
 	enum
 	{
 		FRAME_NUM = 3,
-		MAX_OBJECTS = 1024
+		MAX_OBJECTS = 2048
 	};
 
 #ifdef _DEBUG
