@@ -30,13 +30,24 @@ CGeneratorObject::CGeneratorObject(SRenderObject const& renderObject)
 	, m_health(m_maxHealth)
 	, m_veinsSpawnTime(0.1f)
 	, m_lastVeinsSpawnTime(0.f)
+	, m_hitTime( .1f )
+	, m_lastHitTime( 0.f )
 {
 	m_collisionMask = (Byte)(CF_ENEMY | CF_ENEMY_BULLET | CF_PLAYER);
+
+	SRenderObject bakedGround;
+	bakedGround.m_positionWS = m_renderObject.m_positionWS;
+	bakedGround.m_size = m_renderObject.m_size * 1.75f;
+	bakedGround.m_texutreID = T_GROUND;
+	bakedGround.m_rotation = Vec2::GetRandomOnCircle();
+
+	GBakeObjects.push_back(bakedGround);
 }
 
 void CGeneratorObject::Update()
 {
 	m_lastVeinsSpawnTime -= GTimer.GameDelta();
+	m_lastHitTime -= GTimer.GameDelta();
 
 	if (m_lastVeinsSpawnTime < 0.f)
 	{
@@ -62,6 +73,11 @@ void CGeneratorObject::Update()
 void CGeneratorObject::FillRenderData() const
 {
 	GRenderObjects[RL_FOREGROUND0].push_back(m_renderObject);
+	if (0.f < m_lastHitTime)
+	{
+		GRenderObjects[RL_FOREGROUND0].back().m_colorScale.Set(1.f, 0.f, 0.f, 1.f);
+	}
+
 	DrawHealthBar();
 }
 
@@ -75,9 +91,14 @@ Vec2 CGeneratorObject::GetSize() const
 	return m_renderObject.m_size;
 }
 
-void CGeneratorObject::TakeDamage(float const damage)
+void CGeneratorObject::TakeDamage(Vec2 const rotation, float const damage)
 {
 	m_health = max(0.f, min(m_maxHealth, m_health - damage));
+	if (0.f < damage && m_lastHitTime < -m_hitTime)
+	{
+		m_lastHitTime = m_hitTime;
+	}
+
 	if (m_health <= 0.f)
 	{
 		GSoundEngine.Play2DSound(GSounds[SET_EXPLOSION]);

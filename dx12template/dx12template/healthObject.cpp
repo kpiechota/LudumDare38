@@ -30,10 +30,12 @@ CHealthObject::CHealthObject(SRenderObject const& renderObject)
 	, m_healSpeed(2.f)
 	, m_lastHeal(m_healSpeed)
 	, m_healRadius2(100.f * 100.f)
-	, m_maxHealth(5.f)
+	, m_maxHealth(2.5f)
 	, m_health(m_maxHealth)
 	, m_veinsSpawnTime( 0.2f )
-	, m_lastVeinsSpawnTime( 0.f )
+	, m_lastVeinsSpawnTime(0.f)
+	, m_hitTime(.1f)
+	, m_lastHitTime(0.f)
 {
 	m_collisionMask = (Byte)(CF_ENEMY | CF_ENEMY_BULLET | CF_PLAYER);
 
@@ -44,12 +46,21 @@ CHealthObject::CHealthObject(SRenderObject const& renderObject)
 	m_healthEffectObject.m_size = 100.f;
 	m_healthEffectObject.m_texutreID = T_HEALTH_EFFECT;
 	m_healthEffectObject.m_shaderID = ST_OBJECT_DRAW_BLEND;
+
+	SRenderObject bakedGround;
+	bakedGround.m_positionWS = m_renderObject.m_positionWS;
+	bakedGround.m_size = m_renderObject.m_size * 1.75f;
+	bakedGround.m_texutreID = T_GROUND;
+	bakedGround.m_rotation = Vec2::GetRandomOnCircle();
+
+	GBakeObjects.push_back(bakedGround);
 }
 
 void CHealthObject::Update()
 {
 	m_lastHeal -= GTimer.GameDelta();
 	m_lastVeinsSpawnTime -= GTimer.GameDelta();
+	m_lastHitTime -= GTimer.GameDelta();
 
 	if (m_lastHeal < 0.f)
 	{
@@ -66,7 +77,7 @@ void CHealthObject::Update()
 
 			if (pGameObject != this && pGameObject->CollideWith(CF_ENEMY_BULLET) && !pGameObject->NeedDelete() && (pGameObject->GetPosition() - m_renderObject.m_positionWS).Magnitude2() < m_healRadius2 )
 			{
-				pGameObject->TakeDamage(-0.5f);
+				pGameObject->TakeDamage(m_renderObject.m_rotation,-0.5f);
 			}
 		}
 	}
@@ -95,6 +106,10 @@ void CHealthObject::Update()
 void CHealthObject::FillRenderData() const
 {
 	GRenderObjects[RL_FOREGROUND0].push_back(m_renderObject);
+	if (0.f < m_lastHitTime)
+	{
+		GRenderObjects[RL_FOREGROUND0].back().m_colorScale.Set(1.f, 0.f, 0.f, 1.f);
+	}
 
 	DrawHealthBar();
 }
@@ -114,9 +129,13 @@ bool CHealthObject::NeedDelete() const
 	return m_health <= 0.f;
 }
 
-void CHealthObject::TakeDamage(float const damage)
+void CHealthObject::TakeDamage(Vec2 const rotation, float const damage)
 {
 	m_health = max( 0.f, min(m_maxHealth, m_health - damage) );
+	if (0.f < damage && m_lastHitTime < -m_hitTime)
+	{
+		m_lastHitTime = m_hitTime;
+	}
 	if (m_health <= 0.f)
 	{
 		GSoundEngine.Play2DSound(GSounds[SET_EXPLOSION]);

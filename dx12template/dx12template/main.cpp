@@ -21,6 +21,7 @@ CPlayerObject* GPlayer;
 CGeneratorObject* GGenerator;
 
 std::vector< SRenderObject > GRenderObjects[ RL_MAX ];
+std::vector< SRenderObject > GBakeObjects;
 std::vector< CGameObject* > GGameObjects[2];
 std::vector< CGameObject* > GGameObjectsToSpawn;
 std::vector< CGameObject* > GGameObjectsToDelete;
@@ -68,6 +69,9 @@ void InitGame()
 	GGameObjectsToDelete.clear();
 	GGameObjectsToSpawn.clear();
 	GGameObjects[GGameObjectArray].clear();
+	GBakeObjects.clear();
+
+	GRender.ClearBaked();
 
 	SRenderObject gameObject;
 	gameObject.m_size = 400.f;
@@ -76,6 +80,12 @@ void InitGame()
 
 	gameObject.m_size = GIslandSize;
 	gameObject.m_texutreID = T_ISLAND;
+	GRenderObjects[RL_BACKGROUND_STATIC].push_back(gameObject);
+
+	gameObject.m_size = 400.f;
+	gameObject.m_texutreID = T_BAKED;
+	gameObject.m_shaderID = ST_OBJECT_DRAW_BLEND;
+	gameObject.m_uvTile.y = -1.f;
 	GRenderObjects[RL_BACKGROUND_STATIC].push_back(gameObject);
 
 	GPlayer = new CPlayerObject();
@@ -149,6 +159,8 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, PSTR pCmdLine, 
 		"../content/veins.tif",
 		"../content/initScreen.tif",
 		"../content/deathScreen.tif",
+		"../content/deadEnemy.tif",
+		"../content/ground.png",
 	};
 
 	GRender.Init();

@@ -26,6 +26,9 @@ enum ETextures
 	T_VEINS,
 	T_INIT_SCREEN,
 	T_DEATH_SCREEN,
+	T_DEAD_ENEMY,
+	T_GROUND,
+	T_BAKED,
 };
 
 enum ERenderLayer
@@ -99,10 +102,11 @@ public:
 	virtual Vec2 GetPosition() const = 0;
 	virtual Vec2 GetSize() const = 0;
 	virtual bool NeedDelete() const = 0;
-	virtual void TakeDamage(float const damage) = 0;
+	virtual void TakeDamage(Vec2 const rotation, float const damage) = 0;
 };
 
 extern unsigned int GGameObjectArray;
 extern std::vector< CGameObject* > GGameObjects[2];
 extern std::vector< CGameObject* > GGameObjectsToSpawn;
 extern std::vector< SRenderObject > GRenderObjects[RL_MAX];
+extern std::vector< SRenderObject > GBakeObjects;

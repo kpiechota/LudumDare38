@@ -113,7 +113,7 @@ void CRender::InitRenderTargets()
 	m_rtvDescriptorHandleIncrementSize = m_device->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_RTV);
 
 	D3D12_DESCRIPTOR_HEAP_DESC descDescHeap = {};
-	descDescHeap.NumDescriptors = FRAME_NUM;
+	descDescHeap.NumDescriptors = FRAME_NUM + 1;
 	descDescHeap.Type = D3D12_DESCRIPTOR_HEAP_TYPE_RTV;
 	descDescHeap.Flags = D3D12_DESCRIPTOR_HEAP_FLAG_NONE;
 	CheckResult(m_device->CreateDescriptorHeap(&descDescHeap, IID_PPV_ARGS(&m_renderTargetDH)));
@@ -129,6 +129,27 @@ void CRender::InitRenderTargets()
 		descHandle.ptr += m_rtvDescriptorHandleIncrementSize;
 	}
 	m_frameID = 0;
+
+	D3D12_RESOURCE_DESC bakeTextureDesc = {};
+	bakeTextureDesc.Dimension = D3D12_RESOURCE_DIMENSION_TEXTURE2D;
+	bakeTextureDesc.Width = GWidth;
+	bakeTextureDesc.Height = GHeight;
+	bakeTextureDesc.DepthOrArraySize = 1;
+	bakeTextureDesc.Format = DXGI_FORMAT_B8G8R8A8_UNORM;
+	bakeTextureDesc.SampleDesc.Count = 1;
+	bakeTextureDesc.SampleDesc.Quality = 0;
+	bakeTextureDesc.Layout = D3D12_TEXTURE_LAYOUT_UNKNOWN;
+	bakeTextureDesc.Flags = D3D12_RESOURCE_FLAG_ALLOW_RENDER_TARGET;
+
+	D3D12_CLEAR_VALUE optimizedClearValue = {};
+	optimizedClearValue.Format = DXGI_FORMAT_B8G8R8A8_UNORM;
+	optimizedClearValue.Color[0] = 0.f;
+	optimizedClearValue.Color[1] = 0.f;
+	optimizedClearValue.Color[2] = 0.f;
+	optimizedClearValue.Color[3] = 0.f;
+
+	m_device->CreateCommittedResource(&GHeapPropertiesGPUOnly, D3D12_HEAP_FLAG_NONE, &bakeTextureDesc, D3D12_RESOURCE_STATE_RENDER_TARGET, &optimizedClearValue, IID_PPV_ARGS(&m_bakeTexture));
+	m_device->CreateRenderTargetView(m_bakeTexture, nullptr, descHandle);
 }
 
 void CRender::InitRootSignatures()
@@ -138,7 +159,12 @@ void CRender::InitRootSignatures()
 		{ D3D12_DESCRIPTOR_RANGE_TYPE_SRV, 1, 0, 0, D3D12_DESCRIPTOR_RANGE_OFFSET_APPEND }
 	};
 
-	D3D12_ROOT_PARAMETER rootParameters[2];
+	D3D12_DESCRIPTOR_RANGE bakedDescriptorRange[] =
+	{
+		{ D3D12_DESCRIPTOR_RANGE_TYPE_SRV, 1, 1, 0, D3D12_DESCRIPTOR_RANGE_OFFSET_APPEND }
+	};
+
+	D3D12_ROOT_PARAMETER rootParameters[3];
 
 	rootParameters[0].ParameterType = D3D12_ROOT_PARAMETER_TYPE_CBV;
 	rootParameters[0].Descriptor = {0, 0};
@@ -147,6 +173,10 @@ void CRender::InitRootSignatures()
 	rootParameters[1].ParameterType = D3D12_ROOT_PARAMETER_TYPE_DESCRIPTOR_TABLE;
 	rootParameters[1].DescriptorTable = { 1, descriptorRange };
 	rootParameters[1].ShaderVisibility = D3D12_SHADER_VISIBILITY_PIXEL;
+
+	rootParameters[2].ParameterType = D3D12_ROOT_PARAMETER_TYPE_DESCRIPTOR_TABLE;
+	rootParameters[2].DescriptorTable = { 1, bakedDescriptorRange };
+	rootParameters[2].ShaderVisibility = D3D12_SHADER_VISIBILITY_PIXEL;
 
 	D3D12_STATIC_SAMPLER_DESC samplers[] =
 	{
@@ -177,6 +207,11 @@ void CRender::InitRootSignatures()
 	ID3DBlob* signature;
 	CheckResult(D3D12SerializeRootSignature(&descRootSignature, D3D_ROOT_SIGNATURE_VERSION_1, &signature, nullptr));
 	CheckResult(m_device->CreateRootSignature(0, signature->GetBufferPointer(), signature->GetBufferSize(), IID_PPV_ARGS(&m_mainRS)));
+	signature->Release();
+
+	descRootSignature.NumParameters = 3;
+	CheckResult(D3D12SerializeRootSignature(&descRootSignature, D3D_ROOT_SIGNATURE_VERSION_1, &signature, nullptr));
+	CheckResult(m_device->CreateRootSignature(0, signature->GetBufferPointer(), signature->GetBufferSize(), IID_PPV_ARGS(&m_bakeRS)));
 	signature->Release();
 }
 
@@ -220,8 +255,8 @@ void CRender::InitShaders()
 		/*RenderTarget[0].SrcBlend*/				,D3D12_BLEND_ONE
 		/*RenderTarget[0].DestBlend*/				,D3D12_BLEND_ZERO
 		/*RenderTarget[0].BlendOp*/					,D3D12_BLEND_OP_ADD
-		/*RenderTarget[0].SrcBlendAlpha*/			,D3D12_BLEND_ZERO
-		/*RenderTarget[0].DestBlendAlpha*/			,D3D12_BLEND_ZERO
+		/*RenderTarget[0].SrcBlendAlpha*/			,D3D12_BLEND_ONE
+		/*RenderTarget[0].DestBlendAlpha*/			,D3D12_BLEND_ONE
 		/*RenderTarget[0].BlendOpAlpha*/			,D3D12_BLEND_OP_ADD
 		/*RenderTarget[0].LogicOp*/					,D3D12_LOGIC_OP_NOOP
 		/*RenderTarget[0].RenderTargetWriteMask*/	,D3D12_COLOR_WRITE_ENABLE_ALL
@@ -273,6 +308,56 @@ void CRender::InitShaders()
 
 	vsShader->Release();
 	psShader->Release();
+
+	descPSO.pRootSignature = m_bakeRS;
+	LoadShader(L"../shaders/bake.hlsl", nullptr, "vsMain", "vs_5_1", &vsShader);
+	descPSO.VS = { vsShader->GetBufferPointer(), vsShader->GetBufferSize() };
+
+	LoadShader(L"../shaders/bake.hlsl", nullptr, "psMain", "ps_5_1", &psShader);
+	descPSO.PS = { psShader->GetBufferPointer(), psShader->GetBufferSize() };
+
+	CheckResult(m_device->CreateGraphicsPipelineState(&descPSO, IID_PPV_ARGS(&m_bakeShader)));
+
+	vsShader->Release();
+	psShader->Release();
+}
+
+inline void CRender::Bake(unsigned int& renderObjectID)
+{
+	ID3D12GraphicsCommandList* commandList = m_frameData[m_frameID].m_frameCL;
+
+	D3D12_CPU_DESCRIPTOR_HANDLE renderTargetDH = m_renderTargetDH->GetCPUDescriptorHandleForHeapStart();
+	renderTargetDH.ptr += FRAME_NUM * m_rtvDescriptorHandleIncrementSize;
+	commandList->OMSetRenderTargets(1, &renderTargetDH, true, nullptr);
+
+	commandList->SetGraphicsRootSignature(m_bakeRS);
+	D3D12_GPU_DESCRIPTOR_HANDLE texturesHandle = m_texturesDH->GetGPUDescriptorHandleForHeapStart();
+
+	D3D12_GPU_DESCRIPTOR_HANDLE maskTexture = texturesHandle;
+	maskTexture.ptr += m_srvDescriptorHandleIncrementSize * T_ISLAND;
+	commandList->SetGraphicsRootDescriptorTable(1, maskTexture);
+
+	unsigned int const objectsNum = GBakeObjects.size();
+	for (unsigned int objectID = 0; objectID < objectsNum; ++objectID)
+	{
+		CBObject& cbObject = m_frameData[m_frameID].m_pResourceData[renderObjectID];
+		SRenderObject const& gameObject = GBakeObjects[objectID];
+		cbObject.m_objectToScreen = Mul(GScreenMatrix, Matrix3x3::GetTranslateRotationSize(gameObject.m_positionWS, gameObject.m_rotation, gameObject.m_size));
+		cbObject.m_colorScale = gameObject.m_colorScale;
+		cbObject.m_offset = gameObject.m_offset;
+		cbObject.m_uvTile = gameObject.m_uvTile;
+		cbObject.m_uvOffset = gameObject.m_uvOffset;
+
+		commandList->SetGraphicsRootConstantBufferView(0, m_frameData[m_frameID].m_frameResource->GetGPUVirtualAddress() + (D3D12_GPU_VIRTUAL_ADDRESS)(renderObjectID * sizeof(CBObject)));
+		D3D12_GPU_DESCRIPTOR_HANDLE texture = texturesHandle;
+		texture.ptr += m_srvDescriptorHandleIncrementSize * gameObject.m_texutreID;
+
+		commandList->SetGraphicsRootDescriptorTable(2, texture);
+		commandList->DrawInstanced(4, 1, 0, 0);
+		++renderObjectID;
+	}
+
+	GBakeObjects.clear();
 }
 
 void CRender::Init()
@@ -325,33 +410,42 @@ void CRender::DrawFrame()
 	ID3D12GraphicsCommandList* commandList = m_frameData[m_frameID].m_frameCL;
 
 	m_frameData[m_frameID].m_frameCA->Reset();
-	commandList->Reset(m_frameData[m_frameID].m_frameCA, nullptr);
+	commandList->Reset(m_frameData[m_frameID].m_frameCA, m_bakeShader);
+
+	commandList->RSSetScissorRects(1, &m_scissorRect);
+	commandList->RSSetViewports(1, &m_viewport);
+	commandList->SetDescriptorHeaps(1, &m_texturesDH);
+	commandList->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLESTRIP);
+
+	unsigned int renderObjectID = 0;
+	Bake(renderObjectID);
 
 	D3D12_CPU_DESCRIPTOR_HANDLE renderTargetDH = m_renderTargetDH->GetCPUDescriptorHandleForHeapStart();
 	renderTargetDH.ptr += m_frameID * m_rtvDescriptorHandleIncrementSize;
 
-	D3D12_RESOURCE_BARRIER renderTargetBarrier = {};
-	renderTargetBarrier.Type = D3D12_RESOURCE_BARRIER_TYPE_TRANSITION;
-	renderTargetBarrier.Flags = D3D12_RESOURCE_BARRIER_FLAG_NONE;
-	renderTargetBarrier.Transition.pResource = m_rederTarget[m_frameID];
-	renderTargetBarrier.Transition.StateAfter = D3D12_RESOURCE_STATE_RENDER_TARGET;
-	renderTargetBarrier.Transition.StateBefore = D3D12_RESOURCE_STATE_PRESENT;
-	renderTargetBarrier.Transition.Subresource = D3D12_RESOURCE_BARRIER_ALL_SUBRESOURCES;
+	D3D12_RESOURCE_BARRIER barriers[2];
+	barriers[0].Type = D3D12_RESOURCE_BARRIER_TYPE_TRANSITION;
+	barriers[0].Flags = D3D12_RESOURCE_BARRIER_FLAG_NONE;
+	barriers[0].Transition.pResource = m_rederTarget[m_frameID];
+	barriers[0].Transition.StateAfter = D3D12_RESOURCE_STATE_RENDER_TARGET;
+	barriers[0].Transition.StateBefore = D3D12_RESOURCE_STATE_PRESENT;
+	barriers[0].Transition.Subresource = D3D12_RESOURCE_BARRIER_ALL_SUBRESOURCES;
 
-	commandList->ResourceBarrier(1, &renderTargetBarrier);
+	barriers[1].Type = D3D12_RESOURCE_BARRIER_TYPE_TRANSITION;
+	barriers[1].Flags = D3D12_RESOURCE_BARRIER_FLAG_NONE;
+	barriers[1].Transition.pResource = m_bakeTexture;
+	barriers[1].Transition.StateAfter = D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE;
+	barriers[1].Transition.StateBefore = D3D12_RESOURCE_STATE_RENDER_TARGET;
+	barriers[1].Transition.Subresource = D3D12_RESOURCE_BARRIER_ALL_SUBRESOURCES;
+
+	commandList->ResourceBarrier(2, barriers);
 
 	commandList->OMSetRenderTargets(1, &renderTargetDH, true, nullptr);
-
-	commandList->RSSetScissorRects(1, &m_scissorRect);
-	commandList->RSSetViewports(1, &m_viewport);
-
+	
 	commandList->SetGraphicsRootSignature(m_mainRS);
-	commandList->SetDescriptorHeaps(1, &m_texturesDH);
-	commandList->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLESTRIP);
 	D3D12_GPU_DESCRIPTOR_HANDLE texturesHandle = m_texturesDH->GetGPUDescriptorHandleForHeapStart();
 
 	Byte currentShader = ST_MAX;
-	unsigned int renderObjectID = 0;
 	for (unsigned int layerID = 0; layerID < RL_MAX; ++layerID)
 	{
 		unsigned int const objectsNum = GRenderObjects[layerID].size();
@@ -381,10 +475,13 @@ void CRender::DrawFrame()
 		}
 	}
 
-	renderTargetBarrier.Transition.StateAfter = D3D12_RESOURCE_STATE_PRESENT;
-	renderTargetBarrier.Transition.StateBefore = D3D12_RESOURCE_STATE_RENDER_TARGET;
+	barriers[0].Transition.StateAfter = D3D12_RESOURCE_STATE_PRESENT;
+	barriers[0].Transition.StateBefore = D3D12_RESOURCE_STATE_RENDER_TARGET;
 
-	commandList->ResourceBarrier(1, &renderTargetBarrier);
+	barriers[1].Transition.StateAfter = D3D12_RESOURCE_STATE_RENDER_TARGET;
+	barriers[1].Transition.StateBefore = D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE;
+
+	commandList->ResourceBarrier(2, barriers);
 
 	CheckResult(commandList->Close());
 
@@ -428,6 +525,10 @@ void CRender::Release()
 		frameData.m_pResourceData = nullptr;
 	}
 
+	m_bakeRS->Release();
+	m_bakeShader->Release();
+
+	m_bakeTexture->Release();
 	unsigned int const texutreNum = m_texturesResources.size();
 	for (unsigned int texutreID = 0; texutreID < texutreNum; ++texutreID)
 	{
@@ -449,7 +550,7 @@ void CRender::BeginLoadResources(unsigned int const textureNum)
 	m_srvDescriptorHandleIncrementSize = m_device->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV);
 
 	D3D12_DESCRIPTOR_HEAP_DESC textureHeapDesc = {};
-	textureHeapDesc.NumDescriptors = textureNum;
+	textureHeapDesc.NumDescriptors = textureNum + 1;
 	textureHeapDesc.Type = D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV;
 	textureHeapDesc.Flags = D3D12_DESCRIPTOR_HEAP_FLAG_SHADER_VISIBLE;
 	CheckResult(m_device->CreateDescriptorHeap(&textureHeapDesc, IID_PPV_ARGS(&m_texturesDH)));
@@ -526,6 +627,11 @@ void CRender::WaitForResourcesLoad()
 {
 	std::vector< D3D12_RESOURCE_BARRIER > resourcesBarruers;
 
+	CheckResult(m_mainCQ->Signal(m_fence, m_fenceValue));
+	CheckResult(m_fence->SetEventOnCompletion(m_fenceValue, m_fenceEvent));
+	++m_fenceValue;
+	WaitForSingleObject(m_fenceEvent, INFINITE);
+
 	m_mainCA->Reset();
 	m_mainCL->Reset(m_mainCA, nullptr);
 
@@ -576,6 +682,37 @@ void CRender::WaitForResourcesLoad()
 		m_texturesUploadResources[texutreID]->Release();
 	}
 
+	srvDesc.Format = DXGI_FORMAT_B8G8R8A8_UNORM;
+	m_device->CreateShaderResourceView(m_bakeTexture, &srvDesc, textureDH);
+
 	m_texturesUploadResources.clear();
 	m_texturesUploadResources.shrink_to_fit();
+}
+
+void CRender::ClearBaked()
+{
+	CheckResult(m_mainCQ->Signal(m_fence, m_fenceValue));
+	CheckResult(m_fence->SetEventOnCompletion(m_fenceValue, m_fenceEvent));
+	++m_fenceValue;
+	WaitForSingleObject(m_fenceEvent, INFINITE);
+
+	ID3D12GraphicsCommandList* commandList = m_mainCL;
+
+	m_mainCA->Reset();
+	commandList->Reset(m_mainCA, nullptr);
+
+	D3D12_CPU_DESCRIPTOR_HANDLE renderTargetDH = m_renderTargetDH->GetCPUDescriptorHandleForHeapStart();
+	renderTargetDH.ptr += FRAME_NUM * m_rtvDescriptorHandleIncrementSize;
+
+	commandList->OMSetRenderTargets(1, &renderTargetDH, true, nullptr);
+
+	commandList->RSSetScissorRects(1, &m_scissorRect);
+	commandList->RSSetViewports(1, &m_viewport);
+	
+	float const clearColor[] = { 0.f, 0.f, 0.f, 0.f };
+	commandList->ClearRenderTargetView(renderTargetDH, clearColor, 0, nullptr);
+
+	CheckResult(commandList->Close());
+
+	m_mainCQ->ExecuteCommandLists(1, (ID3D12CommandList**)(&commandList));
 }

@@ -21,5 +21,5 @@ public:
 	virtual Vec2 GetPosition() const override;
 	virtual Vec2 GetSize() const override;
 	virtual bool NeedDelete() const override;
-	virtual void TakeDamage(float const damage) override {}
+	virtual void TakeDamage(Vec2 const rotation, float const damage) override {}
 };

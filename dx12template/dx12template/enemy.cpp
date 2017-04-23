@@ -156,12 +156,21 @@ bool CEnemyObject::NeedDelete() const
 	return m_health <= 0.f;
 }
 
-void CEnemyObject::TakeDamage(float const damage)
+void CEnemyObject::TakeDamage(Vec2 const rotation, float const damage)
 {
 	m_health -= damage;
 
 	if (m_health <= 0.f)
 	{
 		GEnemySpawner.EnemyKilled();
+
+		SRenderObject deadObject = m_renderObject;
+		deadObject.m_texutreID = T_DEAD_ENEMY;
+		deadObject.m_rotation.Set(rotation.y, -rotation.x);
+		deadObject.m_offset.Set(0.f, 1.f);
+		deadObject.m_size.Set(15.f, 30.f);
+		deadObject.m_uvTile.x = (rand() % 2) ? -1.f : 1.f;
+
+		GBakeObjects.push_back(deadObject);
 	}
 }

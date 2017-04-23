@@ -66,12 +66,22 @@ CTurretObject::CTurretObject(SRenderObject const& renderObject)
 	, m_shootRadius2(150.f * 150.f)
 	, m_maxHealth(5.f)
 	, m_health(m_maxHealth)
-	, m_collisionSize( 12.f )
+	, m_collisionSize(12.f)
+	, m_hitTime(.1f)
+	, m_lastHitTime(0.f)
 {
 	m_collisionMask = (Byte)(CF_ENEMY | CF_ENEMY_BULLET | CF_PLAYER);
 
 	m_renderObject.m_size = 20.f;
 	m_renderObject.m_texutreID = T_TURRET;
+
+	SRenderObject bakedGround;
+	bakedGround.m_positionWS = m_renderObject.m_positionWS;
+	bakedGround.m_size = m_renderObject.m_size * 1.75f;
+	bakedGround.m_texutreID = T_GROUND;
+	bakedGround.m_rotation = Vec2::GetRandomOnCircle();
+
+	GBakeObjects.push_back(bakedGround);
 }
 
 void CTurretObject::Update()
@@ -79,6 +89,7 @@ void CTurretObject::Update()
 	Vec2 const nearestPoint = FindNearestObject();
 
 	m_lastShoot -= GTimer.GameDelta();
+	m_lastHitTime -= GTimer.GameDelta();
 	float const nearestMagnitude2 = nearestPoint.Magnitude2();
 	if (0.f < nearestMagnitude2 && nearestMagnitude2 < m_shootRadius2)
 	{
@@ -103,6 +114,10 @@ void CTurretObject::Update()
 void CTurretObject::FillRenderData() const
 {
 	GRenderObjects[RL_FOREGROUND0].push_back(m_renderObject);
+	if (0.f < m_lastHitTime)
+	{
+		GRenderObjects[RL_FOREGROUND0].back().m_colorScale.Set(1.f, 0.f, 0.f, 1.f);
+	}
 
 	DrawHealthBar();
 }
@@ -122,9 +137,13 @@ bool CTurretObject::NeedDelete() const
 	return m_health <= 0.f;
 }
 
-void CTurretObject::TakeDamage(float const damage)
+void CTurretObject::TakeDamage(Vec2 const rotation, float const damage)
 {
 	m_health = max(0.f, min(m_maxHealth, m_health - damage));
+	if (0.f < damage && m_lastHitTime < -m_hitTime)
+	{
+		m_lastHitTime = m_hitTime;
+	}
 	if (m_health <= 0.f)
 	{
 		GSoundEngine.Play2DSound(GSounds[SET_EXPLOSION]);

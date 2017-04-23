@@ -301,9 +301,9 @@ struct Matrix3x3
 
 	void SetTranslateRotationSize(Vec2 const translate, Vec2 const rotation, Vec2 const size)
 	{
-		m_a00 = +rotation.x * size.x;	m_a01 = rotation.y * size.y;	m_a02 = 0.f;
-		m_a10 = -rotation.y * size.x;	m_a11 = rotation.x * size.y;	m_a12 = 0.f;
-		m_a20 = translate.x;			m_a21 = translate.y;			m_a22 = 1.f;
+		m_a00 = +rotation.x * size.x;		m_a01 = -rotation.y * size.y;		m_a02 = translate.x;
+		m_a10 = rotation.y * size.x;		m_a11 = rotation.x * size.y;		m_a12 = translate.y;
+		m_a20 = 0.f;						m_a21 = 0.f;						m_a22 = 1.f;
 	}
 
 	void SetOrthogonalMatrix(float const negative, float const positive)
@@ -320,8 +320,8 @@ struct Matrix3x3
 	static Matrix3x3 GetTranslateRotationSize(Vec2 const translate, Vec2 const rotation, Vec2 const size)
 	{
 		Matrix3x3 mat;
-		mat.m_a00 = +rotation.x * size.x;		mat.m_a01 = -rotation.y * size.x;		mat.m_a02 = translate.x;
-		mat.m_a10 = rotation.y * size.y;		mat.m_a11 = rotation.x * size.y;		mat.m_a12 = translate.y;
+		mat.m_a00 = +rotation.x * size.x;		mat.m_a01 = -rotation.y * size.y;		mat.m_a02 = translate.x;
+		mat.m_a10 = rotation.y * size.x;		mat.m_a11 = rotation.x * size.y;		mat.m_a12 = translate.y;
 		mat.m_a20 = 0.f;						mat.m_a21 = 0.f;						mat.m_a22 = 1.f;
 
 		return mat;

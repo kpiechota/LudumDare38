@@ -239,7 +239,7 @@ Vec2 CPlayerObject::GetSize() const
 	return m_renderObject.m_size;
 }
 
-void CPlayerObject::TakeDamage(float const damage)
+void CPlayerObject::TakeDamage(Vec2 const rotation, float const damage)
 {
 	m_health = max( 0.f, min(m_maxHealth, m_health - damage) );
 }

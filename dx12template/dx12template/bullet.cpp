@@ -19,7 +19,7 @@ void CBullet::CollisionTest()
 
 			if (magnitude2 < radius2 && 0.f < magnitude2)
 			{
-				pGameObject->TakeDamage(m_damage);
+				pGameObject->TakeDamage(m_renderObject.m_rotation, m_damage);
 				m_lifeTime = -1.f;
 			}
 		}

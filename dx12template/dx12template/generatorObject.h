@@ -10,6 +10,8 @@ private:
 	float m_health;
 	float m_veinsSpawnTime;
 	float m_lastVeinsSpawnTime;
+	float m_hitTime;
+	float m_lastHitTime;
 
 private:
 	inline void DrawHealthBar() const;
@@ -23,5 +25,5 @@ public:
 	virtual Vec2 GetPosition() const override;
 	virtual Vec2 GetSize() const override;
 	virtual bool NeedDelete() const override { return m_health < 0.f; }
-	virtual void TakeDamage(float const damage) override;
+	virtual void TakeDamage(Vec2 const rotation, float const damage) override;
 };

@@ -50,7 +50,11 @@ private:
 	ID3D12RootSignature*			m_mainRS;
 	ID3D12PipelineState*			m_shaders[ST_MAX];
 
+	ID3D12RootSignature*			m_bakeRS;
+	ID3D12PipelineState*			m_bakeShader;
+
 	ID3D12DescriptorHeap*			m_texturesDH;
+	ID3D12Resource*					m_bakeTexture;
 	std::vector< ID3D12Resource* >	m_texturesResources;
 	std::vector< ID3D12Resource* >	m_texturesUploadResources;
 
@@ -73,6 +77,8 @@ private:
 	inline void LoadShader(LPCWSTR pFileName, D3D_SHADER_MACRO const* pDefines, LPCSTR pEmtryPoint, LPCSTR pTarget, ID3DBlob** ppCode) const;
 	void InitShaders();
 
+	inline void Bake(unsigned int& renderObjectID);
+
 public:
 	void Init();
 	void DrawFrame();
@@ -82,6 +88,8 @@ public:
 	void LoadResource(STexture const& texture);
 	void EndLoadResources();
 	void WaitForResourcesLoad();
+
+	void ClearBaked();
 
 public: //Getters\setters
 	void SetWindowWidth(int const wndWidth) { m_wndWidth = wndWidth; }
