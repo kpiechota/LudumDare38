@@ -224,6 +224,8 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, PSTR pCmdLine, 
 		}
 
 
+		GRenderObjects[RL_BACKGROUND_STATIC][0].m_uvOffset.x += GTimer.GameDelta();
+
 		for (unsigned int gameObjectID = 0; gameObjectID < gameObjectsNum; ++gameObjectID)
 		{
 			currentGameObjectArray[gameObjectID]->Update();
