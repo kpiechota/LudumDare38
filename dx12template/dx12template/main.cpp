@@ -93,6 +93,7 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, PSTR pCmdLine, 
 		"../content/enemy.png",
 		"../content/turret.png",
 		"../content/health.png",
+		"../content/healthEffect.tif",
 	};
 
 	GRender.Init();
@@ -158,7 +159,7 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, PSTR pCmdLine, 
 
 	CStaticObject* pStaticObject = new CStaticObject(gameObject);
 	GGameObjects[GGameObjectArray].push_back(pStaticObject);
-	
+
 	GRender.WaitForResourcesLoad();
 
 	MSG msg = { 0 };

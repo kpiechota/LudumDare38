@@ -220,7 +220,7 @@ void CRender::InitShaders()
 		/*RenderTarget[0].SrcBlend*/				,D3D12_BLEND_ONE
 		/*RenderTarget[0].DestBlend*/				,D3D12_BLEND_ZERO
 		/*RenderTarget[0].BlendOp*/					,D3D12_BLEND_OP_ADD
-		/*RenderTarget[0].SrcBlendAlpha*/			,D3D12_BLEND_ONE
+		/*RenderTarget[0].SrcBlendAlpha*/			,D3D12_BLEND_ZERO
 		/*RenderTarget[0].DestBlendAlpha*/			,D3D12_BLEND_ZERO
 		/*RenderTarget[0].BlendOpAlpha*/			,D3D12_BLEND_OP_ADD
 		/*RenderTarget[0].LogicOp*/					,D3D12_LOGIC_OP_NOOP
@@ -264,7 +264,12 @@ void CRender::InitShaders()
 	LoadShader(L"../shaders/objectDraw.hlsl", nullptr, "psMain", "ps_5_1", &psShader);
 	descPSO.PS = { psShader->GetBufferPointer(), psShader->GetBufferSize() };
 
-	CheckResult(m_device->CreateGraphicsPipelineState(&descPSO, IID_PPV_ARGS(&m_mainPSO)));
+	CheckResult(m_device->CreateGraphicsPipelineState(&descPSO, IID_PPV_ARGS(&m_shaders[ST_OBJECT_DRAW])));
+
+	descPSO.BlendState.RenderTarget[0].BlendEnable = TRUE;
+	descPSO.BlendState.RenderTarget[0].DestBlend = D3D12_BLEND_INV_SRC_ALPHA;
+	descPSO.BlendState.RenderTarget[0].SrcBlend = D3D12_BLEND_SRC_ALPHA;
+	CheckResult(m_device->CreateGraphicsPipelineState(&descPSO, IID_PPV_ARGS(&m_shaders[ST_OBJECT_DRAW_BLEND])));
 
 	vsShader->Release();
 	psShader->Release();
@@ -320,7 +325,7 @@ void CRender::DrawFrame()
 	ID3D12GraphicsCommandList* commandList = m_frameData[m_frameID].m_frameCL;
 
 	m_frameData[m_frameID].m_frameCA->Reset();
-	commandList->Reset(m_frameData[m_frameID].m_frameCA, m_mainPSO);
+	commandList->Reset(m_frameData[m_frameID].m_frameCA, nullptr);
 
 	D3D12_CPU_DESCRIPTOR_HANDLE renderTargetDH = m_renderTargetDH->GetCPUDescriptorHandleForHeapStart();
 	renderTargetDH.ptr += m_frameID * m_rtvDescriptorHandleIncrementSize;
@@ -345,6 +350,7 @@ void CRender::DrawFrame()
 	commandList->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLESTRIP);
 	D3D12_GPU_DESCRIPTOR_HANDLE texturesHandle = m_texturesDH->GetGPUDescriptorHandleForHeapStart();
 
+	Byte currentShader = ST_MAX;
 	unsigned int renderObjectID = 0;
 	for (unsigned int layerID = 0; layerID < RL_MAX; ++layerID)
 	{
@@ -360,6 +366,12 @@ void CRender::DrawFrame()
 			commandList->SetGraphicsRootConstantBufferView(0, m_frameData[m_frameID].m_frameResource->GetGPUVirtualAddress() + (D3D12_GPU_VIRTUAL_ADDRESS)(renderObjectID * sizeof(CBObject)));
 			D3D12_GPU_DESCRIPTOR_HANDLE texture = texturesHandle;
 			texture.ptr += m_srvDescriptorHandleIncrementSize * gameObject.m_texutreID;
+
+			if (currentShader != gameObject.m_shaderID)
+			{
+				commandList->SetPipelineState(m_shaders[gameObject.m_shaderID]);
+				currentShader = gameObject.m_shaderID;
+			}
 
 			commandList->SetGraphicsRootDescriptorTable(1, texture);
 			commandList->DrawInstanced(4, 1, 0, 0);
@@ -395,7 +407,10 @@ void CRender::Release()
 	m_mainCA->Release();
 	m_mainCL->Release();
 
-	m_mainPSO->Release();
+	for (unsigned int shaderID = 0; shaderID < ST_MAX; ++shaderID)
+	{
+		m_shaders[shaderID]->Release();
+	}
 	m_mainRS->Release();
 	m_renderTargetDH->Release();
 	m_texturesDH->Release();

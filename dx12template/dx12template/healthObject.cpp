@@ -1,4 +1,5 @@
 #include "healthObject.h"
+#include "healthEffectObject.h"
 #include "timer.h"
 
 extern CTimer GTimer;
@@ -24,16 +25,21 @@ void CHealthObject::DrawHealthBar() const
 
 CHealthObject::CHealthObject(SRenderObject const& renderObject)
 	: m_renderObject(renderObject)
-	, m_healSpeed(1.f)
+	, m_healSpeed(2.f)
 	, m_lastHeal(m_healSpeed)
 	, m_healRadius2(100.f * 100.f)
-	, m_maxHealth(25.f)
-	, m_health(15.f)
+	, m_maxHealth(15.f)
+	, m_health(m_maxHealth)
 {
 	m_collisionMask = (Byte)(CF_ENEMY | CF_ENEMY_BULLET | CF_PLAYER);
 
 	m_renderObject.m_size = 12.f;
 	m_renderObject.m_texutreID = T_HEALTH;
+
+	m_healthEffectObject.m_positionWS = m_renderObject.m_positionWS;
+	m_healthEffectObject.m_size = 100.f;
+	m_healthEffectObject.m_texutreID = T_HEALTH_EFFECT;
+	m_healthEffectObject.m_shaderID = ST_OBJECT_DRAW_BLEND;
 }
 
 void CHealthObject::Update()
@@ -41,6 +47,9 @@ void CHealthObject::Update()
 	m_lastHeal -= GTimer.GameDelta();
 	if (m_lastHeal < 0.f)
 	{
+		CHealthEffectObject* healthEffect = new CHealthEffectObject(m_healthEffectObject, .5f);
+		GGameObjectsToSpawn.push_back(healthEffect);
+
 		m_lastHeal = m_healSpeed;
 		std::vector< CGameObject* > const& currentGameObjectArray = GGameObjects[GGameObjectArray];
 		unsigned int const gameObjectsNum = currentGameObjectArray.size();
@@ -50,7 +59,7 @@ void CHealthObject::Update()
 
 			if (pGameObject != this && pGameObject->CollideWith(CF_ENEMY_BULLET) && !pGameObject->NeedDelete() && (pGameObject->GetPosition() - m_renderObject.m_positionWS).Magnitude2() < m_healRadius2 )
 			{
-				pGameObject->TakeDamage(-5.f);
+				pGameObject->TakeDamage(-1.5f);
 			}
 		}
 	}
@@ -58,7 +67,7 @@ void CHealthObject::Update()
 
 void CHealthObject::FillRenderData() const
 {
-	GRenderObjects[RL_FOREGROUND].push_back(m_renderObject);
+	GRenderObjects[RL_FOREGROUND0].push_back(m_renderObject);
 
 	DrawHealthBar();
 }

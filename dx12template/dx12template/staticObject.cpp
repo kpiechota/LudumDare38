@@ -8,7 +8,7 @@ CStaticObject::CStaticObject(SRenderObject const& renderObject)
 
 void CStaticObject::FillRenderData() const
 {
-	GRenderObjects[RL_FOREGROUND].push_back(m_renderObject);
+	GRenderObjects[RL_FOREGROUND0].push_back(m_renderObject);
 }
 
 Vec2 CStaticObject::GetPosition() const

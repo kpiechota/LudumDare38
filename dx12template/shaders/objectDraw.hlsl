@@ -30,9 +30,9 @@ PSInput vsMain( uint vertexID : SV_VertexID )
 
 float4 psMain(PSInput input) : SV_TARGET0
 {
-	const float4 color = DiffTex.Sample(Sampler, input.m_uv);
+	const float4 color = DiffTex.Sample(Sampler, input.m_uv) * ColorScale;
 	
-	clip(color.a - 0.1f);
+	clip(color.a - 0.002f);
 	
-	return color * ColorScale;
+	return color;
 }

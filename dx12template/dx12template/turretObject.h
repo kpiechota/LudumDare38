@@ -10,6 +10,7 @@ private:
 	float m_shootRadius2;
 	float m_maxHealth;
 	float m_health;
+	float m_collisionSize;
 
 private:
 	inline void DrawHealthBar() const;

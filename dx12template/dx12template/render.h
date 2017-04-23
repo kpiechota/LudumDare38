@@ -48,7 +48,7 @@ private:
 	SRenderFrameData				m_frameData[FRAME_NUM];
 
 	ID3D12RootSignature*			m_mainRS;
-	ID3D12PipelineState*			m_mainPSO;
+	ID3D12PipelineState*			m_shaders[ST_MAX];
 
 	ID3D12DescriptorHeap*			m_texturesDH;
 	std::vector< ID3D12Resource* >	m_texturesResources;

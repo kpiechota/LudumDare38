@@ -134,7 +134,7 @@ void CEnemyObject::Update()
 
 void CEnemyObject::FillRenderData() const
 {
-	GRenderObjects[RL_FOREGROUND].push_back(m_renderObject);
+	GRenderObjects[RL_FOREGROUND0].push_back(m_renderObject);
 
 	DrawHealthBar();
 }

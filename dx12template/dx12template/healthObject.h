@@ -5,6 +5,8 @@ class CHealthObject : public CGameObject
 {
 private:
 	SRenderObject m_renderObject;
+	SRenderObject m_healthEffectObject;
+
 	float m_healSpeed;
 	float m_lastHeal;
 	float m_healRadius2;

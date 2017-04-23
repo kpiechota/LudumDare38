@@ -63,12 +63,13 @@ CTurretObject::CTurretObject(SRenderObject const& renderObject)
 	, m_shootSpeed(0.3f)
 	, m_lastShoot(0.f)
 	, m_shootRadius2(150.f * 150.f)
-	, m_maxHealth(30.f)
+	, m_maxHealth(20.f)
 	, m_health(m_maxHealth)
+	, m_collisionSize( 12.f )
 {
 	m_collisionMask = (Byte)(CF_ENEMY | CF_ENEMY_BULLET | CF_PLAYER);
 
-	m_renderObject.m_size = 12.f;
+	m_renderObject.m_size = 20.f;
 	m_renderObject.m_texutreID = T_TURRET;
 }
 
@@ -99,7 +100,7 @@ void CTurretObject::Update()
 
 void CTurretObject::FillRenderData() const
 {
-	GRenderObjects[RL_FOREGROUND].push_back(m_renderObject);
+	GRenderObjects[RL_FOREGROUND0].push_back(m_renderObject);
 
 	DrawHealthBar();
 }
@@ -111,7 +112,7 @@ Vec2 CTurretObject::GetPosition() const
 
 Vec2 CTurretObject::GetSize() const
 {
-	return m_renderObject.m_size;
+	return Vec2(m_collisionSize);
 }
 
 bool CTurretObject::NeedDelete() const

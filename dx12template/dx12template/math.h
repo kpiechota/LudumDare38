@@ -31,6 +31,10 @@ struct Vec2
 		: x(x)
 		, y(y)
 	{}
+	Vec2(float const x)
+		: x(x)
+		, y(x)
+	{}
 
 	void Set(float const x, float const y)
 	{

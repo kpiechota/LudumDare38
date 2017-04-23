@@ -1,5 +1,13 @@
 #pragma once
 
+enum EShaderType
+{
+	ST_OBJECT_DRAW,
+	ST_OBJECT_DRAW_BLEND,
+
+	ST_MAX
+};
+
 enum ETextures
 {
 	T_BLANK,
@@ -12,12 +20,14 @@ enum ETextures
 	T_ENEMY,
 	T_TURRET,
 	T_HEALTH,
+	T_HEALTH_EFFECT,
 };
 
 enum ERenderLayer
 {
 	RL_BACKGROUND_STATIC,
-	RL_FOREGROUND,
+	RL_FOREGROUND0,
+	RL_FOREGROUND1,
 	RL_OVERLAY0,
 	RL_OVERLAY1,
 
@@ -41,6 +51,7 @@ struct SRenderObject
 	Vec2 m_offset;
 
 	Byte m_texutreID;
+	Byte m_shaderID;
 
 	SRenderObject()
 		: m_colorScale( 1.f, 1.f, 1.f, 1.f )
@@ -49,6 +60,7 @@ struct SRenderObject
 		, m_size(1.f, 1.f)
 		, m_offset(0.f, 0.f)
 		, m_texutreID( 0 )
+		, m_shaderID( 0 )
 	{}
 };
 

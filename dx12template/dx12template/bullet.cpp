@@ -46,7 +46,7 @@ void CBullet::Update()
 
 void CBullet::FillRenderData() const
 {
-	GRenderObjects[RL_FOREGROUND].push_back(m_renderObject);
+	GRenderObjects[RL_FOREGROUND0].push_back(m_renderObject);
 }
 
 Vec2 CBullet::GetPosition() const

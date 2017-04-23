@@ -65,15 +65,24 @@ void CPlayerObject::DrawHealthBar() const
 
 	GRenderObjects[RL_OVERLAY0].push_back(healthBarBackground);
 	GRenderObjects[RL_OVERLAY0].push_back(healthBar);
+
+	healthBarBackground.m_positionWS = m_renderObject.m_positionWS + Vec2(0.f, 12.f + 3.f + 6.f);
+
+	healthBar.m_colorScale.Set(0.2f, .8f, 1.f, 1.f);
+	healthBar.m_positionWS = m_renderObject.m_positionWS + Vec2(-12.f, 12.f + 3.f + 6.f);
+	healthBar.m_size.Set(12.f * m_energyValue, 2.f);
+
+	GRenderObjects[RL_OVERLAY0].push_back(healthBarBackground);
+	GRenderObjects[RL_OVERLAY0].push_back(healthBar);
 }
 
 CPlayerObject::CPlayerObject()
 	: m_speed( 100.f )
 	, m_shootSpeed( 0.1f )
 	, m_lastShoot( 0.f )
-	, m_energyValue( 0.f )
-	, m_maxHealth(5.f)
-	, m_health(5.f)
+	, m_energyValue( 1.f )
+	, m_maxHealth(10.f)
+	, m_health(10.f)
 {
 	m_collisionMask = (Byte)(CF_ENEMY | CF_ENEMY_BULLET);
 
@@ -100,7 +109,7 @@ void CPlayerObject::AddEnergy()
 
 void CPlayerObject::FillRenderData() const
 {
-	GRenderObjects[RL_FOREGROUND].push_back(m_renderObject);
+	GRenderObjects[RL_FOREGROUND0].push_back(m_renderObject);
 
 	DrawHealthBar();
 
