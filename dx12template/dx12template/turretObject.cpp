@@ -63,7 +63,7 @@ CTurretObject::CTurretObject(SRenderObject const& renderObject)
 	, m_shootSpeed(0.3f)
 	, m_lastShoot(0.f)
 	, m_shootRadius2(150.f * 150.f)
-	, m_maxHealth(20.f)
+	, m_maxHealth(10.f)
 	, m_health(m_maxHealth)
 	, m_collisionSize( 12.f )
 {
@@ -87,10 +87,10 @@ void CTurretObject::Update()
 			SRenderObject bulletObject;
 			bulletObject.m_positionWS = m_renderObject.m_positionWS + m_renderObject.m_rotation * m_renderObject.m_size;
 			bulletObject.m_rotation = m_renderObject.m_rotation;
-			bulletObject.m_size = 2.f;
+			bulletObject.m_size = 4.f;
 			bulletObject.m_texutreID = T_BULLET0;
 
-			CBullet* bullet = new CBullet(bulletObject, 1.f, CF_PLAYER_BULLET);
+			CBullet* bullet = new CBullet(bulletObject, .5f, CF_PLAYER_BULLET);
 			GGameObjectsToSpawn.push_back(bullet);
 
 			m_lastShoot = m_shootSpeed;
@@ -117,7 +117,7 @@ Vec2 CTurretObject::GetSize() const
 
 bool CTurretObject::NeedDelete() const
 {
-	return m_health < 0.f;
+	return m_health <= 0.f;
 }
 
 void CTurretObject::TakeDamage(float const damage)

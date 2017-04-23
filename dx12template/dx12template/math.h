@@ -6,6 +6,7 @@ namespace MathConsts
 	float const PI = 3.14159265359f;
 	float const DegToRad = PI / 180.f;
 }
+extern float RandFloat();
 
 struct Vec2
 {
@@ -122,8 +123,8 @@ struct Vec2
 
 	static Vec2 GetRandomInCircle()
 	{
-		float const x = ((float)rand()) / ((float)RAND_MAX) * 2.f - 1.f;
-		float const y = ((float)rand()) / ((float)RAND_MAX) * -2.f + 1.f;
+		float const x = RandFloat() * 2.f - 1.f;
+		float const y = RandFloat() * -2.f + 1.f;
 
 		Vec2 position(x, y);
 		float const magnitude2 = position.Magnitude2();
@@ -137,8 +138,8 @@ struct Vec2
 
 	static Vec2 GetRandomOnCircle()
 	{
-		float const x = ((float)rand()) / ((float)RAND_MAX) * 2.f - 1.f;
-		float const y = ((float)rand()) / ((float)RAND_MAX) * -2.f + 1.f;
+		float const x = RandFloat() * 2.f - 1.f;
+		float const y = RandFloat() * -2.f + 1.f;
 
 		Vec2 position(x, y);
 		position.Normalize();

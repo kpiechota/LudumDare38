@@ -122,6 +122,7 @@
     <ClCompile Include="bullet.cpp" />
     <ClCompile Include="enemy.cpp" />
     <ClCompile Include="enemySpawner.cpp" />
+    <ClCompile Include="generatorObject.cpp" />
     <ClCompile Include="healthEffectObject.cpp" />
     <ClCompile Include="healthObject.cpp" />
     <ClCompile Include="helpers.cpp" />
@@ -139,6 +140,7 @@
     <ClInclude Include="enemy.h" />
     <ClInclude Include="enemySpawner.h" />
     <ClInclude Include="gameObject.h" />
+    <ClInclude Include="generatorObject.h" />
     <ClInclude Include="headers.h" />
     <ClInclude Include="healthEffectObject.h" />
     <ClInclude Include="healthObject.h" />

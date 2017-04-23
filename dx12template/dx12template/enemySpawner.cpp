@@ -16,7 +16,7 @@ void CEnemySpawner::Init()
 	m_maxAliveEnemy = 100;
 	m_spawnTime = 5.f;
 	m_lastSpawn = m_spawnTime;
-	m_spawnIncTime = 15.f;
+	m_spawnIncTime = 20.f;
 	m_lastSpawnInc = m_spawnIncTime;
 }
 

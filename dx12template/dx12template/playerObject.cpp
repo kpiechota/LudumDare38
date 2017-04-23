@@ -82,13 +82,13 @@ CPlayerObject::CPlayerObject()
 	, m_shootSpeed( 0.1f )
 	, m_lastShoot( 0.f )
 	, m_energyValue( 1.f )
-	, m_maxHealth(10.f)
-	, m_health(10.f)
+	, m_maxHealth(15.f)
+	, m_health(15.f)
 	, m_initScreen( nullptr )
 {
 	m_collisionMask = (Byte)(CF_ENEMY | CF_ENEMY_BULLET);
 
-	m_renderObject.m_positionWS.Set(0.f, 16.f + 12.f);
+	m_renderObject.m_positionWS.Set(0.f, 32.f + 12.f);
 	m_renderObject.m_size = 12.f;
 	m_renderObject.m_texutreID = T_PLAYER;
 
@@ -194,7 +194,7 @@ void CPlayerObject::Update()
 				m_energyValue = 0.f;
 
 				SRenderObject turretObject;
-				turretObject.m_positionWS = m_renderObject.m_positionWS + m_renderObject.m_rotation * m_renderObject.m_size;
+				turretObject.m_positionWS = m_renderObject.m_positionWS + m_renderObject.m_rotation * (m_renderObject.m_size + 14.f);
 				turretObject.m_rotation = m_renderObject.m_rotation;
 				turretObject.m_size = 12.f;
 				turretObject.m_texutreID = T_TURRET;
@@ -207,7 +207,7 @@ void CPlayerObject::Update()
 				m_energyValue = 0.f;
 
 				SRenderObject healthObject;
-				healthObject.m_positionWS = m_renderObject.m_positionWS + m_renderObject.m_rotation * m_renderObject.m_size;
+				healthObject.m_positionWS = m_renderObject.m_positionWS + m_renderObject.m_rotation * ( m_renderObject.m_size + 14.f );
 				healthObject.m_size = 12.f;
 				healthObject.m_texutreID = T_HEALTH;
 

@@ -29,7 +29,7 @@ CHealthObject::CHealthObject(SRenderObject const& renderObject)
 	, m_healSpeed(2.f)
 	, m_lastHeal(m_healSpeed)
 	, m_healRadius2(100.f * 100.f)
-	, m_maxHealth(15.f)
+	, m_maxHealth(5.f)
 	, m_health(m_maxHealth)
 	, m_veinsSpawnTime( 0.2f )
 	, m_lastVeinsSpawnTime( 0.f )
@@ -109,10 +109,10 @@ Vec2 CHealthObject::GetSize() const
 
 bool CHealthObject::NeedDelete() const
 {
-	return m_health < 0.f;
+	return m_health <= 0.f;
 }
 
 void CHealthObject::TakeDamage(float const damage)
 {
-	m_health = min(m_maxHealth, m_health - damage);
+	m_health = max( 0.f, min(m_maxHealth, m_health - damage) );
 }

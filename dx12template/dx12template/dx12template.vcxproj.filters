@@ -54,6 +54,9 @@
     <ClCompile Include="healthEffectObject.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="generatorObject.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="headers.h">
@@ -111,6 +114,9 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="healthEffectObject.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="generatorObject.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

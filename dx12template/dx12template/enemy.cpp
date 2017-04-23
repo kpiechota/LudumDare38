@@ -115,7 +115,7 @@ void CEnemyObject::Update()
 			SRenderObject bulletObject;
 			bulletObject.m_positionWS = m_renderObject.m_positionWS + m_renderObject.m_rotation * m_renderObject.m_size;
 			bulletObject.m_rotation = m_renderObject.m_rotation;
-			bulletObject.m_size = 2.f;
+			bulletObject.m_size = 4.f;
 			bulletObject.m_texutreID = T_BULLET1;
 
 			CBullet* bullet = new CBullet(bulletObject, 0.2f, CF_ENEMY_BULLET);
@@ -151,7 +151,7 @@ Vec2 CEnemyObject::GetSize() const
 
 bool CEnemyObject::NeedDelete() const
 {
-	return m_health < 0.f;
+	return m_health <= 0.f;
 }
 
 void CEnemyObject::TakeDamage(float const damage)

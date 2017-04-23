@@ -6,6 +6,7 @@
 #include "utility/FreeImage.h"
 
 #include "playerObject.h"
+#include "generatorObject.h"
 #include "staticObject.h"
 
 #include "enemySpawner.h"
@@ -17,6 +18,7 @@ CSystemInput GSystemInput;
 CTimer GTimer;
 CEnemySpawner GEnemySpawner;
 CPlayerObject* GPlayer;
+CGeneratorObject* GGenerator;
 
 std::vector< SRenderObject > GRenderObjects[ RL_MAX ];
 std::vector< CGameObject* > GGameObjects[2];
@@ -78,11 +80,11 @@ void InitGame()
 	GPlayer = new CPlayerObject();
 	GGameObjects[GGameObjectArray].push_back(GPlayer);
 
-	gameObject.m_size = 16.f;
+	gameObject.m_size = 32.f;
 	gameObject.m_texutreID = T_GENERATOR;
 
-	CStaticObject* pStaticObject = new CStaticObject(gameObject, 10000000.f, (Byte)(CF_ENEMY | CF_ENEMY_BULLET | CF_PLAYER), RL_FOREGROUND0);
-	GGameObjects[GGameObjectArray].push_back(pStaticObject);
+	GGenerator = new CGeneratorObject(gameObject);
+	GGameObjects[GGameObjectArray].push_back(GGenerator);
 
 	GEnemySpawner.Init();
 }
@@ -273,7 +275,7 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, PSTR pCmdLine, 
 		currentGameObjectArray.clear();
 		GGameObjectArray = nextGameObjectArray;
 
-		if (GPlayer->GetHealth() <= 0.f)
+		if ((GPlayer->GetHealth() * GGenerator->GetHealth()) <= 0.f )
 		{
 			if (!pDeathScreen)
 			{
@@ -287,7 +289,7 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, PSTR pCmdLine, 
 
 				GTimer.SetGameScale(0.1f);
 			}
-			else if (GInputManager.IsKeyDown(' ' ))
+			else if (GInputManager.IsKeyDown(' '))
 			{
 				InitGame();
 				pDeathScreen = nullptr;
