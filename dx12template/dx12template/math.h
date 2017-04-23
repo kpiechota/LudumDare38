@@ -134,6 +134,17 @@ struct Vec2
 
 		return position;
 	}
+
+	static Vec2 GetRandomOnCircle()
+	{
+		float const x = ((float)rand()) / ((float)RAND_MAX) * 2.f - 1.f;
+		float const y = ((float)rand()) / ((float)RAND_MAX) * -2.f + 1.f;
+
+		Vec2 position(x, y);
+		position.Normalize();
+
+		return position;
+	}
 };
 
 struct Vec2i

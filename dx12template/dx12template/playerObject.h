@@ -9,6 +9,8 @@ private:
 	SRenderObject m_renderObjectTurret;
 	SRenderObject m_renderObjectHealth;
 
+	class CStaticObject* m_initScreen;
+
 	float m_speed;
 	float m_shootSpeed;
 	float m_lastShoot;

@@ -4,6 +4,7 @@
 #include "bullet.h"
 #include "turretObject.h"
 #include "healthObject.h"
+#include "staticObject.h"
 
 extern CTimer GTimer;
 
@@ -83,6 +84,7 @@ CPlayerObject::CPlayerObject()
 	, m_energyValue( 1.f )
 	, m_maxHealth(10.f)
 	, m_health(10.f)
+	, m_initScreen( nullptr )
 {
 	m_collisionMask = (Byte)(CF_ENEMY | CF_ENEMY_BULLET);
 
@@ -99,6 +101,16 @@ CPlayerObject::CPlayerObject()
 	m_renderObjectHealth.m_positionWS.Set(35.f, iconY);
 	m_renderObjectHealth.m_size = 32.f;
 	m_renderObjectHealth.m_texutreID = T_HEALTH_ICON;
+
+	SRenderObject initScreenObject;
+	initScreenObject.m_shaderID = ST_OBJECT_DRAW_BLEND;
+	initScreenObject.m_texutreID = T_INIT_SCREEN;
+	initScreenObject.m_size = 400.f;
+	
+	m_initScreen = new CStaticObject(initScreenObject, -1.f, 0, RL_OVERLAY2);
+	GGameObjectsToSpawn.push_back(m_initScreen);
+
+	GTimer.SetGameScale(0.f);
 }
 
 void CPlayerObject::AddEnergy()
@@ -121,84 +133,96 @@ void CPlayerObject::FillRenderData() const
 
 void CPlayerObject::Update()
 {
-	Vec2 moveDir;
-
-	if (GInputManager.IsKeyDown('W'))
+	if ( !m_initScreen )
 	{
-		moveDir.y += 1.f;
-	}
+		Vec2 moveDir;
 
-	if (GInputManager.IsKeyDown('S'))
-	{
-		moveDir.y -= 1.f;
-	}
-
-	if (GInputManager.IsKeyDown('A'))
-	{
-		moveDir.x -= 1.f;
-	}
-
-	if (GInputManager.IsKeyDown('D'))
-	{
-		moveDir.x += 1.f;
-	}
-
-	moveDir.Normalize();
-	moveDir *= m_speed * GTimer.GameDelta();
-
-	m_renderObject.m_positionWS += moveDir;
-	CollisionTest();
-
-	Vec2i mouseScreenPos;
-	GInputManager.GetMousePosition(mouseScreenPos);
-
-	Vec2 mouseWorldPos = Vec2(mouseScreenPos) - Vec2((float)(GWidth) * 0.5f, (float)(GHeight) * 0.5f);
-	mouseWorldPos.y = -mouseWorldPos.y;
-
-	m_renderObject.m_rotation = mouseWorldPos - m_renderObject.m_positionWS;
-	m_renderObject.m_rotation.Normalize();
-
-	m_lastShoot -= GTimer.GameDelta();
-	if (m_lastShoot < 0.f && GInputManager.IsKeyDown(K_LEFTM))
-	{
-		SRenderObject bulletObject;
-		bulletObject.m_positionWS = m_renderObject.m_positionWS + m_renderObject.m_rotation * m_renderObject.m_size;
-		bulletObject.m_rotation = m_renderObject.m_rotation;
-		bulletObject.m_size = 2.f;
-		bulletObject.m_texutreID = T_BULLET0;
-
-		CBullet* bullet = new CBullet(bulletObject, 0.3f, CF_PLAYER_BULLET);
-		GGameObjectsToSpawn.push_back(bullet);
-
-		m_lastShoot = m_shootSpeed;
-	}
-
-	if (1.f == m_energyValue )
-	{
-		if (GInputManager.IsKeyDown('Q'))
+		if (GInputManager.IsKeyDown('W'))
 		{
-			m_energyValue = 0.f;
-
-			SRenderObject turretObject;
-			turretObject.m_positionWS = m_renderObject.m_positionWS + m_renderObject.m_rotation * m_renderObject.m_size;
-			turretObject.m_rotation = m_renderObject.m_rotation;
-			turretObject.m_size = 12.f;
-			turretObject.m_texutreID = T_TURRET;
-
-			CTurretObject* turret = new CTurretObject(turretObject);
-			GGameObjectsToSpawn.push_back(turret);
+			moveDir.y += 1.f;
 		}
-		else if (GInputManager.IsKeyDown('E'))
+
+		if (GInputManager.IsKeyDown('S'))
 		{
-			m_energyValue = 0.f;
+			moveDir.y -= 1.f;
+		}
 
-			SRenderObject healthObject;
-			healthObject.m_positionWS = m_renderObject.m_positionWS + m_renderObject.m_rotation * m_renderObject.m_size;
-			healthObject.m_size = 12.f;
-			healthObject.m_texutreID = T_HEALTH;
+		if (GInputManager.IsKeyDown('A'))
+		{
+			moveDir.x -= 1.f;
+		}
 
-			CHealthObject* health = new CHealthObject(healthObject);
-			GGameObjectsToSpawn.push_back(health);
+		if (GInputManager.IsKeyDown('D'))
+		{
+			moveDir.x += 1.f;
+		}
+
+		moveDir.Normalize();
+		moveDir *= m_speed * GTimer.GameDelta();
+
+		m_renderObject.m_positionWS += moveDir;
+		CollisionTest();
+
+		Vec2i mouseScreenPos;
+		GInputManager.GetMousePosition(mouseScreenPos);
+
+		Vec2 mouseWorldPos = Vec2(mouseScreenPos) - Vec2((float)(GWidth) * 0.5f, (float)(GHeight) * 0.5f);
+		mouseWorldPos.y = -mouseWorldPos.y;
+
+		m_renderObject.m_rotation = mouseWorldPos - m_renderObject.m_positionWS;
+		m_renderObject.m_rotation.Normalize();
+
+		m_lastShoot -= GTimer.GameDelta();
+		if (m_lastShoot < 0.f && GInputManager.IsKeyDown(K_LEFTM))
+		{
+			SRenderObject bulletObject;
+			bulletObject.m_positionWS = m_renderObject.m_positionWS + m_renderObject.m_rotation * m_renderObject.m_size;
+			bulletObject.m_rotation = m_renderObject.m_rotation;
+			bulletObject.m_size = 2.f;
+			bulletObject.m_texutreID = T_BULLET0;
+
+			CBullet* bullet = new CBullet(bulletObject, 0.3f, CF_PLAYER_BULLET);
+			GGameObjectsToSpawn.push_back(bullet);
+
+			m_lastShoot = m_shootSpeed;
+		}
+
+		if (1.f == m_energyValue)
+		{
+			if (GInputManager.IsKeyDown('Q'))
+			{
+				m_energyValue = 0.f;
+
+				SRenderObject turretObject;
+				turretObject.m_positionWS = m_renderObject.m_positionWS + m_renderObject.m_rotation * m_renderObject.m_size;
+				turretObject.m_rotation = m_renderObject.m_rotation;
+				turretObject.m_size = 12.f;
+				turretObject.m_texutreID = T_TURRET;
+
+				CTurretObject* turret = new CTurretObject(turretObject);
+				GGameObjectsToSpawn.push_back(turret);
+			}
+			else if (GInputManager.IsKeyDown('E'))
+			{
+				m_energyValue = 0.f;
+
+				SRenderObject healthObject;
+				healthObject.m_positionWS = m_renderObject.m_positionWS + m_renderObject.m_rotation * m_renderObject.m_size;
+				healthObject.m_size = 12.f;
+				healthObject.m_texutreID = T_HEALTH;
+
+				CHealthObject* health = new CHealthObject(healthObject);
+				GGameObjectsToSpawn.push_back(health);
+			}
+		}
+	}
+	else
+	{
+		if (GInputManager.IsKeyDown(' '))
+		{
+			m_initScreen->ForceDelete();
+			m_initScreen = nullptr;
+			GTimer.SetGameScale(1.f);
 		}
 	}
 }

@@ -23,6 +23,8 @@ enum ETextures
 	T_HEALTH_EFFECT,
 	T_TURRET_ICON,
 	T_HEALTH_ICON,
+	T_VEINS,
+	T_INIT_SCREEN,
 };
 
 enum ERenderLayer
@@ -32,6 +34,7 @@ enum ERenderLayer
 	RL_FOREGROUND1,
 	RL_OVERLAY0,
 	RL_OVERLAY1,
+	RL_OVERLAY2,
 
 	RL_MAX
 };
@@ -51,6 +54,8 @@ struct SRenderObject
 	Vec2 m_rotation;
 	Vec2 m_size;
 	Vec2 m_offset;
+	Vec2 m_uvTile;
+	Vec2 m_uvOffset;
 
 	Byte m_texutreID;
 	Byte m_shaderID;
@@ -61,6 +66,8 @@ struct SRenderObject
 		, m_rotation( 1.f, 0.f )
 		, m_size(1.f, 1.f)
 		, m_offset(0.f, 0.f)
+		, m_uvTile(1.f, 1.f)
+		, m_uvOffset(0.f, 0.f)
 		, m_texutreID( 0 )
 		, m_shaderID( 0 )
 	{}

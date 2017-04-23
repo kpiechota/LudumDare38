@@ -362,6 +362,8 @@ void CRender::DrawFrame()
 			cbObject.m_objectToScreen = Mul(GScreenMatrix, Matrix3x3::GetTranslateRotationSize(gameObject.m_positionWS, gameObject.m_rotation, gameObject.m_size));
 			cbObject.m_colorScale = gameObject.m_colorScale;
 			cbObject.m_offset = gameObject.m_offset;
+			cbObject.m_uvTile = gameObject.m_uvTile;
+			cbObject.m_uvOffset = gameObject.m_uvOffset;
 
 			commandList->SetGraphicsRootConstantBufferView(0, m_frameData[m_frameID].m_frameResource->GetGPUVirtualAddress() + (D3D12_GPU_VIRTUAL_ADDRESS)(renderObjectID * sizeof(CBObject)));
 			D3D12_GPU_DESCRIPTOR_HANDLE texture = texturesHandle;

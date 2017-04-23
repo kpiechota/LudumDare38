@@ -1,5 +1,6 @@
 #include "healthObject.h"
 #include "healthEffectObject.h"
+#include "staticObject.h"
 #include "timer.h"
 
 extern CTimer GTimer;
@@ -30,6 +31,8 @@ CHealthObject::CHealthObject(SRenderObject const& renderObject)
 	, m_healRadius2(100.f * 100.f)
 	, m_maxHealth(15.f)
 	, m_health(m_maxHealth)
+	, m_veinsSpawnTime( 0.2f )
+	, m_lastVeinsSpawnTime( 0.f )
 {
 	m_collisionMask = (Byte)(CF_ENEMY | CF_ENEMY_BULLET | CF_PLAYER);
 
@@ -45,6 +48,8 @@ CHealthObject::CHealthObject(SRenderObject const& renderObject)
 void CHealthObject::Update()
 {
 	m_lastHeal -= GTimer.GameDelta();
+	m_lastVeinsSpawnTime -= GTimer.GameDelta();
+
 	if (m_lastHeal < 0.f)
 	{
 		CHealthEffectObject* healthEffect = new CHealthEffectObject(m_healthEffectObject, .5f);
@@ -62,6 +67,26 @@ void CHealthObject::Update()
 				pGameObject->TakeDamage(-1.5f);
 			}
 		}
+	}
+
+	if (m_lastVeinsSpawnTime < 0.f)
+	{
+		m_lastVeinsSpawnTime = m_veinsSpawnTime;
+
+		Vec2 veinOffset = Vec2::GetRandomOnCircle();
+
+		SRenderObject veinObject;
+		veinObject.m_positionWS = m_renderObject.m_positionWS + veinOffset * 2.f * m_renderObject.m_size.x;
+
+		veinObject.m_colorScale.Set(0.f, 1.f, 0.f, 1.f);
+		veinObject.m_rotation.Set(veinOffset.y, -veinOffset.x);
+		veinObject.m_size = 12.f;
+		veinObject.m_uvTile.x = (rand() % 2) ? 1.f : -1.f;
+		veinObject.m_texutreID = T_VEINS;
+		veinObject.m_shaderID = ST_OBJECT_DRAW_BLEND;
+
+		CStaticObject* pVein = new CStaticObject(veinObject, 0.3f, 0, RL_FOREGROUND1);
+		GGameObjectsToSpawn.push_back(pVein);
 	}
 }
 

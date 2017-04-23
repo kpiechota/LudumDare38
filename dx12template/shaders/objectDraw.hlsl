@@ -2,6 +2,8 @@ cbuffer objectBuffer : register(b0)
 {
 	float4x4 ObjectToScreen;
 	float4 ColorScale;
+	float2 UVTile;
+	float2 UVOffset;
 	float2 Offset;
 }
 
@@ -23,7 +25,7 @@ PSInput vsMain( uint vertexID : SV_VertexID )
 
 	PSInput output;
 	output.m_position = float4( positionSS, 1.f );
-	output.m_uv = mad(positionOS, 0.5f, 0.5f);
+	output.m_uv = mad(positionOS, 0.5f, 0.5f) * UVTile + UVOffset;
 
 	return output;
 }

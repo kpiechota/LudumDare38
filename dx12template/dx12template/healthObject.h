@@ -12,6 +12,8 @@ private:
 	float m_healRadius2;
 	float m_maxHealth;
 	float m_health;
+	float m_veinsSpawnTime;
+	float m_lastVeinsSpawnTime;
 
 private:
 	inline void DrawHealthBar() const;
