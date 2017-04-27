@@ -4,6 +4,8 @@ enum EShaderType
 {
 	ST_OBJECT_DRAW,
 	ST_OBJECT_DRAW_BLEND,
+	ST_OBJECT_DRAW_NO_CLIP,
+	ST_OBJECT_DRAW_ALPHA_MULT,
 
 	ST_MAX
 };
@@ -105,8 +107,7 @@ public:
 	virtual void TakeDamage(Vec2 const rotation, float const damage) = 0;
 };
 
-extern unsigned int GGameObjectArray;
-extern std::vector< CGameObject* > GGameObjects[2];
+extern std::vector< CGameObject* > GGameObjects;
 extern std::vector< CGameObject* > GGameObjectsToSpawn;
 extern std::vector< SRenderObject > GRenderObjects[RL_MAX];
 extern std::vector< SRenderObject > GBakeObjects;

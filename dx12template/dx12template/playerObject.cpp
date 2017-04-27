@@ -24,11 +24,10 @@ inline void CPlayerObject::CollisionTest()
 		m_renderObject.m_positionWS += offset;
 	}
 
-	std::vector< CGameObject* > const& currentGameObjectArray = GGameObjects[GGameObjectArray];
-	unsigned int const gameObjectsNum = currentGameObjectArray.size();
+	unsigned int const gameObjectsNum = GGameObjects.size();
 	for (unsigned int gameObjectID = 0; gameObjectID < gameObjectsNum; ++gameObjectID)
 	{
-		CGameObject const * const pGameObject = currentGameObjectArray[gameObjectID];
+		CGameObject const * const pGameObject = GGameObjects[gameObjectID];
 
 		if (pGameObject != this && pGameObject->CollideWith(CF_PLAYER))
 		{

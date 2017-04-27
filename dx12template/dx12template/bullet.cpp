@@ -4,11 +4,10 @@ extern CTimer GTimer;
 
 void CBullet::CollisionTest()
 {
-	std::vector< CGameObject* >& currentGameObjectArray = GGameObjects[GGameObjectArray];
-	unsigned int const gameObjectsNum = currentGameObjectArray.size();
+	unsigned int const gameObjectsNum = GGameObjects.size();
 	for (unsigned int gameObjectID = 0; gameObjectID < gameObjectsNum; ++gameObjectID)
 	{
-		CGameObject* pGameObject = currentGameObjectArray[gameObjectID];
+		CGameObject* pGameObject = GGameObjects[gameObjectID];
 
 		if (pGameObject != this && pGameObject->CollideWith(m_bulletType) && !pGameObject->NeedDelete())
 		{

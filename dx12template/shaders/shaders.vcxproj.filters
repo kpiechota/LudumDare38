@@ -16,6 +16,5 @@
   </ItemGroup>
   <ItemGroup>
     <FxCompile Include="objectDraw.hlsl" />
-    <FxCompile Include="bake.hlsl" />
   </ItemGroup>
 </Project>

@@ -29,11 +29,10 @@ Vec2 CTurretObject::FindNearestObject() const
 	Vec2 nearest;
 	float nearestMagnitude2 = -1.f;
 
-	std::vector< CGameObject* > const& currentGameObjectArray = GGameObjects[GGameObjectArray];
-	unsigned int const gameObjectsNum = currentGameObjectArray.size();
+	unsigned int const gameObjectsNum = GGameObjects.size();
 	for (unsigned int gameObjectID = 0; gameObjectID < gameObjectsNum; ++gameObjectID)
 	{
-		CGameObject const* const pGameObject = currentGameObjectArray[gameObjectID];
+		CGameObject const* const pGameObject = GGameObjects[gameObjectID];
 
 		if (pGameObject != this && pGameObject->CollideWith(CF_PLAYER_BULLET) && !pGameObject->NeedDelete())
 		{

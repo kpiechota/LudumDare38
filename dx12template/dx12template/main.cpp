@@ -22,12 +22,11 @@ CGeneratorObject* GGenerator;
 
 std::vector< SRenderObject > GRenderObjects[ RL_MAX ];
 std::vector< SRenderObject > GBakeObjects;
-std::vector< CGameObject* > GGameObjects[2];
+std::vector< CGameObject* > GGameObjects;
 std::vector< CGameObject* > GGameObjectsToSpawn;
 std::vector< CGameObject* > GGameObjectsToDelete;
 CStaticSound GSounds[SET_MAX];
 
-unsigned int GGameObjectArray = 0;
 int GWidth = 800;
 int GHeight = 800;
 float const GIslandSize = 350.f;
@@ -50,10 +49,10 @@ void InitGame()
 	{
 		delete GGameObjectsToDelete[gameObjectID];
 	}
-	unsigned int const gameObjectsNum = GGameObjects[GGameObjectArray].size();
+	unsigned int const gameObjectsNum = GGameObjects.size();
 	for (unsigned int gameObjectID = 0; gameObjectID < gameObjectsNum; ++gameObjectID)
 	{
-		delete GGameObjects[GGameObjectArray][gameObjectID];
+		delete GGameObjects[gameObjectID];
 	}
 	unsigned int const objectToSpawnNum = GGameObjectsToSpawn.size();
 	for (unsigned int gameObjectID = 0; gameObjectID < objectToSpawnNum; ++gameObjectID)
@@ -68,7 +67,7 @@ void InitGame()
 
 	GGameObjectsToDelete.clear();
 	GGameObjectsToSpawn.clear();
-	GGameObjects[GGameObjectArray].clear();
+	GGameObjects.clear();
 	GBakeObjects.clear();
 
 	GRender.ClearBaked();
@@ -76,26 +75,28 @@ void InitGame()
 	SRenderObject gameObject;
 	gameObject.m_size = 400.f;
 	gameObject.m_texutreID = T_BACKGROUND;
+	gameObject.m_shaderID = ST_OBJECT_DRAW_NO_CLIP;
 	GRenderObjects[RL_BACKGROUND_STATIC].push_back(gameObject);
 
 	gameObject.m_size = GIslandSize;
 	gameObject.m_texutreID = T_ISLAND;
+	gameObject.m_shaderID = ST_OBJECT_DRAW;
 	GRenderObjects[RL_BACKGROUND_STATIC].push_back(gameObject);
 
 	gameObject.m_size = 400.f;
 	gameObject.m_texutreID = T_BAKED;
-	gameObject.m_shaderID = ST_OBJECT_DRAW_BLEND;
+	gameObject.m_shaderID = ST_OBJECT_DRAW_ALPHA_MULT;
 	gameObject.m_uvTile.y = -1.f;
 	GRenderObjects[RL_BACKGROUND_STATIC].push_back(gameObject);
 
 	GPlayer = new CPlayerObject();
-	GGameObjects[GGameObjectArray].push_back(GPlayer);
+	GGameObjects.push_back(GPlayer);
 
 	gameObject.m_size = 32.f;
 	gameObject.m_texutreID = T_GENERATOR;
 
 	GGenerator = new CGeneratorObject(gameObject);
-	GGameObjects[GGameObjectArray].push_back(GGenerator);
+	GGameObjects.push_back(GGenerator);
 
 	GEnemySpawner.Init();
 }
@@ -152,7 +153,7 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, PSTR pCmdLine, 
 	{
 		"../content/blank.png",
 		"../content/player.png",
-		"../content/background.png",
+		"../content/background.tif",
 		"../content/island.png",
 		"../content/generator.png",
 		"../content/bullet_0.png",
@@ -241,9 +242,7 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, PSTR pCmdLine, 
 	bool run = true;
 	while (run)
 	{
-		std::vector< CGameObject* >& currentGameObjectArray = GGameObjects[GGameObjectArray];
-
-		unsigned int const gameObjectsNum = currentGameObjectArray.size();
+		unsigned int const gameObjectsNum = GGameObjects.size();
 		GTimer.Tick();
 		GEnemySpawner.Update();
 
@@ -263,7 +262,7 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, PSTR pCmdLine, 
 
 		for (unsigned int gameObjectID = 0; gameObjectID < gameObjectsNum; ++gameObjectID)
 		{
-			currentGameObjectArray[gameObjectID]->Update();
+			GGameObjects[gameObjectID]->Update();
 		}
 
 		timeToRender -= GTimer.Delta();
@@ -271,7 +270,7 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, PSTR pCmdLine, 
 		{
 			for (unsigned int gameObjectID = 0; gameObjectID < gameObjectsNum; ++gameObjectID)
 			{
-				currentGameObjectArray[gameObjectID]->FillRenderData();
+				GGameObjects[gameObjectID]->FillRenderData();
 			}
 			GRender.DrawFrame();
 			timeToRender = 1.f / 60.f;
@@ -289,28 +288,25 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, PSTR pCmdLine, 
 		}
 		GGameObjectsToDelete.clear();
 
-		unsigned int const nextGameObjectArray = (GGameObjectArray + 1) % 2;
-		for (unsigned int gameObjectID = 0; gameObjectID < gameObjectsNum; ++gameObjectID)
+		for (unsigned int gameObjectID = 0; gameObjectID < GGameObjects.size(); ++gameObjectID)
 		{
-			if (!currentGameObjectArray[gameObjectID]->NeedDelete())
+			if (GGameObjects[gameObjectID]->NeedDelete())
 			{
-				GGameObjects[nextGameObjectArray].push_back(currentGameObjectArray[gameObjectID]);
-			}
-			else
-			{
-				GGameObjectsToDelete.push_back( currentGameObjectArray[gameObjectID] );
+				CGameObject* const pObject = GGameObjects[gameObjectID];
+				GGameObjectsToDelete.push_back(pObject);
+				GGameObjects[gameObjectID] = GGameObjects.back();
+				GGameObjects.pop_back();
+				--gameObjectID;
 			}
 		}
 
 		unsigned int const objectToSpawnNum = GGameObjectsToSpawn.size();
 		for (unsigned int gameObjectID = 0; gameObjectID < objectToSpawnNum; ++gameObjectID)
 		{
-			GGameObjects[nextGameObjectArray].push_back(GGameObjectsToSpawn[gameObjectID]);
+			GGameObjects.push_back(GGameObjectsToSpawn[gameObjectID]);
 		}
 
 		GGameObjectsToSpawn.clear();
-		currentGameObjectArray.clear();
-		GGameObjectArray = nextGameObjectArray;
 
 		if ((GPlayer->GetHealth() * GGenerator->GetHealth()) <= 0.f )
 		{
@@ -339,10 +335,10 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, PSTR pCmdLine, 
 	{
 		delete GGameObjectsToDelete[gameObjectID];
 	}
-	unsigned int const gameObjectsNum = GGameObjects[GGameObjectArray].size();
+	unsigned int const gameObjectsNum = GGameObjects.size();
 	for (unsigned int gameObjectID = 0; gameObjectID < gameObjectsNum; ++gameObjectID)
 	{
-		delete GGameObjects[GGameObjectArray][gameObjectID];
+		delete GGameObjects[gameObjectID];
 	}
 	unsigned int const objectToSpawnNum = GGameObjectsToSpawn.size();
 	for (unsigned int gameObjectID = 0; gameObjectID < objectToSpawnNum; ++gameObjectID)

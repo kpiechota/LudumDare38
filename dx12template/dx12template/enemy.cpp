@@ -28,11 +28,10 @@ void CEnemyObject::DrawHealthBar() const
 
 inline void CEnemyObject::CollisionTest()
 {
-	std::vector< CGameObject* > const& currentGameObjectArray = GGameObjects[GGameObjectArray];
-	unsigned int const gameObjectsNum = currentGameObjectArray.size();
+	unsigned int const gameObjectsNum = GGameObjects.size();
 	for (unsigned int gameObjectID = 0; gameObjectID < gameObjectsNum; ++gameObjectID)
 	{
-		CGameObject const* const pGameObject = currentGameObjectArray[gameObjectID];
+		CGameObject const* const pGameObject = GGameObjects[gameObjectID];
 
 		if (pGameObject != this && pGameObject->CollideWith(CF_ENEMY))
 		{
@@ -59,11 +58,10 @@ inline Vec2 CEnemyObject::FindNearestObject() const
 	Vec2 nearest;
 	float nearestMagnitude2 = -1.f;
 
-	std::vector< CGameObject* > const& currentGameObjectArray = GGameObjects[GGameObjectArray];
-	unsigned int const gameObjectsNum = currentGameObjectArray.size();
+	unsigned int const gameObjectsNum = GGameObjects.size();
 	for (unsigned int gameObjectID = 0; gameObjectID < gameObjectsNum; ++gameObjectID)
 	{
-		CGameObject const* const pGameObject = currentGameObjectArray[gameObjectID];
+		CGameObject const* const pGameObject = GGameObjects[gameObjectID];
 
 		if (pGameObject != this && pGameObject->CollideWith(CF_ENEMY_BULLET) && !pGameObject->NeedDelete())
 		{

@@ -50,7 +50,6 @@ private:
 	ID3D12RootSignature*			m_mainRS;
 	ID3D12PipelineState*			m_shaders[ST_MAX];
 
-	ID3D12RootSignature*			m_bakeRS;
 	ID3D12PipelineState*			m_bakeShader;
 
 	ID3D12DescriptorHeap*			m_texturesDH;

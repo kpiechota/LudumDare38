@@ -69,11 +69,10 @@ void CHealthObject::Update()
 
 		GSoundEngine.Play2DSound(GSounds[SET_HEAL]);
 		m_lastHeal = m_healSpeed;
-		std::vector< CGameObject* > const& currentGameObjectArray = GGameObjects[GGameObjectArray];
-		unsigned int const gameObjectsNum = currentGameObjectArray.size();
+		unsigned int const gameObjectsNum = GGameObjects.size();
 		for (unsigned int gameObjectID = 0; gameObjectID < gameObjectsNum; ++gameObjectID)
 		{
-			CGameObject* const pGameObject = currentGameObjectArray[gameObjectID];
+			CGameObject* const pGameObject = GGameObjects[gameObjectID];
 
 			if (pGameObject != this && pGameObject->CollideWith(CF_ENEMY_BULLET) && !pGameObject->NeedDelete() && (pGameObject->GetPosition() - m_renderObject.m_positionWS).Magnitude2() < m_healRadius2 )
 			{

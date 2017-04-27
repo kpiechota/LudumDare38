@@ -158,13 +158,7 @@ void CRender::InitRootSignatures()
 	{
 		{ D3D12_DESCRIPTOR_RANGE_TYPE_SRV, 1, 0, 0, D3D12_DESCRIPTOR_RANGE_OFFSET_APPEND }
 	};
-
-	D3D12_DESCRIPTOR_RANGE bakedDescriptorRange[] =
-	{
-		{ D3D12_DESCRIPTOR_RANGE_TYPE_SRV, 1, 1, 0, D3D12_DESCRIPTOR_RANGE_OFFSET_APPEND }
-	};
-
-	D3D12_ROOT_PARAMETER rootParameters[3];
+	D3D12_ROOT_PARAMETER rootParameters[2];
 
 	rootParameters[0].ParameterType = D3D12_ROOT_PARAMETER_TYPE_CBV;
 	rootParameters[0].Descriptor = {0, 0};
@@ -173,10 +167,6 @@ void CRender::InitRootSignatures()
 	rootParameters[1].ParameterType = D3D12_ROOT_PARAMETER_TYPE_DESCRIPTOR_TABLE;
 	rootParameters[1].DescriptorTable = { 1, descriptorRange };
 	rootParameters[1].ShaderVisibility = D3D12_SHADER_VISIBILITY_PIXEL;
-
-	rootParameters[2].ParameterType = D3D12_ROOT_PARAMETER_TYPE_DESCRIPTOR_TABLE;
-	rootParameters[2].DescriptorTable = { 1, bakedDescriptorRange };
-	rootParameters[2].ShaderVisibility = D3D12_SHADER_VISIBILITY_PIXEL;
 
 	D3D12_STATIC_SAMPLER_DESC samplers[] =
 	{
@@ -207,11 +197,6 @@ void CRender::InitRootSignatures()
 	ID3DBlob* signature;
 	CheckResult(D3D12SerializeRootSignature(&descRootSignature, D3D_ROOT_SIGNATURE_VERSION_1, &signature, nullptr));
 	CheckResult(m_device->CreateRootSignature(0, signature->GetBufferPointer(), signature->GetBufferSize(), IID_PPV_ARGS(&m_mainRS)));
-	signature->Release();
-
-	descRootSignature.NumParameters = 3;
-	CheckResult(D3D12SerializeRootSignature(&descRootSignature, D3D_ROOT_SIGNATURE_VERSION_1, &signature, nullptr));
-	CheckResult(m_device->CreateRootSignature(0, signature->GetBufferPointer(), signature->GetBufferSize(), IID_PPV_ARGS(&m_bakeRS)));
 	signature->Release();
 }
 
@@ -309,13 +294,37 @@ void CRender::InitShaders()
 	vsShader->Release();
 	psShader->Release();
 
-	descPSO.pRootSignature = m_bakeRS;
-	LoadShader(L"../shaders/bake.hlsl", nullptr, "vsMain", "vs_5_1", &vsShader);
+	D3D_SHADER_MACRO const noClipShaderMacro[] = { "NO_CLIP", NULL, NULL };
+	D3D_SHADER_MACRO const alphaMultShaderMacro[] = { "ALPHA_MUL", NULL, NULL };
+
+	LoadShader(L"../shaders/objectDraw.hlsl", noClipShaderMacro, "vsMain", "vs_5_1", &vsShader);
+	descPSO.VS = { vsShader->GetBufferPointer(), vsShader->GetBufferSize() };
+	LoadShader(L"../shaders/objectDraw.hlsl", noClipShaderMacro, "psMain", "ps_5_1", &psShader);
+	descPSO.PS = { psShader->GetBufferPointer(), psShader->GetBufferSize() };
+	descPSO.BlendState.RenderTarget[0].BlendEnable = FALSE;
+	CheckResult(m_device->CreateGraphicsPipelineState(&descPSO, IID_PPV_ARGS(&m_shaders[ST_OBJECT_DRAW_NO_CLIP])));
+
+	vsShader->Release();
+	psShader->Release();
+
+	LoadShader(L"../shaders/objectDraw.hlsl", alphaMultShaderMacro, "vsMain", "vs_5_1", &vsShader);
+	descPSO.VS = { vsShader->GetBufferPointer(), vsShader->GetBufferSize() };
+	LoadShader(L"../shaders/objectDraw.hlsl", alphaMultShaderMacro, "psMain", "ps_5_1", &psShader);
+	descPSO.PS = { psShader->GetBufferPointer(), psShader->GetBufferSize() };
+	descPSO.BlendState.RenderTarget[0].BlendEnable = TRUE;
+	descPSO.BlendState.RenderTarget[0].SrcBlend = D3D12_BLEND_DEST_ALPHA;
+	CheckResult(m_device->CreateGraphicsPipelineState(&descPSO, IID_PPV_ARGS(&m_shaders[ST_OBJECT_DRAW_ALPHA_MULT])));
+
+	vsShader->Release();
+	psShader->Release();
+
+	LoadShader(L"../shaders/objectDraw.hlsl", nullptr, "vsMain", "vs_5_1", &vsShader);
 	descPSO.VS = { vsShader->GetBufferPointer(), vsShader->GetBufferSize() };
 
-	LoadShader(L"../shaders/bake.hlsl", nullptr, "psMain", "ps_5_1", &psShader);
+	LoadShader(L"../shaders/objectDraw.hlsl", nullptr, "psMain", "ps_5_1", &psShader);
 	descPSO.PS = { psShader->GetBufferPointer(), psShader->GetBufferSize() };
 
+	descPSO.BlendState.RenderTarget[0].SrcBlend = D3D12_BLEND_SRC_ALPHA;
 	CheckResult(m_device->CreateGraphicsPipelineState(&descPSO, IID_PPV_ARGS(&m_bakeShader)));
 
 	vsShader->Release();
@@ -330,12 +339,7 @@ inline void CRender::Bake(unsigned int& renderObjectID)
 	renderTargetDH.ptr += FRAME_NUM * m_rtvDescriptorHandleIncrementSize;
 	commandList->OMSetRenderTargets(1, &renderTargetDH, true, nullptr);
 
-	commandList->SetGraphicsRootSignature(m_bakeRS);
 	D3D12_GPU_DESCRIPTOR_HANDLE texturesHandle = m_texturesDH->GetGPUDescriptorHandleForHeapStart();
-
-	D3D12_GPU_DESCRIPTOR_HANDLE maskTexture = texturesHandle;
-	maskTexture.ptr += m_srvDescriptorHandleIncrementSize * T_ISLAND;
-	commandList->SetGraphicsRootDescriptorTable(1, maskTexture);
 
 	unsigned int const objectsNum = GBakeObjects.size();
 	for (unsigned int objectID = 0; objectID < objectsNum; ++objectID)
@@ -352,7 +356,7 @@ inline void CRender::Bake(unsigned int& renderObjectID)
 		D3D12_GPU_DESCRIPTOR_HANDLE texture = texturesHandle;
 		texture.ptr += m_srvDescriptorHandleIncrementSize * gameObject.m_texutreID;
 
-		commandList->SetGraphicsRootDescriptorTable(2, texture);
+		commandList->SetGraphicsRootDescriptorTable(1, texture);
 		commandList->DrawInstanced(4, 1, 0, 0);
 		++renderObjectID;
 	}
@@ -416,6 +420,7 @@ void CRender::DrawFrame()
 	commandList->RSSetViewports(1, &m_viewport);
 	commandList->SetDescriptorHeaps(1, &m_texturesDH);
 	commandList->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLESTRIP);
+	commandList->SetGraphicsRootSignature(m_mainRS);
 
 	unsigned int renderObjectID = 0;
 	Bake(renderObjectID);
@@ -442,7 +447,6 @@ void CRender::DrawFrame()
 
 	commandList->OMSetRenderTargets(1, &renderTargetDH, true, nullptr);
 	
-	commandList->SetGraphicsRootSignature(m_mainRS);
 	D3D12_GPU_DESCRIPTOR_HANDLE texturesHandle = m_texturesDH->GetGPUDescriptorHandleForHeapStart();
 
 	Byte currentShader = ST_MAX;
@@ -525,7 +529,6 @@ void CRender::Release()
 		frameData.m_pResourceData = nullptr;
 	}
 
-	m_bakeRS->Release();
 	m_bakeShader->Release();
 
 	m_bakeTexture->Release();
