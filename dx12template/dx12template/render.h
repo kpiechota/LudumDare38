@@ -6,7 +6,7 @@ struct SRenderFrameData
 	ID3D12CommandAllocator*		m_frameCA;
 	ID3D12GraphicsCommandList*	m_frameCL;
 	ID3D12Resource*				m_frameResource;
-	CBObject*					m_pResourceData;
+	Byte*						m_pResourceData;
 };
 
 class CRender
@@ -65,6 +65,8 @@ private:
 	UINT							m_rtvDescriptorHandleIncrementSize;
 	UINT							m_srvDescriptorHandleIncrementSize;
 
+	UINT							m_constBufferOffset;
+
 private:
 	void InitCommands();
 	void InitFrameData();
@@ -76,7 +78,7 @@ private:
 	inline void LoadShader(LPCWSTR pFileName, D3D_SHADER_MACRO const* pDefines, LPCSTR pEmtryPoint, LPCSTR pTarget, ID3DBlob** ppCode) const;
 	void InitShaders();
 
-	inline void Bake(unsigned int& renderObjectID);
+	inline void Bake();
 
 public:
 	void Init();
@@ -89,6 +91,8 @@ public:
 	void WaitForResourcesLoad();
 
 	void ClearBaked();
+
+	void GetRenderData( UINT const cbSize, D3D12_GPU_VIRTUAL_ADDRESS& outConstBufferOffset, void*& outConstBufferPtr );
 
 public: //Getters\setters
 	void SetWindowWidth(int const wndWidth) { m_wndWidth = wndWidth; }

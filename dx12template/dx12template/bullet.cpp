@@ -1,6 +1,8 @@
+#include "render.h"
 #include "bullet.h"
 #include "timer.h"
 extern CTimer GTimer;
+extern Matrix3x3 GScreenMatrix;
 
 void CBullet::CollisionTest()
 {
@@ -11,33 +13,34 @@ void CBullet::CollisionTest()
 
 		if (pGameObject != this && pGameObject->CollideWith(m_bulletType) && !pGameObject->NeedDelete())
 		{
-			Vec2 vectorTo = pGameObject->GetPosition() - m_renderObject.m_positionWS;
+			Vec2 vectorTo = pGameObject->GetPosition() - m_position;
 			float const magnitude2 = vectorTo.x * vectorTo.x + vectorTo.y * vectorTo.y;
-			float const radius = m_renderObject.m_size.x + pGameObject->GetSize().x;
+			float const radius = m_colliderSize.x + pGameObject->GetColliderSize().x;
 			float const radius2 = radius * radius;
 
 			if (magnitude2 < radius2 && 0.f < magnitude2)
 			{
-				pGameObject->TakeDamage(m_renderObject.m_rotation, m_damage);
+				pGameObject->TakeDamage(m_rotation, m_damage);
 				m_lifeTime = -1.f;
 			}
 		}
 	}
 }
 
-CBullet::CBullet(SRenderObject const& renderObject, float const damage, ECollisionFlag const bulletType)
-	: m_renderObject( renderObject )
-	, m_lifeTime( 5.f )
+CBullet::CBullet(float const damage, ECollisionFlag const bulletType)
+	: m_lifeTime( 5.f )
 	, m_speed( 800.f )
 	, m_damage( damage )
 	, m_bulletType( bulletType )
+	, m_shaderID( 0 )
+	, m_textureID( 0 )
 {
 	m_collisionMask = 0;
 }
 
 void CBullet::Update()
 {
-	m_renderObject.m_positionWS += m_renderObject.m_rotation * m_speed * GTimer.GameDelta();
+	m_position += m_rotation * m_speed * GTimer.GameDelta();
 	m_lifeTime -= GTimer.GameDelta();
 
 	CollisionTest();
@@ -45,20 +48,47 @@ void CBullet::Update()
 
 void CBullet::FillRenderData() const
 {
-	GRenderObjects[RL_FOREGROUND0].push_back(m_renderObject);
-}
+	ASSERT( m_shaderID < EShaderType::ST_MAX );
+	CBObject* constBuffer;
+	SRenderData renderData;
+	renderData.m_shaderID = m_shaderID;
+	renderData.m_textureID = m_textureID;
 
-Vec2 CBullet::GetPosition() const
-{
-	return m_renderObject.m_positionWS;
-}
+	GRender.GetRenderData( sizeof( CBObject ), renderData.m_cbOffset, reinterpret_cast< void*& >( constBuffer ) );
 
-Vec2 CBullet::GetSize() const
-{
-	return m_renderObject.m_size;
+	constBuffer->m_objectToScreen = Mul(GScreenMatrix, Matrix3x3::GetTranslateRotationSize(m_position, m_rotation, m_scale));
+	m_material.FillConstBuffer( constBuffer );
+
+	GRenderObjects[RL_FOREGROUND0].push_back(renderData);
 }
 
 bool CBullet::NeedDelete() const
 {
 	return m_lifeTime < 0.f;
+}
+
+void CBullet::SetShaderID( Byte const shaderID )
+{
+	m_shaderID = shaderID;
+}
+void CBullet::SetTextureID( Byte const textureID )
+{
+	m_textureID = textureID;
+}
+
+void CBullet::SetColor( Vec4 const& color )
+{
+	m_material.m_color = color;
+}
+void CBullet::SetPositionOffset( Vec2 const offset )
+{
+	m_material.m_positionOffset = offset;
+}
+void CBullet::SetUvTile( Vec2 const tile )
+{
+	m_material.m_uvTile = tile;
+}
+void CBullet::SetUvOffset( Vec2 const offset )
+{
+	m_material.m_uvOffset = offset;
 }

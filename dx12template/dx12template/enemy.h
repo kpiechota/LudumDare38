@@ -4,13 +4,17 @@
 class CEnemyObject : public CGameObject
 {
 private:
-	SRenderObject m_renderObject;
+	SObjectMaterial m_material;
+
 	float m_speed;
 	float m_shootSpeed;
 	float m_lastShoot;
 	float m_shootRadius2;
 	float m_maxHealth;
 	float m_health;
+
+	Byte m_shaderID;
+	Byte m_textureID;
 
 private:
 	inline void DrawHealthBar() const;
@@ -20,12 +24,16 @@ private:
 public:
 	CEnemyObject();
 
-	void SetPosition(Vec2 const position) { m_renderObject.m_positionWS = position; }
+	void SetShaderID( Byte const shaderID );
+	void SetTextureID( Byte const textureID );
+
+	void SetColor( Vec4 const& color );
+	void SetPositionOffset( Vec2 const offset );
+	void SetUvTile( Vec2 const tile );
+	void SetUvOffset( Vec2 const offset );
 
 	virtual void Update() override;
 	virtual void FillRenderData() const override;
-	virtual Vec2 GetPosition() const override;
-	virtual Vec2 GetSize() const override;
 	virtual bool NeedDelete() const override;
 	virtual void TakeDamage(Vec2 const rotation, float const damage) override;
 };

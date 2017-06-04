@@ -1,12 +1,15 @@
+#include "render.h"
 #include "staticObject.h"
 #include "timer.h"
 
 extern CTimer GTimer;
+extern Matrix3x3 GScreenMatrix;
 
-CStaticObject::CStaticObject(SRenderObject const& renderObject, float const lifeTime, Byte const collisionMask, Byte const layer)
-	: m_renderObject(renderObject)
-	, m_lifeTime( lifeTime )
+CStaticObject::CStaticObject( float const lifeTime, Byte const collisionMask, Byte const layer)
+	: m_lifeTime( lifeTime )
 	, m_layer( layer )
+	, m_shaderID( 0 )
+	, m_textureID( 0 )
 {
 	m_collisionMask = collisionMask;
 	m_allowDestroy = 0.f < m_lifeTime;
@@ -14,7 +17,18 @@ CStaticObject::CStaticObject(SRenderObject const& renderObject, float const life
 
 void CStaticObject::FillRenderData() const
 {
-	GRenderObjects[m_layer].push_back(m_renderObject);
+	ASSERT( m_shaderID < EShaderType::ST_MAX );
+	CBObject* constBuffer;
+	SRenderData renderData;
+	renderData.m_shaderID = m_shaderID;
+	renderData.m_textureID = m_textureID;
+
+	GRender.GetRenderData( sizeof( CBObject ), renderData.m_cbOffset, reinterpret_cast< void*& >( constBuffer ) );
+
+	constBuffer->m_objectToScreen = Mul(GScreenMatrix, Matrix3x3::GetTranslateRotationSize(m_position, m_rotation, m_scale));
+	m_material.FillConstBuffer( constBuffer );
+
+	GRenderObjects[m_layer].push_back(renderData);
 }
 
 void CStaticObject::Update()
@@ -22,12 +36,28 @@ void CStaticObject::Update()
 	m_lifeTime -= GTimer.GameDelta();
 }
 
-Vec2 CStaticObject::GetPosition() const
+void CStaticObject::SetShaderID( Byte const shaderID )
 {
-	return m_renderObject.m_positionWS;
+	m_shaderID = shaderID;
+}
+void CStaticObject::SetTextureID( Byte const textureID )
+{
+	m_textureID = textureID;
 }
 
-Vec2 CStaticObject::GetSize() const
+void CStaticObject::SetColor( Vec4 const& color )
 {
-	return m_renderObject.m_size;
+	m_material.m_color = color;
+}
+void CStaticObject::SetPositionOffset( Vec2 const offset )
+{
+	m_material.m_positionOffset = offset;
+}
+void CStaticObject::SetUvTile( Vec2 const tile )
+{
+	m_material.m_uvTile = tile;
+}
+void CStaticObject::SetUvOffset( Vec2 const offset )
+{
+	m_material.m_uvOffset = offset;
 }

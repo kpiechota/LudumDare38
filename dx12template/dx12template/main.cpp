@@ -19,9 +19,10 @@ CTimer GTimer;
 CEnemySpawner GEnemySpawner;
 CPlayerObject* GPlayer;
 CGeneratorObject* GGenerator;
+CStaticObject* GBackgroundStars;
 
-std::vector< SRenderObject > GRenderObjects[ RL_MAX ];
-std::vector< SRenderObject > GBakeObjects;
+std::vector< SRenderData > GRenderObjects[ RL_MAX ];
+std::vector< SRenderData > GBakeObjects;
 std::vector< CGameObject* > GGameObjects;
 std::vector< CGameObject* > GGameObjectsToSpawn;
 std::vector< CGameObject* > GGameObjectsToDelete;
@@ -72,31 +73,33 @@ void InitGame()
 
 	GRender.ClearBaked();
 
-	SRenderObject gameObject;
-	gameObject.m_size = 400.f;
-	gameObject.m_texutreID = T_BACKGROUND;
-	gameObject.m_shaderID = ST_OBJECT_DRAW_NO_CLIP;
-	GRenderObjects[RL_BACKGROUND_STATIC].push_back(gameObject);
+	GBackgroundStars = new CStaticObject( -1.f, 0, RL_BACKGROUND);
+	GBackgroundStars->SetScale( 400.f );
+	GBackgroundStars->SetShaderID( ST_OBJECT_DRAW_NO_CLIP );
+	GBackgroundStars->SetTextureID( T_BACKGROUND );
+	GGameObjectsToSpawn.push_back(GBackgroundStars);
 
-	gameObject.m_size = GIslandSize;
-	gameObject.m_texutreID = T_ISLAND;
-	gameObject.m_shaderID = ST_OBJECT_DRAW;
-	GRenderObjects[RL_BACKGROUND_STATIC].push_back(gameObject);
+	CStaticObject* pIsland = new CStaticObject( -1.f, 0, RL_BACKGROUND);
+	pIsland->SetScale( GIslandSize );
+	pIsland->SetShaderID( ST_OBJECT_DRAW );
+	pIsland->SetTextureID( T_ISLAND );
+	GGameObjectsToSpawn.push_back(pIsland);
 
-	gameObject.m_size = 400.f;
-	gameObject.m_texutreID = T_BAKED;
-	gameObject.m_shaderID = ST_OBJECT_DRAW_ALPHA_MULT;
-	gameObject.m_uvTile.y = -1.f;
-	GRenderObjects[RL_BACKGROUND_STATIC].push_back(gameObject);
+	CStaticObject* pBaked = new CStaticObject( -1.f, 0, RL_BACKGROUND);
+	pBaked->SetScale( 400.f );
+	pBaked->SetShaderID( ST_OBJECT_DRAW_ALPHA_MULT );
+	pBaked->SetTextureID( T_BAKED );
+	pBaked->SetUvTile( Vec2(1.f, -1.f) );
+	GGameObjectsToSpawn.push_back(pBaked);
 
 	GPlayer = new CPlayerObject();
-	GGameObjects.push_back(GPlayer);
+	GGameObjectsToSpawn.push_back(GPlayer);
 
-	gameObject.m_size = 32.f;
-	gameObject.m_texutreID = T_GENERATOR;
-
-	GGenerator = new CGeneratorObject(gameObject);
-	GGameObjects.push_back(GGenerator);
+	GGenerator = new CGeneratorObject();
+	GGenerator->SetScale( 32.f );
+	GGenerator->SetColliderSize( 32.f );
+	GGenerator->SetTextureID( T_GENERATOR );
+	GGameObjectsToSpawn.push_back(GGenerator);
 
 	GEnemySpawner.Init();
 }
@@ -169,6 +172,8 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, PSTR pCmdLine, 
 		"../content/deathScreen.tif",
 		"../content/deadEnemy.tif",
 		"../content/ground.png",
+		"../content/sdf_font_512.png",
+		"../content/sdf_font_64.png",
 	};
 
 	GRender.Init();
@@ -257,8 +262,7 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, PSTR pCmdLine, 
 			}
 		}
 
-
-		GRenderObjects[RL_BACKGROUND_STATIC][0].m_uvOffset.x += GTimer.GameDelta();
+		GBackgroundStars->SetUvOffset( Vec2( GTimer.GetSeconds( GTimer.TimeFromStart() ), 0.f ) );
 
 		for (unsigned int gameObjectID = 0; gameObjectID < gameObjectsNum; ++gameObjectID)
 		{
@@ -304,6 +308,7 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, PSTR pCmdLine, 
 		for (unsigned int gameObjectID = 0; gameObjectID < objectToSpawnNum; ++gameObjectID)
 		{
 			GGameObjects.push_back(GGameObjectsToSpawn[gameObjectID]);
+			GGameObjectsToSpawn[ gameObjectID ]->Start();
 		}
 
 		GGameObjectsToSpawn.clear();
@@ -312,12 +317,11 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, PSTR pCmdLine, 
 		{
 			if (!pDeathScreen)
 			{
-				SRenderObject initDeathObject;
-				initDeathObject.m_shaderID = ST_OBJECT_DRAW_BLEND;
-				initDeathObject.m_texutreID = T_DEATH_SCREEN;
-				initDeathObject.m_size = 400.f;
+				pDeathScreen = new CStaticObject( -1.f, 0, RL_OVERLAY2);
+				pDeathScreen->SetScale( 400.f );
+				pDeathScreen->SetShaderID( ST_OBJECT_DRAW_BLEND );
+				pDeathScreen->SetTextureID( T_DEATH_SCREEN );
 
-				pDeathScreen = new CStaticObject(initDeathObject, -1.f, 0, RL_OVERLAY2);
 				GGameObjectsToSpawn.push_back(pDeathScreen);
 
 				GTimer.SetGameScale(0.1f);

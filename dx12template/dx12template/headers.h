@@ -14,6 +14,7 @@
 #include <comdef.h>
 #include <intrin.h>
 #include <cstdlib>
+#include <assert.h>
 
 #include "types.h"
 #include "math.h"
@@ -29,3 +30,6 @@ extern float const GIslandSize;
 
 void CheckResult(HRESULT result);
 void CheckResult(HRESULT result, ID3DBlob* errorBlob);
+
+#define ASSERT( condition ) assert( condition )
+#define ASSERT_STR( condition, msg ) assert( condition && msg )

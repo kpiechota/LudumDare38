@@ -1,27 +1,33 @@
+#include "render.h"
 #include "turretObject.h"
 #include "timer.h"
 #include "soundEngine.h"
 #include "bullet.h"
 
 extern CTimer GTimer;
+extern Matrix3x3 GScreenMatrix;
 
 void CTurretObject::DrawHealthBar() const
 {
-	SRenderObject healthBarBackground;
-	healthBarBackground.m_colorScale.Set(0.f, 0.f, 0.f, 1.f);
-	healthBarBackground.m_positionWS = m_renderObject.m_positionWS + Vec2(0.f, 12.f + 3.f);
-	healthBarBackground.m_size.Set(12.f, 2.f);
-	healthBarBackground.m_texutreID = T_BLANK;
+	CBObject* constBuffer;
+	SRenderData renderData;
+	renderData.m_textureID = T_BLANK;
 
-	SRenderObject healthBar;
-	healthBar.m_colorScale.Set(0.f, 1.f, 0.f, 1.f);
-	healthBar.m_positionWS = m_renderObject.m_positionWS + Vec2(-12.f, 12.f + 3.f);
-	healthBar.m_size.Set(12.f * (m_health / m_maxHealth), 2.f);
-	healthBar.m_offset.Set(1.f, 0.f);
-	healthBar.m_texutreID = T_BLANK;
+	GRender.GetRenderData( sizeof( CBObject ), renderData.m_cbOffset, reinterpret_cast< void*& >( constBuffer ) );
+	constBuffer->m_objectToScreen = Mul(GScreenMatrix, Matrix3x3::GetTranslateRotationSize(m_position + Vec2(0.f, 12.f + 3.f), Vec2(1.f, 0.f), Vec2(12.f, 2.f)));
+	constBuffer->m_colorScale.Set( 0.f, 0.f, 0.f, 1.f );
+	constBuffer->m_offset.Set( 0.f, 0.f );
+	constBuffer->m_uvOffset.Set( 0.f, 0.f );
+	constBuffer->m_uvTile.Set( 1.f, 1.f );
+	GRenderObjects[RL_OVERLAY0].push_back(renderData);
 
-	GRenderObjects[RL_OVERLAY0].push_back(healthBarBackground);
-	GRenderObjects[RL_OVERLAY0].push_back(healthBar);
+	GRender.GetRenderData( sizeof( CBObject ), renderData.m_cbOffset, reinterpret_cast< void*& >( constBuffer ) );
+	constBuffer->m_objectToScreen = Mul(GScreenMatrix, Matrix3x3::GetTranslateRotationSize(m_position + Vec2(-12.f, 12.f + 3.f), Vec2(1.f, 0.f), Vec2(12.f * (m_health / m_maxHealth), 2.f)));
+	constBuffer->m_colorScale.Set( 0.f, 1.f, 0.f, 1.f );
+	constBuffer->m_offset.Set( 1.f, 0.f );
+	constBuffer->m_uvOffset.Set( 0.f, 0.f );
+	constBuffer->m_uvTile.Set( 1.f, 1.f );
+	GRenderObjects[RL_OVERLAY0].push_back(renderData);
 }
 
 Vec2 CTurretObject::FindNearestObject() const
@@ -36,7 +42,7 @@ Vec2 CTurretObject::FindNearestObject() const
 
 		if (pGameObject != this && pGameObject->CollideWith(CF_PLAYER_BULLET) && !pGameObject->NeedDelete())
 		{
-			Vec2 vectorTo = pGameObject->GetPosition() - m_renderObject.m_positionWS;
+			Vec2 vectorTo = pGameObject->GetPosition() - m_position;
 			float const magnitude2 = vectorTo.x * vectorTo.x + vectorTo.y * vectorTo.y;
 
 			if (-1.f < nearestMagnitude2)
@@ -58,9 +64,8 @@ Vec2 CTurretObject::FindNearestObject() const
 	return nearest;
 }
 
-CTurretObject::CTurretObject(SRenderObject const& renderObject)
-	: m_renderObject(renderObject)
-	, m_shootSpeed(0.3f)
+CTurretObject::CTurretObject()
+	: m_shootSpeed(0.3f)
 	, m_lastShoot(0.f)
 	, m_shootRadius2(150.f * 150.f)
 	, m_maxHealth(1.f)
@@ -68,19 +73,29 @@ CTurretObject::CTurretObject(SRenderObject const& renderObject)
 	, m_collisionSize(12.f)
 	, m_hitTime(.1f)
 	, m_lastHitTime(0.f)
+	, m_shaderID( 0 )
+	, m_textureID( T_TURRET )
 {
 	m_collisionMask = (Byte)(CF_ENEMY | CF_ENEMY_BULLET | CF_PLAYER);
 
-	m_renderObject.m_size = 20.f;
-	m_renderObject.m_texutreID = T_TURRET;
+	m_scale = 20.f;
+}
 
-	SRenderObject bakedGround;
-	bakedGround.m_positionWS = m_renderObject.m_positionWS;
-	bakedGround.m_size = m_renderObject.m_size * 1.75f;
-	bakedGround.m_texutreID = T_GROUND;
-	bakedGround.m_rotation = Vec2::GetRandomOnCircle();
+void CTurretObject::Start()
+{
+	CBObject* constBuffer;
+	SRenderData renderData;
+	renderData.m_textureID = T_GROUND;
 
-	GBakeObjects.push_back(bakedGround);
+	GRender.GetRenderData( sizeof( CBObject ), renderData.m_cbOffset, reinterpret_cast< void*& >( constBuffer ) );
+
+	constBuffer->m_objectToScreen = Mul(GScreenMatrix, Matrix3x3::GetTranslateRotationSize(m_position, Vec2::GetRandomOnCircle(), m_scale * 1.75f));
+	constBuffer->m_colorScale.Set( 1.f, 1.f, 1.f, 1.f );
+	constBuffer->m_offset.Set( 0.f, 0.f );
+	constBuffer->m_uvOffset.Set( 0.f, 0.f );
+	constBuffer->m_uvTile.Set( 1.f, 1.f );
+
+	GBakeObjects.push_back(renderData);
 }
 
 void CTurretObject::Update()
@@ -92,16 +107,16 @@ void CTurretObject::Update()
 	float const nearestMagnitude2 = nearestPoint.Magnitude2();
 	if (0.f < nearestMagnitude2 && nearestMagnitude2 < m_shootRadius2)
 	{
-		m_renderObject.m_rotation = nearestPoint.GetNormalized();
+		m_rotation = nearestPoint.GetNormalized();
 		if (m_lastShoot < 0.f)
 		{
-			SRenderObject bulletObject;
-			bulletObject.m_positionWS = m_renderObject.m_positionWS + m_renderObject.m_rotation * m_renderObject.m_size;
-			bulletObject.m_rotation = m_renderObject.m_rotation;
-			bulletObject.m_size = 4.f;
-			bulletObject.m_texutreID = T_BULLET0;
+			CBullet* bullet = new CBullet(.5f, CF_PLAYER_BULLET);
+			bullet->SetPosition( m_position + m_rotation * m_scale );
+			bullet->SetRotation( m_rotation );
+			bullet->SetScale( 4.f );
+			bullet->SetColliderSize( 4.f );
+			bullet->SetTextureID( T_BULLET0 );
 
-			CBullet* bullet = new CBullet(bulletObject, .5f, CF_PLAYER_BULLET);
 			GGameObjectsToSpawn.push_back(bullet);
 
 			m_lastShoot = m_shootSpeed;
@@ -112,23 +127,25 @@ void CTurretObject::Update()
 
 void CTurretObject::FillRenderData() const
 {
-	GRenderObjects[RL_FOREGROUND0].push_back(m_renderObject);
+	ASSERT( m_shaderID < EShaderType::ST_MAX );
+	CBObject* constBuffer;
+	SRenderData renderData;
+	renderData.m_shaderID = m_shaderID;
+	renderData.m_textureID = m_textureID;
+
+	GRender.GetRenderData( sizeof( CBObject ), renderData.m_cbOffset, reinterpret_cast< void*& >( constBuffer ) );
+
+	constBuffer->m_objectToScreen = Mul(GScreenMatrix, Matrix3x3::GetTranslateRotationSize(m_position, m_rotation, m_scale));
+	m_material.FillConstBuffer( constBuffer );
+
 	if (0.f < m_lastHitTime)
 	{
-		GRenderObjects[RL_FOREGROUND0].back().m_colorScale.Set(1.f, 0.f, 0.f, 1.f);
+		constBuffer->m_colorScale.Set(1.f, 0.f, 0.f, 1.f);
 	}
 
+	GRenderObjects[RL_FOREGROUND0].push_back(renderData);
+
 	DrawHealthBar();
-}
-
-Vec2 CTurretObject::GetPosition() const
-{
-	return m_renderObject.m_positionWS;
-}
-
-Vec2 CTurretObject::GetSize() const
-{
-	return Vec2(m_collisionSize);
 }
 
 bool CTurretObject::NeedDelete() const
@@ -147,4 +164,30 @@ void CTurretObject::TakeDamage(Vec2 const rotation, float const damage)
 	{
 		GSoundEngine.Play2DSound(GSounds[SET_EXPLOSION]);
 	}
+}
+
+void CTurretObject::SetShaderID( Byte const shaderID )
+{
+	m_shaderID = shaderID;
+}
+void CTurretObject::SetTextureID( Byte const textureID )
+{
+	m_textureID = textureID;
+}
+
+void CTurretObject::SetColor( Vec4 const& color )
+{
+	m_material.m_color = color;
+}
+void CTurretObject::SetPositionOffset( Vec2 const offset )
+{
+	m_material.m_positionOffset = offset;
+}
+void CTurretObject::SetUvTile( Vec2 const tile )
+{
+	m_material.m_uvTile = tile;
+}
+void CTurretObject::SetUvOffset( Vec2 const offset )
+{
+	m_material.m_uvOffset = offset;
 }

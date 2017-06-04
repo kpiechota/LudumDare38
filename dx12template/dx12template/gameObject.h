@@ -6,6 +6,7 @@ enum EShaderType
 	ST_OBJECT_DRAW_BLEND,
 	ST_OBJECT_DRAW_NO_CLIP,
 	ST_OBJECT_DRAW_ALPHA_MULT,
+	ST_SDF_DRAW,
 
 	ST_MAX
 };
@@ -30,12 +31,14 @@ enum ETextures
 	T_DEATH_SCREEN,
 	T_DEAD_ENEMY,
 	T_GROUND,
+	T_SDF_FONT_512,
+	T_SDF_FONT_64,
 	T_BAKED,
 };
 
 enum ERenderLayer
 {
-	RL_BACKGROUND_STATIC,
+	RL_BACKGROUND,
 	RL_FOREGROUND0,
 	RL_FOREGROUND1,
 	RL_OVERLAY0,
@@ -65,28 +68,16 @@ enum ECollisionFlag
 	CF_ENEMY_BULLET		= 1 << 3,
 };
 
-struct SRenderObject
+struct SRenderData
 {
-	Vec4 m_colorScale;
-	Vec2 m_positionWS;
-	Vec2 m_rotation;
-	Vec2 m_size;
-	Vec2 m_offset;
-	Vec2 m_uvTile;
-	Vec2 m_uvOffset;
+	D3D12_GPU_VIRTUAL_ADDRESS m_cbOffset;
 
-	Byte m_texutreID;
+	Byte m_textureID;
 	Byte m_shaderID;
 
-	SRenderObject()
-		: m_colorScale( 1.f, 1.f, 1.f, 1.f )
-		, m_positionWS( 0.f, 0.f )
-		, m_rotation( 1.f, 0.f )
-		, m_size(1.f, 1.f)
-		, m_offset(0.f, 0.f)
-		, m_uvTile(1.f, 1.f)
-		, m_uvOffset(0.f, 0.f)
-		, m_texutreID( 0 )
+	SRenderData()
+		: m_cbOffset( 0 )
+		, m_textureID( 0 )
 		, m_shaderID( 0 )
 	{}
 };
@@ -94,20 +85,42 @@ struct SRenderObject
 class CGameObject
 {
 protected:
+	Vec2 m_position;
+	Vec2 m_rotation;
+	Vec2 m_scale;
+	Vec2 m_colliderSize;
+
 	Byte m_collisionMask;
 
 public:
+	CGameObject()
+	{
+		m_position.Set( 0.f, 0.f );
+		m_rotation.Set( 1.f, 0.f );
+		m_scale.Set( 1.f, 1.f );
+		m_colliderSize.Set( 1.f, 1.f );
+	}
+
 	bool CollideWith( ECollisionFlag const collisionType ) const { return m_collisionMask & collisionType; }
 
+	virtual void SetPosition( Vec2 const position ) { m_position = position; }
+	virtual void SetRotation( Vec2 const rotation ) { m_rotation = rotation; }
+	virtual void SetScale( Vec2 const scale ) { m_scale = scale; }
+	virtual void SetScale( float const scale ) { m_scale = scale; }
+
+	virtual void SetColliderSize( Vec2 const size ) { m_colliderSize = size; }
+
+	virtual void Start(){}
 	virtual void Update() = 0;
 	virtual void FillRenderData() const = 0;
-	virtual Vec2 GetPosition() const = 0;
-	virtual Vec2 GetSize() const = 0;
+	virtual Vec2 GetPosition() const { return m_position; }
+	virtual Vec2 GetScale() const { return m_scale; }
+	virtual Vec2 GetColliderSize() const { return m_colliderSize; }
 	virtual bool NeedDelete() const = 0;
 	virtual void TakeDamage(Vec2 const rotation, float const damage) = 0;
 };
 
 extern std::vector< CGameObject* > GGameObjects;
 extern std::vector< CGameObject* > GGameObjectsToSpawn;
-extern std::vector< SRenderObject > GRenderObjects[RL_MAX];
-extern std::vector< SRenderObject > GBakeObjects;
+extern std::vector< SRenderData > GRenderObjects[RL_MAX];
+extern std::vector< SRenderData > GBakeObjects;

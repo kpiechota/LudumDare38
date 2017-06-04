@@ -16,5 +16,6 @@
   </ItemGroup>
   <ItemGroup>
     <FxCompile Include="objectDraw.hlsl" />
+    <FxCompile Include="sdfDraw.hlsl" />
   </ItemGroup>
 </Project>

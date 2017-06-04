@@ -17,11 +17,12 @@ void CheckResult(HRESULT result, ID3DBlob* errorBlob)
 		::OutputDebugString(err.ErrorMessage());
 		::OutputDebugStringA("\n");
 		::OutputDebugStringA((LPCSTR)errorBlob->GetBufferPointer());
-		__debugbreak();
+		ASSERT( false );
 	}
 	if (errorBlob && 0 < errorBlob->GetBufferSize())
 	{
 		::OutputDebugString((LPCWSTR)errorBlob->GetBufferPointer());
+		ASSERT( false );
 	}
 }
 
