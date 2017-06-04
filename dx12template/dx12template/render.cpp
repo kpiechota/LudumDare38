@@ -26,8 +26,7 @@ D3D12_HEAP_PROPERTIES const GHeapPropertiesUpload =
 	/*VisibleNodeMask*/			,1
 };
 
-extern std::vector< SRenderObject > GRenderObjects[RL_MAX];
-extern Matrix3x3 GScreenMatrix;
+extern std::vector< SRenderData > GRenderObjects[RL_MAX];
 CRender GRender;
 
 void CRender::InitCommands()
@@ -70,7 +69,7 @@ void CRender::InitFrameData()
 	descResource.SampleDesc.Count = 1;
 	descResource.Layout = D3D12_TEXTURE_LAYOUT_ROW_MAJOR;
 	descResource.Flags = D3D12_RESOURCE_FLAG_NONE;
-	descResource.Width = sizeof(CBObject) * MAX_OBJECTS;
+	descResource.Width = 256 * MAX_OBJECTS;
 
 	for (UINT frameID = 0; frameID < FRAME_NUM; ++frameID)
 	{
@@ -168,7 +167,7 @@ void CRender::InitRootSignatures()
 	rootParameters[1].DescriptorTable = { 1, descriptorRange };
 	rootParameters[1].ShaderVisibility = D3D12_SHADER_VISIBILITY_PIXEL;
 
-	D3D12_STATIC_SAMPLER_DESC samplers[] =
+	D3D12_STATIC_SAMPLER_DESC const samplers[] =
 	{
 		{
 		/*Filter*/				D3D12_FILTER_MIN_MAG_MIP_POINT
@@ -184,18 +183,34 @@ void CRender::InitRootSignatures()
 		/*ShaderRegister*/		,0
 		/*RegisterSpace*/		,0
 		/*ShaderVisibility*/	,D3D12_SHADER_VISIBILITY_PIXEL
+		},
+		{
+		/*Filter*/				D3D12_FILTER_MIN_MAG_MIP_LINEAR
+		/*AddressU*/			,D3D12_TEXTURE_ADDRESS_MODE_WRAP
+		/*AddressV*/			,D3D12_TEXTURE_ADDRESS_MODE_WRAP
+		/*AddressW*/			,D3D12_TEXTURE_ADDRESS_MODE_WRAP
+		/*MipLODBias*/			,0
+		/*MaxAnisotropy*/		,0
+		/*ComparisonFunc*/		,D3D12_COMPARISON_FUNC_NEVER
+		/*BorderColor*/			,D3D12_STATIC_BORDER_COLOR_TRANSPARENT_BLACK
+		/*MinLOD*/				,0.f
+		/*MaxLOD*/				,D3D12_FLOAT32_MAX
+		/*ShaderRegister*/		,1
+		/*RegisterSpace*/		,0
+		/*ShaderVisibility*/	,D3D12_SHADER_VISIBILITY_PIXEL
 		}
 	};
 
 	D3D12_ROOT_SIGNATURE_DESC descRootSignature;
 	descRootSignature.NumParameters = 2;
 	descRootSignature.pParameters = rootParameters;
-	descRootSignature.NumStaticSamplers = 1;
+	descRootSignature.NumStaticSamplers = ARRAYSIZE(samplers);
 	descRootSignature.pStaticSamplers = samplers;
 	descRootSignature.Flags = D3D12_ROOT_SIGNATURE_FLAG_ALLOW_INPUT_ASSEMBLER_INPUT_LAYOUT | D3D12_ROOT_SIGNATURE_FLAG_DENY_GEOMETRY_SHADER_ROOT_ACCESS | D3D12_ROOT_SIGNATURE_FLAG_DENY_DOMAIN_SHADER_ROOT_ACCESS | D3D12_ROOT_SIGNATURE_FLAG_DENY_HULL_SHADER_ROOT_ACCESS;
 
 	ID3DBlob* signature;
-	CheckResult(D3D12SerializeRootSignature(&descRootSignature, D3D_ROOT_SIGNATURE_VERSION_1, &signature, nullptr));
+	ID3DBlob* error = nullptr;
+	CheckResult(D3D12SerializeRootSignature(&descRootSignature, D3D_ROOT_SIGNATURE_VERSION_1, &signature, &error), error);
 	CheckResult(m_device->CreateRootSignature(0, signature->GetBufferPointer(), signature->GetBufferSize(), IID_PPV_ARGS(&m_mainRS)));
 	signature->Release();
 }
@@ -329,9 +344,20 @@ void CRender::InitShaders()
 
 	vsShader->Release();
 	psShader->Release();
+
+	LoadShader(L"../shaders/sdfDraw.hlsl", nullptr, "vsMain", "vs_5_1", &vsShader);
+	descPSO.VS = { vsShader->GetBufferPointer(), vsShader->GetBufferSize() };
+
+	LoadShader(L"../shaders/sdfDraw.hlsl", nullptr, "psMain", "ps_5_1", &psShader);
+	descPSO.PS = { psShader->GetBufferPointer(), psShader->GetBufferSize() };
+
+	CheckResult(m_device->CreateGraphicsPipelineState(&descPSO, IID_PPV_ARGS(&m_shaders[ST_SDF_DRAW])));
+
+	vsShader->Release();
+	psShader->Release();
 }
 
-inline void CRender::Bake(unsigned int& renderObjectID)
+inline void CRender::Bake()
 {
 	ID3D12GraphicsCommandList* commandList = m_frameData[m_frameID].m_frameCL;
 
@@ -341,24 +367,17 @@ inline void CRender::Bake(unsigned int& renderObjectID)
 
 	D3D12_GPU_DESCRIPTOR_HANDLE texturesHandle = m_texturesDH->GetGPUDescriptorHandleForHeapStart();
 
+	D3D12_GPU_VIRTUAL_ADDRESS const constBufferStart = m_frameData[ m_frameID ].m_frameResource->GetGPUVirtualAddress();
 	unsigned int const objectsNum = GBakeObjects.size();
 	for (unsigned int objectID = 0; objectID < objectsNum; ++objectID)
 	{
-		CBObject& cbObject = m_frameData[m_frameID].m_pResourceData[renderObjectID];
-		SRenderObject const& gameObject = GBakeObjects[objectID];
-		cbObject.m_objectToScreen = Mul(GScreenMatrix, Matrix3x3::GetTranslateRotationSize(gameObject.m_positionWS, gameObject.m_rotation, gameObject.m_size));
-		cbObject.m_colorScale = gameObject.m_colorScale;
-		cbObject.m_offset = gameObject.m_offset;
-		cbObject.m_uvTile = gameObject.m_uvTile;
-		cbObject.m_uvOffset = gameObject.m_uvOffset;
-
-		commandList->SetGraphicsRootConstantBufferView(0, m_frameData[m_frameID].m_frameResource->GetGPUVirtualAddress() + (D3D12_GPU_VIRTUAL_ADDRESS)(renderObjectID * sizeof(CBObject)));
+		SRenderData const& gameObject = GBakeObjects[objectID];
+		commandList->SetGraphicsRootConstantBufferView(0, constBufferStart + gameObject.m_cbOffset);
 		D3D12_GPU_DESCRIPTOR_HANDLE texture = texturesHandle;
-		texture.ptr += m_srvDescriptorHandleIncrementSize * gameObject.m_texutreID;
+		texture.ptr += m_srvDescriptorHandleIncrementSize * gameObject.m_textureID;
 
 		commandList->SetGraphicsRootDescriptorTable(1, texture);
 		commandList->DrawInstanced(4, 1, 0, 0);
-		++renderObjectID;
 	}
 
 	GBakeObjects.clear();
@@ -366,6 +385,8 @@ inline void CRender::Bake(unsigned int& renderObjectID)
 
 void CRender::Init()
 {
+	m_constBufferOffset = 0;
+
 	m_viewport.MaxDepth = 1.f;
 	m_viewport.MinDepth = 0.f;
 	m_viewport.Width = m_wndWidth;
@@ -422,8 +443,7 @@ void CRender::DrawFrame()
 	commandList->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLESTRIP);
 	commandList->SetGraphicsRootSignature(m_mainRS);
 
-	unsigned int renderObjectID = 0;
-	Bake(renderObjectID);
+	Bake();
 
 	D3D12_CPU_DESCRIPTOR_HANDLE renderTargetDH = m_renderTargetDH->GetCPUDescriptorHandleForHeapStart();
 	renderTargetDH.ptr += m_frameID * m_rtvDescriptorHandleIncrementSize;
@@ -450,22 +470,16 @@ void CRender::DrawFrame()
 	D3D12_GPU_DESCRIPTOR_HANDLE texturesHandle = m_texturesDH->GetGPUDescriptorHandleForHeapStart();
 
 	Byte currentShader = ST_MAX;
+	D3D12_GPU_VIRTUAL_ADDRESS const constBufferStart = m_frameData[ m_frameID ].m_frameResource->GetGPUVirtualAddress();
 	for (unsigned int layerID = 0; layerID < RL_MAX; ++layerID)
 	{
 		unsigned int const objectsNum = GRenderObjects[layerID].size();
 		for (unsigned int objectID = 0; objectID < objectsNum; ++objectID)
 		{
-			CBObject& cbObject = m_frameData[m_frameID].m_pResourceData[renderObjectID];
-			SRenderObject const& gameObject = GRenderObjects[layerID][objectID];
-			cbObject.m_objectToScreen = Mul(GScreenMatrix, Matrix3x3::GetTranslateRotationSize(gameObject.m_positionWS, gameObject.m_rotation, gameObject.m_size));
-			cbObject.m_colorScale = gameObject.m_colorScale;
-			cbObject.m_offset = gameObject.m_offset;
-			cbObject.m_uvTile = gameObject.m_uvTile;
-			cbObject.m_uvOffset = gameObject.m_uvOffset;
-
-			commandList->SetGraphicsRootConstantBufferView(0, m_frameData[m_frameID].m_frameResource->GetGPUVirtualAddress() + (D3D12_GPU_VIRTUAL_ADDRESS)(renderObjectID * sizeof(CBObject)));
+			SRenderData const& gameObject = GRenderObjects[layerID][objectID];
+			commandList->SetGraphicsRootConstantBufferView(0, constBufferStart + gameObject.m_cbOffset );
 			D3D12_GPU_DESCRIPTOR_HANDLE texture = texturesHandle;
-			texture.ptr += m_srvDescriptorHandleIncrementSize * gameObject.m_texutreID;
+			texture.ptr += m_srvDescriptorHandleIncrementSize * gameObject.m_textureID;
 
 			if (currentShader != gameObject.m_shaderID)
 			{
@@ -475,7 +489,6 @@ void CRender::DrawFrame()
 
 			commandList->SetGraphicsRootDescriptorTable(1, texture);
 			commandList->DrawInstanced(4, 1, 0, 0);
-			++renderObjectID;
 		}
 	}
 
@@ -493,6 +506,8 @@ void CRender::DrawFrame()
 
 	CheckResult(m_swapChain->Present(0, 0));
 	m_frameID = (m_frameID + 1) % FRAME_NUM;
+
+	m_constBufferOffset = 0;
 }
 
 void CRender::Release()
@@ -718,4 +733,14 @@ void CRender::ClearBaked()
 	CheckResult(commandList->Close());
 
 	m_mainCQ->ExecuteCommandLists(1, (ID3D12CommandList**)(&commandList));
+}
+
+void CRender::GetRenderData( UINT const cbSize, D3D12_GPU_VIRTUAL_ADDRESS& outConstBufferOffset, void*& outConstBufferPtr )
+{
+	ASSERT_STR( ( cbSize & 0xFF ) == 0, "Const buffer not alignet ty 256B" );
+	ASSERT_STR( m_constBufferOffset + cbSize <= 256 * MAX_OBJECTS, "Not enough space for constant buffer" );
+	outConstBufferPtr = reinterpret_cast<void*>( &m_frameData[ m_frameID ].m_pResourceData[ m_constBufferOffset ] );
+	outConstBufferOffset = m_constBufferOffset;
+
+	m_constBufferOffset += cbSize;
 }
