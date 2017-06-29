@@ -162,7 +162,6 @@
     <ClInclude Include="timer.h" />
     <ClInclude Include="turretObject.h" />
     <ClInclude Include="types.h" />
-    <ClInclude Include="utility\FreeImage.h" />
     <ClInclude Include="vertexFormats.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />

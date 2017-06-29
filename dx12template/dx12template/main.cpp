@@ -3,7 +3,7 @@
 #include "soundEngine.h"
 #include "timer.h"
 #include "input.h"
-#include "utility/FreeImage.h"
+#include "../DirectXTex/DirectXTex.h"
 
 #include "playerObject.h"
 #include "generatorObject.h"
@@ -32,16 +32,6 @@ int GWidth = 800;
 int GHeight = 800;
 float const GIslandSize = 350.f;
 Matrix3x3 GScreenMatrix;
-
-DXGI_FORMAT GFreeImageToDXGI[] =
-{
-	DXGI_FORMAT_R8_UNORM,			
-	DXGI_FORMAT_R8_UNORM,			
-	DXGI_FORMAT_B8G8R8A8_UNORM,
-	DXGI_FORMAT_UNKNOWN,			
-	DXGI_FORMAT_B8G8R8A8_UNORM,
-	DXGI_FORMAT_UNKNOWN				
-};
 
 void InitGame()
 {
@@ -157,27 +147,27 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, PSTR pCmdLine, 
 	GRender.SetWindowHeight(GHeight);
 	GRender.SetHWND(hwnd);
 
-	char const* textures[] =
+	wchar_t const* textures[] =
 	{
-		"../content/blank.png",
-		"../content/player.png",
-		"../content/background.tif",
-		"../content/island.png",
-		"../content/generator.png",
-		"../content/bullet_0.png",
-		"../content/bullet_1.png",
-		"../content/enemy.png",
-		"../content/turret.png",
-		"../content/health.png",
-		"../content/healthEffect.tif",
-		"../content/turretIcon.png",
-		"../content/healthIcon.png",
-		"../content/veins.tif",
-		"../content/initScreen.tif",
-		"../content/deathScreen.tif",
-		"../content/deadEnemy.tif",
-		"../content/ground.png",
-		"../content/sdf_font_512.png",
+		L"../content/blank.png",
+		L"../content/player.png",
+		L"../content/background.tif",
+		L"../content/island.png",
+		L"../content/generator.png",
+		L"../content/bullet_0.png",
+		L"../content/bullet_1.png",
+		L"../content/enemy.png",
+		L"../content/turret.png",
+		L"../content/health.png",
+		L"../content/healthEffect.tif",
+		L"../content/turretIcon.png",
+		L"../content/healthIcon.png",
+		L"../content/veins.tif",
+		L"../content/initScreen.tif",
+		L"../content/deathScreen.tif",
+		L"../content/deadEnemy.tif",
+		L"../content/ground.png",
+		L"../content/sdf_font_512.png",
 	};
 
 	GRender.Init();
@@ -187,23 +177,17 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, PSTR pCmdLine, 
 	for (unsigned int texutreID = 0; texutreID < ARRAYSIZE(textures); ++texutreID)
 	{
 		STexture texutre;
+		DirectX::TexMetadata texMeta;
+		DirectX::ScratchImage image;
+		CheckResult( DirectX::LoadFromWICFile( textures[ texutreID ], DirectX::WIC_FLAGS_NONE, &texMeta, image ) );
 
-		FREE_IMAGE_FORMAT const format = FreeImage_GetFileType(textures[texutreID]);
-		ASSERT( format != FIF_UNKNOWN );
-
-		FIBITMAP* bitmap = FreeImage_Load(format, textures[texutreID]);
-		ASSERT( bitmap );
-
-		texutre.m_data = FreeImage_GetBits(bitmap);
-		texutre.m_width = FreeImage_GetWidth(bitmap);
-		texutre.m_height = FreeImage_GetHeight(bitmap);
-		FREE_IMAGE_COLOR_TYPE const colorType = FreeImage_GetColorType(bitmap);
-		texutre.m_format = GFreeImageToDXGI[colorType];
+		texutre.m_data = image.GetPixels();
+		texutre.m_width = texMeta.width;
+		texutre.m_height = texMeta.height;
+		texutre.m_format = texMeta.format;
 
 		ASSERT( texutre.m_format != DXGI_FORMAT_UNKNOWN );
 		GRender.LoadResource(texutre);
-
-		FreeImage_Unload(bitmap);
 	}
 
 

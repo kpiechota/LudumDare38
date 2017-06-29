@@ -27,6 +27,7 @@ PSInput vsMain( uint vertexID : SV_VertexID )
 	PSInput output;
 	output.m_position = float4( positionSS, 1.f );
 	output.m_uv = mad(position.xy, 0.5f, 0.5f) * UVTile + UVOffset;
+	output.m_uv.y = 1.f - output.m_uv.y;
 
 	return output;
 }

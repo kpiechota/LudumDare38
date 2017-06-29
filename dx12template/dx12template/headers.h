@@ -1,5 +1,9 @@
 #pragma once
-#pragma comment( lib, "../lib/FreeImage" )
+#ifdef _DEBUG
+#pragma comment(lib, "../lib/DirectXTex_d.lib")
+#else
+#pragma comment(lib, "../lib/DirectXTex.lib")
+#endif
 #pragma comment( lib, "../lib/irrKlang" )
 #pragma comment( lib, "d3d12" )
 #pragma comment( lib, "dxgi" )

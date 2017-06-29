@@ -11,8 +11,8 @@ struct SGlyphData
 };
 
 #define GLYPH_UV( lbCornerX, lbCornerY, w, h ) \
-{ lbCornerX / 512.f, 1.f - ( ( lbCornerY - h ) / 512.f ) }, { (lbCornerX + w) / 512.f, 1.f - ( ( lbCornerY - h ) / 512.f ) },	\
-{ lbCornerX / 512.f, 1.f - ( ( lbCornerY ) / 512.f ) }, { (lbCornerX + w) / 512.f, 1.f - ( ( lbCornerY ) / 512.f ) }
+{ lbCornerX / 512.f, ( ( lbCornerY - h ) / 512.f ) }, { (lbCornerX + w) / 512.f, ( ( lbCornerY - h ) / 512.f ) },	\
+{ lbCornerX / 512.f, ( ( lbCornerY ) / 512.f ) }, { (lbCornerX + w) / 512.f, ( ( lbCornerY ) / 512.f ) }
 
 #define GLYPH_POSITION_ALIGN_CENTER( w, h ) \
 { 0.5f - 0.5f * ( w / GMaxGlyphRatio.x ), ( GMaxGlyphRatio.y / GMaxGlyphRatio.x ) * ( 0.5f + 0.5f * ( h / GMaxGlyphRatio.y ) ) },	{ 0.5f + 0.5f * ( w / GMaxGlyphRatio.x ), ( GMaxGlyphRatio.y / GMaxGlyphRatio.x ) * ( 0.5f + 0.5f * ( h / GMaxGlyphRatio.y ) ) },	\
