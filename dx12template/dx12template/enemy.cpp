@@ -13,6 +13,7 @@ void CEnemyObject::DrawHealthBar() const
 {
 	CBObject* constBuffer;
 	SRenderData renderData;
+	renderData.m_dataNum = 4;
 	renderData.m_textureID = T_BLANK;
 
 	GRender.GetRenderData( sizeof( CBObject ), renderData.m_cbOffset, reinterpret_cast< void*& >( constBuffer ) );
@@ -144,6 +145,7 @@ void CEnemyObject::FillRenderData() const
 	ASSERT( m_shaderID < EShaderType::ST_MAX );
 	CBObject* constBuffer;
 	SRenderData renderData;
+	renderData.m_dataNum = 4;
 	renderData.m_shaderID = m_shaderID;
 	renderData.m_textureID = m_textureID;
 
@@ -172,6 +174,7 @@ void CEnemyObject::TakeDamage(Vec2 const rotation, float const damage)
 
 		CBObject* constBuffer;
 		SRenderData renderData;
+		renderData.m_dataNum = 4;
 		renderData.m_textureID = T_DEAD_ENEMY;
 
 		GRender.GetRenderData( sizeof( CBObject ), renderData.m_cbOffset, reinterpret_cast< void*& >( constBuffer ) );

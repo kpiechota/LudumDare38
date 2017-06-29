@@ -1,6 +1,9 @@
 #pragma once
-#include "headers.h"
 
+#include "headers.h"
+#include "renderConstant.h"
+#include "vertexFormats.h"
+#include "geometry.h"
 struct SRenderFrameData
 {
 	ID3D12CommandAllocator*		m_frameCA;
@@ -54,6 +57,8 @@ private:
 
 	ID3D12DescriptorHeap*			m_texturesDH;
 	ID3D12Resource*					m_bakeTexture;
+
+	std::vector< SGeometry >		m_geometryResources;
 	std::vector< ID3D12Resource* >	m_texturesResources;
 	std::vector< ID3D12Resource* >	m_texturesUploadResources;
 
@@ -85,6 +90,12 @@ public:
 	void DrawFrame();
 	void Release();
 
+	ID3D12Device* GetDevice() { return m_device; }
+
+	Byte AddGeometry( SGeometry const& geometry );
+	SGeometry& GetGeometry( Byte const geometryID );
+	void ReleaseGeometry( Byte const geometryID );
+
 	void BeginLoadResources(unsigned int const textureNum);
 	void LoadResource(STexture const& texture);
 	void EndLoadResources();
@@ -94,7 +105,7 @@ public:
 
 	void GetRenderData( UINT const cbSize, D3D12_GPU_VIRTUAL_ADDRESS& outConstBufferOffset, void*& outConstBufferPtr );
 
-public: //Getters\setters
+public: //Getters/setters
 	void SetWindowWidth(int const wndWidth) { m_wndWidth = wndWidth; }
 	int GetWindowWidth() const { return m_wndWidth; }
 

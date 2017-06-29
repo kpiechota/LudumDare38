@@ -51,6 +51,7 @@ void CBullet::FillRenderData() const
 	ASSERT( m_shaderID < EShaderType::ST_MAX );
 	CBObject* constBuffer;
 	SRenderData renderData;
+	renderData.m_dataNum = 4;
 	renderData.m_shaderID = m_shaderID;
 	renderData.m_textureID = m_textureID;
 

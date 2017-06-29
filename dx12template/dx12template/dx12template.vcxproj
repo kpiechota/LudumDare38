@@ -120,6 +120,7 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="bullet.cpp" />
+    <ClCompile Include="dynamicGeometryManager.cpp" />
     <ClCompile Include="enemy.cpp" />
     <ClCompile Include="enemySpawner.cpp" />
     <ClCompile Include="generatorObject.cpp" />
@@ -130,17 +131,22 @@
     <ClCompile Include="math.cpp" />
     <ClCompile Include="playerObject.cpp" />
     <ClCompile Include="render.cpp" />
+    <ClCompile Include="renderConstant.cpp" />
     <ClCompile Include="soundEngine.cpp" />
     <ClCompile Include="staticObject.cpp" />
+    <ClCompile Include="textRenderManager.cpp" />
     <ClCompile Include="turretObject.cpp" />
+    <ClCompile Include="vertexFormats.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="bullet.h" />
     <ClInclude Include="constantBuffer.h" />
+    <ClInclude Include="dynamicGeometryManager.h" />
     <ClInclude Include="enemy.h" />
     <ClInclude Include="enemySpawner.h" />
     <ClInclude Include="gameObject.h" />
     <ClInclude Include="generatorObject.h" />
+    <ClInclude Include="geometry.h" />
     <ClInclude Include="headers.h" />
     <ClInclude Include="healthEffectObject.h" />
     <ClInclude Include="healthObject.h" />
@@ -148,13 +154,16 @@
     <ClInclude Include="math.h" />
     <ClInclude Include="playerObject.h" />
     <ClInclude Include="render.h" />
+    <ClInclude Include="renderConstant.h" />
     <ClInclude Include="soundEngine.h" />
     <ClInclude Include="staticObject.h" />
+    <ClInclude Include="textRenderManager.h" />
     <ClInclude Include="texture.h" />
     <ClInclude Include="timer.h" />
     <ClInclude Include="turretObject.h" />
     <ClInclude Include="types.h" />
     <ClInclude Include="utility\FreeImage.h" />
+    <ClInclude Include="vertexFormats.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

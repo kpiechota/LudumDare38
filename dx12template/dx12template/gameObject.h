@@ -32,7 +32,6 @@ enum ETextures
 	T_DEAD_ENEMY,
 	T_GROUND,
 	T_SDF_FONT_512,
-	T_SDF_FONT_64,
 	T_BAKED,
 };
 
@@ -68,15 +67,29 @@ enum ECollisionFlag
 	CF_ENEMY_BULLET		= 1 << 3,
 };
 
+
 struct SRenderData
 {
 	D3D12_GPU_VIRTUAL_ADDRESS m_cbOffset;
+
+	UINT m_verticesStart;
+	UINT m_indicesStart;
+	UINT m_dataNum;
+
+	D3D_PRIMITIVE_TOPOLOGY m_topology;
+
+	Byte m_geometryID;
 
 	Byte m_textureID;
 	Byte m_shaderID;
 
 	SRenderData()
 		: m_cbOffset( 0 )
+		, m_verticesStart( 0 )
+		, m_indicesStart( 0 )
+		, m_dataNum( 0 )
+		, m_topology( D3D_PRIMITIVE_TOPOLOGY_TRIANGLESTRIP )
+		, m_geometryID( UINT8_MAX )
 		, m_textureID( 0 )
 		, m_shaderID( 0 )
 	{}

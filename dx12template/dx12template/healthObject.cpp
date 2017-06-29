@@ -12,6 +12,7 @@ void CHealthObject::DrawHealthBar() const
 {
 	CBObject* constBuffer;
 	SRenderData renderData;
+	renderData.m_dataNum = 4;
 	renderData.m_textureID = T_BLANK;
 
 	GRender.GetRenderData( sizeof( CBObject ), renderData.m_cbOffset, reinterpret_cast< void*& >( constBuffer ) );
@@ -54,6 +55,7 @@ void CHealthObject::Start()
 {
 	CBObject* constBuffer;
 	SRenderData renderData;
+	renderData.m_dataNum = 4;
 	renderData.m_textureID = T_GROUND;
 
 	GRender.GetRenderData( sizeof( CBObject ), renderData.m_cbOffset, reinterpret_cast< void*& >( constBuffer ) );
@@ -120,6 +122,7 @@ void CHealthObject::FillRenderData() const
 	ASSERT( m_shaderID < EShaderType::ST_MAX );
 	CBObject* constBuffer;
 	SRenderData renderData;
+	renderData.m_dataNum = 4;
 	renderData.m_shaderID = m_shaderID;
 	renderData.m_textureID = m_textureID;
 

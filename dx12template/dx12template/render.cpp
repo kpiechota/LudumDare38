@@ -1,31 +1,5 @@
 #include "render.h"
 
-D3D12_HEAP_PROPERTIES const GHeapPropertiesGPUOnly =
-{
-	/*Type*/					D3D12_HEAP_TYPE_CUSTOM
-	/*CPUPageProperty*/			,D3D12_CPU_PAGE_PROPERTY_NOT_AVAILABLE
-	/*MemoryPoolPreference*/	,D3D12_MEMORY_POOL_L1
-	/*CreationNodeMask*/		,1
-	/*VisibleNodeMask*/			,1
-};
-
-D3D12_HEAP_PROPERTIES const GHeapPropertiesDefault =
-{
-	/*Type*/					D3D12_HEAP_TYPE_DEFAULT
-	/*CPUPageProperty*/			,D3D12_CPU_PAGE_PROPERTY_UNKNOWN
-	/*MemoryPoolPreference*/	,D3D12_MEMORY_POOL_UNKNOWN
-	/*CreationNodeMask*/		,1
-	/*VisibleNodeMask*/			,1
-};
-D3D12_HEAP_PROPERTIES const GHeapPropertiesUpload =
-{
-	/*Type*/					D3D12_HEAP_TYPE_UPLOAD
-	/*CPUPageProperty*/			,D3D12_CPU_PAGE_PROPERTY_UNKNOWN
-	/*MemoryPoolPreference*/	,D3D12_MEMORY_POOL_UNKNOWN
-	/*CreationNodeMask*/		,1
-	/*VisibleNodeMask*/			,1
-};
-
 extern std::vector< SRenderData > GRenderObjects[RL_MAX];
 CRender GRender;
 
@@ -224,8 +198,8 @@ inline void CRender::LoadShader(LPCWSTR pFileName, D3D_SHADER_MACRO const* pDefi
 		if (error != nullptr)
 		{
 			OutputDebugStringA((char*)error->GetBufferPointer());
-			__debugbreak();
 			error->Release();
+			ASSERT( false );
 		}
 	}
 }
@@ -345,6 +319,7 @@ void CRender::InitShaders()
 	vsShader->Release();
 	psShader->Release();
 
+	descPSO.InputLayout = { STextVertexFormat::desc, 2 };
 	LoadShader(L"../shaders/sdfDraw.hlsl", nullptr, "vsMain", "vs_5_1", &vsShader);
 	descPSO.VS = { vsShader->GetBufferPointer(), vsShader->GetBufferSize() };
 
@@ -423,6 +398,8 @@ void CRender::Init()
 	InitRenderTargets();
 	InitRootSignatures();
 	InitShaders();
+
+	GTextRenderManager.Init();
 }
 
 void CRender::DrawFrame()
@@ -432,6 +409,8 @@ void CRender::DrawFrame()
 	++m_fenceValue;
 	WaitForSingleObject(m_fenceEvent, INFINITE);
 
+
+	GDynamicGeometryManager.PreDraw();
 	ID3D12GraphicsCommandList* commandList = m_frameData[m_frameID].m_frameCL;
 
 	m_frameData[m_frameID].m_frameCA->Reset();
@@ -440,10 +419,9 @@ void CRender::DrawFrame()
 	commandList->RSSetScissorRects(1, &m_scissorRect);
 	commandList->RSSetViewports(1, &m_viewport);
 	commandList->SetDescriptorHeaps(1, &m_texturesDH);
-	commandList->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLESTRIP);
 	commandList->SetGraphicsRootSignature(m_mainRS);
 
-	Bake();
+	//Bake();
 
 	D3D12_CPU_DESCRIPTOR_HANDLE renderTargetDH = m_renderTargetDH->GetCPUDescriptorHandleForHeapStart();
 	renderTargetDH.ptr += m_frameID * m_rtvDescriptorHandleIncrementSize;
@@ -464,12 +442,15 @@ void CRender::DrawFrame()
 	barriers[1].Transition.Subresource = D3D12_RESOURCE_BARRIER_ALL_SUBRESOURCES;
 
 	commandList->ResourceBarrier(2, barriers);
-
 	commandList->OMSetRenderTargets(1, &renderTargetDH, true, nullptr);
 	
 	D3D12_GPU_DESCRIPTOR_HANDLE texturesHandle = m_texturesDH->GetGPUDescriptorHandleForHeapStart();
 
+	D3D_PRIMITIVE_TOPOLOGY currentTopology = D3D_PRIMITIVE_TOPOLOGY_UNDEFINED;
 	Byte currentShader = ST_MAX;
+	Byte currentGeometry = UINT8_MAX;
+	Byte currentTexture = UINT8_MAX;
+	bool geometryUseIndices = false;
 	D3D12_GPU_VIRTUAL_ADDRESS const constBufferStart = m_frameData[ m_frameID ].m_frameResource->GetGPUVirtualAddress();
 	for (unsigned int layerID = 0; layerID < RL_MAX; ++layerID)
 	{
@@ -478,8 +459,20 @@ void CRender::DrawFrame()
 		{
 			SRenderData const& gameObject = GRenderObjects[layerID][objectID];
 			commandList->SetGraphicsRootConstantBufferView(0, constBufferStart + gameObject.m_cbOffset );
-			D3D12_GPU_DESCRIPTOR_HANDLE texture = texturesHandle;
-			texture.ptr += m_srvDescriptorHandleIncrementSize * gameObject.m_textureID;
+
+			if ( currentTexture != gameObject.m_textureID )
+			{
+				D3D12_GPU_DESCRIPTOR_HANDLE texture = texturesHandle;
+				texture.ptr += m_srvDescriptorHandleIncrementSize * gameObject.m_textureID;
+				commandList->SetGraphicsRootDescriptorTable(1, texture);
+				currentTexture = gameObject.m_textureID;
+			}
+
+			if ( currentTopology != gameObject.m_topology )
+			{
+				commandList->IASetPrimitiveTopology( gameObject.m_topology );
+				currentTopology = gameObject.m_topology;
+			}
 
 			if (currentShader != gameObject.m_shaderID)
 			{
@@ -487,8 +480,33 @@ void CRender::DrawFrame()
 				currentShader = gameObject.m_shaderID;
 			}
 
-			commandList->SetGraphicsRootDescriptorTable(1, texture);
-			commandList->DrawInstanced(4, 1, 0, 0);
+			if ( currentGeometry != gameObject.m_geometryID )
+			{
+				currentGeometry = gameObject.m_geometryID;
+				SGeometry const& geometry = m_geometryResources[ currentGeometry ];
+
+				geometryUseIndices = false;
+				if ( geometry.m_indicesRes )
+				{
+					commandList->IASetIndexBuffer( &geometry.m_indexBufferView );
+					geometryUseIndices = true;
+				}
+
+				if ( geometry.m_vertexRes )
+				{
+					commandList->IASetVertexBuffers( 0, 1, &geometry.m_vertexBufferView );
+				}
+			}
+
+
+			if ( geometryUseIndices )
+			{
+				commandList->DrawIndexedInstanced( gameObject.m_dataNum, 1, gameObject.m_indicesStart, gameObject.m_verticesStart, 0 );
+			}
+			else
+			{
+				commandList->DrawInstanced(gameObject.m_dataNum, 1, gameObject.m_verticesStart, 0);
+			}
 		}
 	}
 
@@ -543,8 +561,13 @@ void CRender::Release()
 		frameData.m_frameResource->Release();
 		frameData.m_pResourceData = nullptr;
 	}
-
 	m_bakeShader->Release();
+
+	unsigned int const geometryNum = m_geometryResources.size();
+	for (unsigned int geometryID = 0; geometryID < geometryNum; ++geometryID)
+	{
+		m_geometryResources[geometryID].Release();
+	}
 
 	m_bakeTexture->Release();
 	unsigned int const texutreNum = m_texturesResources.size();
@@ -561,6 +584,24 @@ void CRender::Release()
 #ifdef _DEBUG
 	m_debugController->Release();
 #endif
+}
+
+Byte CRender::AddGeometry( SGeometry const& geometry )
+{
+	Byte const geometryID = Byte( m_geometryResources.size() );
+	m_geometryResources.push_back( geometry );
+
+	return geometryID;
+}
+
+SGeometry& CRender::GetGeometry( Byte const geometryID )
+{
+	return m_geometryResources[ geometryID ];
+}
+
+void CRender::ReleaseGeometry( Byte const geometryID )
+{
+	m_geometryResources[ geometryID ].Release();
 }
 
 void CRender::BeginLoadResources(unsigned int const textureNum)

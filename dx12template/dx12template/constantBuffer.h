@@ -12,7 +12,6 @@ struct CBObject
 __declspec(align(256))
 struct CBSdfDraw
 {
-	Matrix4x4 m_objectToScreen;
 	Vec4 m_sdfColor;
 	Vec2 m_cutoff;
 };

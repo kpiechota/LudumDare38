@@ -55,6 +55,7 @@ void CPlayerObject::DrawHealthBar() const
 {
 	CBObject* constBuffer;
 	SRenderData renderData;
+	renderData.m_dataNum = 4;
 	renderData.m_textureID = T_BLANK;
 
 	GRender.GetRenderData( sizeof( CBObject ), renderData.m_cbOffset, reinterpret_cast< void*& >( constBuffer ) );
@@ -97,6 +98,7 @@ void CPlayerObject::DrawIcons() const
 	float const iconY = -0.5f * ((float)GHeight) + 35.f;
 	float const iconColor = (m_energyValue < 1.f) ? 0.5f : 1.f;
 
+	renderData.m_dataNum = 4;
 	GRender.GetRenderData( sizeof( CBObject ), renderData.m_cbOffset, reinterpret_cast< void*& >( constBuffer ) );
 	renderData.m_textureID = T_TURRET_ICON;
 	constBuffer->m_objectToScreen = Mul(GScreenMatrix, Matrix3x3::GetTranslateRotationSize(Vec2(-35.f, iconY), Vec2(1.f, 0.f), Vec2(32.f, 32.f)));
@@ -151,15 +153,14 @@ void CPlayerObject::AddEnergy()
 {
 	m_energyValue = min(1.f, m_energyValue + 0.2f);
 }
-
 void CPlayerObject::FillRenderData() const
 {
 	ASSERT( m_shaderID < EShaderType::ST_MAX );
 	CBObject* constBuffer;
 	SRenderData renderData;
+	renderData.m_dataNum = 4;
 	renderData.m_shaderID = m_shaderID;
 	renderData.m_textureID = m_textureID;
-
 	GRender.GetRenderData( sizeof( CBObject ), renderData.m_cbOffset, reinterpret_cast< void*& >( constBuffer ) );
 
 	constBuffer->m_objectToScreen = Mul(GScreenMatrix, Matrix3x3::GetTranslateRotationSize(m_position, m_rotation, m_scale));
@@ -169,6 +170,8 @@ void CPlayerObject::FillRenderData() const
 
 	DrawHealthBar();
 	DrawIcons();
+
+	char const c = char(UINT(GTimer.GetSeconds( GTimer.TimeFromStart() )) % 93 );
 }
 
 void CPlayerObject::Update()

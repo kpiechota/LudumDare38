@@ -11,6 +11,11 @@ Matrix3x3 Mul(Matrix3x3 const& a, Matrix3x3 const& b)
 	);
 }
 
+Vec2 operator*( float const a, Vec2 const v )
+{
+	return v * a;
+}
+
 float RandFloat()
 {
 	return ((float)rand()) / ((float)RAND_MAX);

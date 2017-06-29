@@ -2,15 +2,18 @@
 
 void CheckResult(HRESULT result)
 {
+#ifdef _DEBUG
 	if (FAILED(result))
 	{
 		_com_error err(result);
 		::OutputDebugString(err.ErrorMessage());
-		__debugbreak();
+		ASSERT( false );
 	}
+#endif
 }
 void CheckResult(HRESULT result, ID3DBlob* errorBlob)
 {
+#ifdef _DEBUG
 	if (FAILED(result))
 	{
 		_com_error err(result);
@@ -24,5 +27,6 @@ void CheckResult(HRESULT result, ID3DBlob* errorBlob)
 		::OutputDebugString((LPCWSTR)errorBlob->GetBufferPointer());
 		ASSERT( false );
 	}
+#endif
 }
 

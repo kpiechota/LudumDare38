@@ -104,6 +104,13 @@ void InitGame()
 	GEnemySpawner.Init();
 }
 
+void DrawDebugInfo()
+{
+	char fpsText[ 15 ];
+	sprintf_s( fpsText, 15, "FPS:%.2f", 1.f / GTimer.Delta() );
+	GTextRenderManager.Print( Vec4( 1.f, 0.5f, 0.f, 1.f ), Vec2( 0.f, 1.f - 0.025f ), 0.05f, fpsText );
+}
+
 int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, PSTR pCmdLine, INT nCmdShow)
 {
 	srand(time(NULL));
@@ -120,8 +127,6 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, PSTR pCmdLine, 
 	{
 		MessageBox(0, L"RegisterClass FAILED", 0, 0);
 	}
-
-	
 
 	HWND hwnd = CreateWindow(
 		L"WindowClass",
@@ -173,7 +178,6 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, PSTR pCmdLine, 
 		"../content/deadEnemy.tif",
 		"../content/ground.png",
 		"../content/sdf_font_512.png",
-		"../content/sdf_font_64.png",
 	};
 
 	GRender.Init();
@@ -185,16 +189,10 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, PSTR pCmdLine, 
 		STexture texutre;
 
 		FREE_IMAGE_FORMAT const format = FreeImage_GetFileType(textures[texutreID]);
-		if (format == FIF_UNKNOWN)
-		{
-			__debugbreak();
-		}
+		ASSERT( format != FIF_UNKNOWN );
 
 		FIBITMAP* bitmap = FreeImage_Load(format, textures[texutreID]);
-		if (!bitmap)
-		{
-			__debugbreak();
-		}
+		ASSERT( bitmap );
 
 		texutre.m_data = FreeImage_GetBits(bitmap);
 		texutre.m_width = FreeImage_GetWidth(bitmap);
@@ -202,11 +200,7 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, PSTR pCmdLine, 
 		FREE_IMAGE_COLOR_TYPE const colorType = FreeImage_GetColorType(bitmap);
 		texutre.m_format = GFreeImageToDXGI[colorType];
 
-		if (texutre.m_format == DXGI_FORMAT_UNKNOWN)
-		{
-			__debugbreak();
-		}
-
+		ASSERT( texutre.m_format != DXGI_FORMAT_UNKNOWN );
 		GRender.LoadResource(texutre);
 
 		FreeImage_Unload(bitmap);
@@ -276,13 +270,14 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, PSTR pCmdLine, 
 			{
 				GGameObjects[gameObjectID]->FillRenderData();
 			}
+			DrawDebugInfo();
 			GRender.DrawFrame();
-			timeToRender = 1.f / 60.f;
-		}
 
-		for (unsigned int layerID = 1; layerID < RL_MAX; ++layerID)
-		{
-			GRenderObjects[layerID].clear();
+			for (unsigned int layerID = 0; layerID < RL_MAX; ++layerID)
+			{
+				GRenderObjects[layerID].clear();
+			}
+			timeToRender = 1.f / 60.f;
 		}
 
 		unsigned int const objectToDeleteNum = GGameObjectsToDelete.size();

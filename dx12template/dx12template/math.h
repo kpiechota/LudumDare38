@@ -392,3 +392,4 @@ struct Matrix4x4
 };
 
 extern Matrix3x3 Mul(Matrix3x3 const& a, Matrix3x3 const& b);
+extern Vec2 operator*( float const a, Vec2 const v );
