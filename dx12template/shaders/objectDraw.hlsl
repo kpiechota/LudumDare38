@@ -1,48 +1,59 @@
 cbuffer objectBuffer : register(b0)
 {
 	float4x4 ObjectToScreen;
-	float4 ColorScale;
-	float2 UVTile;
-	float2 UVOffset;
-	float2 Offset;
+	float4x4 ObjectToWorld;
 }
 
 Texture2D DiffTex : register(t0);
+Texture2D NormTex : register(t1);
 SamplerState Sampler : register(s0);
+
+struct VSInput
+{
+	float3 m_position : POSITION;
+	float3 m_normal : NORMAL;
+	float3 m_tangent : TANGENT;
+	float2 m_uv : TEXCOORD;
+};
 
 struct PSInput
 {
+	float3x3 m_tbn		: TANGENT;
 	float4 m_position	: SV_POSITION;
 	float2 m_uv			: TEXCOORD;
 };
 
-PSInput vsMain( uint vertexID : SV_VertexID )
+struct PSOutput
 {
-	const float2 position = float2(mad((float)(vertexID & 1), 2.f, -1.f), mad((float)((vertexID >> 1) & 1), -2.f, 1.f));
-	const float3 positionOS = float3(position.xy + Offset, 1.f);
-	const float3x3 objectToScreen3x3 = (float3x3)ObjectToScreen;
+	float4 m_diffuse	: SV_TARGET0;
+	float4 m_normalWS	: SV_TARGET1;
+};
 
-	const float3 positionSS = mul(positionOS, objectToScreen3x3);
+PSInput vsMain( VSInput input )
+{
+	float3 bitangent = cross( input.m_tangent, input.m_normal );
+	float3x3 objectToWorld3x3 = (float3x3)ObjectToWorld;
 
 	PSInput output;
-	output.m_position = float4( positionSS, 1.f );
-	output.m_uv = mad(position.xy, 0.5f, 0.5f) * UVTile + UVOffset;
-	output.m_uv.y = 1.f - output.m_uv.y;
+	output.m_tbn[ 0 ] = mul( input.m_tangent, objectToWorld3x3 );
+	output.m_tbn[ 1 ] = mul( bitangent, objectToWorld3x3 );
+	output.m_tbn[ 2 ] = mul( input.m_normal, objectToWorld3x3 );
+	output.m_position = mul( float4( input.m_position, 1.f ), ObjectToScreen );
+	output.m_uv = input.m_uv;
 
 	return output;
 }
 
-float4 psMain(PSInput input) : SV_TARGET0
+PSOutput psMain(PSInput input) : SV_TARGET0
 {
-	float4 color = DiffTex.Sample(Sampler, input.m_uv) * ColorScale;
-	
-#ifndef NO_CLIP
-	clip(color.a - 0.002f);
-#endif
+	PSOutput output;
+	output.m_normalWS = NormTex.Sample( Sampler, float2(input.m_uv.x, 1.f - input.m_uv.y ) );
+	output.m_diffuse = DiffTex.Sample( Sampler, float2(input.m_uv.x, 1.f - input.m_uv.y ) );
 
-#ifdef ALPHA_MUL
-	color.rgb *= color.a;
-#endif
+	output.m_normalWS.xyz = mad( output.m_normalWS, 2.f, -1.f );
+	output.m_normalWS.xyz = mul( output.m_normalWS, input.m_tbn );
+	output.m_normalWS.xyz = normalize( output.m_normalWS );
+	output.m_normalWS.xyz = mad( output.m_normalWS, 0.5f, 0.5f );
 
-	return color;
+	return output;
 }

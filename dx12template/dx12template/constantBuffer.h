@@ -4,16 +4,21 @@ __declspec(align(256))
 struct CBObject
 {
 	Matrix4x4 m_objectToScreen;
-	Vec4 m_colorScale;
-	Vec2 m_uvTile;
-	Vec2 m_uvOffset;
-	Vec2 m_offset;
+	Matrix4x4 m_objectToWorld;
 };
 __declspec(align(256))
 struct CBSdfDraw
 {
 	Vec4 m_sdfColor;
 	Vec2 m_cutoff;
+};
+
+__declspec(align(256))
+struct CBSimpleLight
+{
+	Matrix4x4 m_viewToWorld;
+	Vec4 m_perspectiveValues;
+	Vec4 m_lightPos;
 };
 
 struct SObjectMaterial
@@ -33,9 +38,5 @@ struct SObjectMaterial
 
 	void FillConstBuffer( CBObject* cbuffer ) const
 	{
-		cbuffer->m_colorScale = m_color;
-		cbuffer->m_offset = m_positionOffset;
-		cbuffer->m_uvOffset = m_uvOffset;
-		cbuffer->m_uvTile = m_uvTile;
 	}
 };

@@ -6,21 +6,18 @@ class CStaticObject : public CGameObject
 private:
 	SObjectMaterial m_material;
 
-	float m_lifeTime;
-
+	Byte m_geometryInfoID;
 	Byte m_shaderID;
-	Byte m_textureID;
+	Byte m_textureID[ SRenderData::MAX_TEXTURES_NUM ];
 
 	Byte m_layer;
-	bool m_allowDestroy;
 
 public:
-	CStaticObject( float const lifeTime, Byte const collisionMask, Byte const layer);
-
-	void ForceDelete() { m_allowDestroy = true; m_lifeTime = -1.f; }
+	CStaticObject( Byte const collisionMask, Byte const layer);
 
 	void SetShaderID( Byte const shaderID );
-	void SetTextureID( Byte const textureID );
+	void SetTextureID( UINT const texture, Byte const textureID );
+	void SetGeomtryInfoID( Byte const geometryInfoID );
 
 	void SetColor( Vec4 const& color );
 	void SetPositionOffset( Vec2 const offset );
@@ -29,6 +26,6 @@ public:
 
 	virtual void FillRenderData() const override;
 	virtual void Update() override;
-	virtual bool NeedDelete() const override { return m_allowDestroy && m_lifeTime < 0.f; }
+	virtual bool NeedDelete() const override { return false; }
 	virtual void TakeDamage(Vec2 const rotation, float const damage) override {}
 };

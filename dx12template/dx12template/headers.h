@@ -5,6 +5,7 @@
 #pragma comment(lib, "../lib/DirectXTex.lib")
 #endif
 #pragma comment( lib, "../lib/irrKlang" )
+#pragma comment( lib, "../lib/libfbxsdk")
 #pragma comment( lib, "d3d12" )
 #pragma comment( lib, "dxgi" )
 #pragma comment( lib, "d3dcompiler" )
@@ -42,9 +43,11 @@ void CheckResult(HRESULT result, ID3DBlob* errorBlob);
 #ifdef _DEBUG
 #define ASSERT( condition ) assert( condition )
 #define ASSERT_STR( condition, msg ) assert( condition && msg )
+#define CT_ASSERT( condition ) static_assert( condition )
 #else
 #define ASSERT( condition ) {}
 #define ASSERT_STR( condition, msg ) {}
+#define CT_ASSERT( condition ) {}
 #endif
 
 #define FORCE_INLINE __forceinline

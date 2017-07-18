@@ -3,16 +3,13 @@
 #include "timer.h"
 
 extern CTimer GTimer;
-extern Matrix3x3 GScreenMatrix;
 
-CStaticObject::CStaticObject( float const lifeTime, Byte const collisionMask, Byte const layer)
-	: m_lifeTime( lifeTime )
-	, m_layer( layer )
+CStaticObject::CStaticObject( Byte const collisionMask, Byte const layer)
+	: m_layer( layer )
 	, m_shaderID( 0 )
-	, m_textureID( 0 )
 {
+	memset( m_textureID, 0, sizeof( m_textureID ) );
 	m_collisionMask = collisionMask;
-	m_allowDestroy = 0.f < m_lifeTime;
 }
 
 void CStaticObject::FillRenderData() const
@@ -20,13 +17,23 @@ void CStaticObject::FillRenderData() const
 	ASSERT( m_shaderID < EShaderType::ST_MAX );
 	CBObject* constBuffer;
 	SRenderData renderData;
-	renderData.m_dataNum = 4;
+	renderData.m_dataNum = GGeometryInfo[ m_geometryInfoID ].m_indicesNum;
+	renderData.m_geometryID = GGeometryInfo[ m_geometryInfoID ].m_geometryID;
 	renderData.m_shaderID = m_shaderID;
-	renderData.m_textureID = m_textureID;
+
+	for ( UINT texture = 0; texture < ARRAYSIZE( m_textureID ); ++texture )
+	{
+		renderData.m_textureID[ texture ] = m_textureID[ texture ];
+	}
+
+	renderData.m_topology = D3D_PRIMITIVE_TOPOLOGY::D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST;
 
 	GRender.GetRenderData( sizeof( CBObject ), renderData.m_cbOffset, reinterpret_cast< void*& >( constBuffer ) );
 
-	constBuffer->m_objectToScreen = Mul(GScreenMatrix, Matrix3x3::GetTranslateRotationSize(m_position, m_rotation, m_scale));
+	constBuffer->m_objectToWorld = Matrix4x4::GetTranslateRotationSize(m_position, m_rotation, m_scale);
+	constBuffer->m_objectToScreen = Mul(constBuffer->m_objectToWorld, GRender.GetView().m_worldToScreen );
+	constBuffer->m_objectToWorld.Transpose();
+	constBuffer->m_objectToScreen.Transpose();
 	m_material.FillConstBuffer( constBuffer );
 
 	GRenderObjects[m_layer].push_back(renderData);
@@ -34,16 +41,20 @@ void CStaticObject::FillRenderData() const
 
 void CStaticObject::Update()
 {
-	m_lifeTime -= GTimer.GameDelta();
 }
 
 void CStaticObject::SetShaderID( Byte const shaderID )
 {
 	m_shaderID = shaderID;
 }
-void CStaticObject::SetTextureID( Byte const textureID )
+void CStaticObject::SetTextureID( UINT const texture, Byte const textureID )
 {
-	m_textureID = textureID;
+	m_textureID[ texture ] = textureID;
+}
+
+void CStaticObject::SetGeomtryInfoID( Byte const geometryInfoID )
+{
+	m_geometryInfoID = geometryInfoID;
 }
 
 void CStaticObject::SetColor( Vec4 const& color )

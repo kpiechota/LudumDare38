@@ -1,6 +1,96 @@
 #include "headers.h"
 #include "renderConstant.h"
 
+D3D12_RASTERIZER_DESC const GRasterizerStates[ ERS_MAX ] =
+{
+	//ERS_Default
+	{
+		/*FillMode*/					D3D12_FILL_MODE_SOLID
+		/*CullMode*/					,D3D12_CULL_MODE_BACK
+		/*FrontCounterClockwise*/		,FALSE
+		/*DepthBias*/					,D3D12_DEFAULT_DEPTH_BIAS
+		/*DepthBiasClamp*/				,D3D12_DEFAULT_DEPTH_BIAS_CLAMP
+		/*SlopeScaledDepthBias*/		,D3D12_DEFAULT_SLOPE_SCALED_DEPTH_BIAS
+		/*DepthClipEnable*/				,FALSE
+		/*MultisampleEnable*/			,FALSE
+		/*AntialiasedLineEnable*/		,FALSE
+		/*ForcedSampleCount*/			,0
+		/*ConservativeRaster*/			,D3D12_CONSERVATIVE_RASTERIZATION_MODE_OFF
+	},
+};
+
+D3D12_RENDER_TARGET_BLEND_DESC const GRenderTargetBlendStates[ ERTBS_MAX ] =
+{
+	//ERTBS_Disabled
+	{
+		/*RenderTarget[0].BlendEnable*/				FALSE
+		/*RenderTarget[0].LogicOpEnable*/			,FALSE
+		/*RenderTarget[0].SrcBlend*/				,D3D12_BLEND_ONE
+		/*RenderTarget[0].DestBlend*/				,D3D12_BLEND_ZERO
+		/*RenderTarget[0].BlendOp*/					,D3D12_BLEND_OP_ADD
+		/*RenderTarget[0].SrcBlendAlpha*/			,D3D12_BLEND_SRC_ALPHA
+		/*RenderTarget[0].DestBlendAlpha*/			,D3D12_BLEND_INV_SRC_ALPHA
+		/*RenderTarget[0].BlendOpAlpha*/			,D3D12_BLEND_OP_ADD
+		/*RenderTarget[0].LogicOp*/					,D3D12_LOGIC_OP_NOOP
+		/*RenderTarget[0].RenderTargetWriteMask*/	,D3D12_COLOR_WRITE_ENABLE_ALL
+	},
+
+	//ERTBS_AlphaBlend
+	{
+		/*RenderTarget[0].BlendEnable*/				TRUE
+		/*RenderTarget[0].LogicOpEnable*/			,FALSE
+		/*RenderTarget[0].SrcBlend*/				,D3D12_BLEND_SRC_ALPHA
+		/*RenderTarget[0].DestBlend*/				,D3D12_BLEND_INV_SRC_ALPHA
+		/*RenderTarget[0].BlendOp*/					,D3D12_BLEND_OP_ADD
+		/*RenderTarget[0].SrcBlendAlpha*/			,D3D12_BLEND_SRC_ALPHA
+		/*RenderTarget[0].DestBlendAlpha*/			,D3D12_BLEND_INV_SRC_ALPHA
+		/*RenderTarget[0].BlendOpAlpha*/			,D3D12_BLEND_OP_ADD
+		/*RenderTarget[0].LogicOp*/					,D3D12_LOGIC_OP_NOOP
+		/*RenderTarget[0].RenderTargetWriteMask*/	,D3D12_COLOR_WRITE_ENABLE_ALL
+	},
+};
+
+D3D12_DEPTH_STENCIL_DESC const GDepthStencilStates[ EDSS_MAX ] =
+{
+	//EDSS_Disabled
+	{
+		/*DepthEnable*/							FALSE
+		/*DepthWriteMask*/						,D3D12_DEPTH_WRITE_MASK_ALL
+		/*DepthFunc*/							,D3D12_COMPARISON_FUNC_LESS
+		/*StencilEnable*/						,FALSE
+		/*StencilReadMask*/						,D3D12_DEFAULT_STENCIL_READ_MASK
+		/*StencilWriteMask*/					,D3D12_DEFAULT_STENCIL_WRITE_MASK
+		/*FrontFace.StencilFailOp*/				,{ D3D12_STENCIL_OP_REPLACE
+		/*FrontFace.StencilDepthFailOp*/		,D3D12_STENCIL_OP_REPLACE
+		/*FrontFace.StencilPassOp*/				,D3D12_STENCIL_OP_REPLACE
+		/*FrontFace.StencilFunc*/				,D3D12_COMPARISON_FUNC_ALWAYS }
+		/*BackFace.StencilFailOp*/				,{ D3D12_STENCIL_OP_REPLACE
+		/*BackFace.StencilDepthFailOp*/			,D3D12_STENCIL_OP_REPLACE
+		/*BackFace.StencilPassOp*/				,D3D12_STENCIL_OP_REPLACE
+		/*BackFace.StencilFunc*/				,D3D12_COMPARISON_FUNC_ALWAYS }
+	},
+
+	//EDSS_DepthEnable
+	{
+		/*DepthEnable*/							TRUE
+		/*DepthWriteMask*/						,D3D12_DEPTH_WRITE_MASK_ALL
+		/*DepthFunc*/							,D3D12_COMPARISON_FUNC_LESS
+		/*StencilEnable*/						,FALSE
+		/*StencilReadMask*/						,D3D12_DEFAULT_STENCIL_READ_MASK
+		/*StencilWriteMask*/					,D3D12_DEFAULT_STENCIL_WRITE_MASK
+		/*FrontFace.StencilFailOp*/				,{ D3D12_STENCIL_OP_REPLACE
+		/*FrontFace.StencilDepthFailOp*/		,D3D12_STENCIL_OP_REPLACE
+		/*FrontFace.StencilPassOp*/				,D3D12_STENCIL_OP_REPLACE
+		/*FrontFace.StencilFunc*/				,D3D12_COMPARISON_FUNC_ALWAYS }
+		/*BackFace.StencilFailOp*/				,{ D3D12_STENCIL_OP_REPLACE
+		/*BackFace.StencilDepthFailOp*/			,D3D12_STENCIL_OP_REPLACE
+		/*BackFace.StencilPassOp*/				,D3D12_STENCIL_OP_REPLACE
+		/*BackFace.StencilFunc*/				,D3D12_COMPARISON_FUNC_ALWAYS }
+	}
+};
+
+UINT GDescriptorHandleIncrementSize[ D3D12_DESCRIPTOR_HEAP_TYPE_NUM_TYPES ];
+
 D3D12_HEAP_PROPERTIES const GHeapPropertiesGPUOnly =
 {
 	/*Type*/					D3D12_HEAP_TYPE_CUSTOM

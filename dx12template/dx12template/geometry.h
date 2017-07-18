@@ -1,4 +1,11 @@
 #pragma once
+#include "vertexFormats.h"
+
+struct SGeometryData
+{
+	std::vector<SSimpleObjectVertexFormat> m_vertices;
+	std::vector<UINT16> m_indices;
+};
 
 struct SGeometry
 {
@@ -44,4 +51,6 @@ struct SGeometry
 		m_indicesRes = nullptr;
 		m_vertexRes = nullptr;
 	}
+
+	void Load( char const* file );
 };

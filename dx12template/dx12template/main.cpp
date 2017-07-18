@@ -5,33 +5,25 @@
 #include "input.h"
 #include "../DirectXTex/DirectXTex.h"
 
-#include "playerObject.h"
-#include "generatorObject.h"
 #include "staticObject.h"
-
-#include "enemySpawner.h"
+#include "geometryLoader.h"
 
 #include <Windows.h>
 
 CInputManager GInputManager;
 CSystemInput GSystemInput;
 CTimer GTimer;
-CEnemySpawner GEnemySpawner;
-CPlayerObject* GPlayer;
-CGeneratorObject* GGenerator;
-CStaticObject* GBackgroundStars;
 
 std::vector< SRenderData > GRenderObjects[ RL_MAX ];
-std::vector< SRenderData > GBakeObjects;
 std::vector< CGameObject* > GGameObjects;
 std::vector< CGameObject* > GGameObjectsToSpawn;
 std::vector< CGameObject* > GGameObjectsToDelete;
+SGeometryInfo GGeometryInfo[ G_MAX ];
 CStaticSound GSounds[SET_MAX];
 
 int GWidth = 800;
 int GHeight = 800;
-float const GIslandSize = 350.f;
-Matrix3x3 GScreenMatrix;
+CStaticObject* testObject;
 
 void InitGame()
 {
@@ -59,39 +51,25 @@ void InitGame()
 	GGameObjectsToDelete.clear();
 	GGameObjectsToSpawn.clear();
 	GGameObjects.clear();
-	GBakeObjects.clear();
 
-	GRender.ClearBaked();
+	testObject = new CStaticObject( 0, RL_OPAQUE );
+	testObject->SetPosition( Vec3( 0.f, -2.f, 10.f ) );
+	testObject->SetScale( .25f );
+	testObject->SetGeomtryInfoID( G_SPACESHIP );
+	testObject->SetTextureID( 0, T_SPACESHIP );
+	testObject->SetTextureID( 1, T_SPACESHIP_N );
 
-	GBackgroundStars = new CStaticObject( -1.f, 0, RL_BACKGROUND);
-	GBackgroundStars->SetScale( 400.f );
-	GBackgroundStars->SetShaderID( ST_OBJECT_DRAW_NO_CLIP );
-	GBackgroundStars->SetTextureID( T_BACKGROUND );
-	GGameObjectsToSpawn.push_back(GBackgroundStars);
 
-	CStaticObject* pIsland = new CStaticObject( -1.f, 0, RL_BACKGROUND);
-	pIsland->SetScale( GIslandSize );
-	pIsland->SetShaderID( ST_OBJECT_DRAW );
-	pIsland->SetTextureID( T_ISLAND );
-	GGameObjectsToSpawn.push_back(pIsland);
+	float const axis0[] = { 0.f, -1.f, 0.f };
+	//Quaternion const q0 = Quaternion::FromAngleAxis( GTimer.GetSeconds( GTimer.TimeFromStart() ) * 30.f * MathConsts::DegToRad, axis0 );
+	Quaternion const q0 = Quaternion::FromAngleAxis( 90.f * MathConsts::DegToRad, axis0 );
+	float const axis1[] = { -1.f, 0.f, 0.f };
+	Quaternion const q1 = Quaternion::FromAngleAxis( 90.f * MathConsts::DegToRad, axis1 );
+	float const axis2[] = { 0.f, -1.f, 0.f };
+	Quaternion const q2 = Quaternion::FromAngleAxis( 15.f * MathConsts::DegToRad, axis2 );
+	testObject->SetRotation( q0 * q1 * q2 );
 
-	CStaticObject* pBaked = new CStaticObject( -1.f, 0, RL_BACKGROUND);
-	pBaked->SetScale( 400.f );
-	pBaked->SetShaderID( ST_OBJECT_DRAW_ALPHA_MULT );
-	pBaked->SetTextureID( T_BAKED );
-	pBaked->SetUvTile( Vec2(1.f, -1.f) );
-	GGameObjectsToSpawn.push_back(pBaked);
-
-	GPlayer = new CPlayerObject();
-	GGameObjectsToSpawn.push_back(GPlayer);
-
-	GGenerator = new CGeneratorObject();
-	GGenerator->SetScale( 32.f );
-	GGenerator->SetColliderSize( 32.f );
-	GGenerator->SetTextureID( T_GENERATOR );
-	GGameObjectsToSpawn.push_back(GGenerator);
-
-	GEnemySpawner.Init();
+	GGameObjectsToSpawn.push_back( testObject );
 }
 
 void DrawDebugInfo()
@@ -139,57 +117,57 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, PSTR pCmdLine, 
 	GetClientRect(hwnd, &clientRect);
 	GWidth = clientRect.right - clientRect.left;
 	GHeight = clientRect.bottom - clientRect.top;
-	GScreenMatrix = Matrix3x3::GetOrthogonalMatrix(-0.5f * ((float)GWidth), 0.5f * ((float)GWidth), -0.5f * ((float)GHeight), 0.5f * ((float)GHeight));
 
 	GSoundEngine.Init();
+	GGeometryLoader.Init();
 
 	GRender.SetWindowWidth(GWidth);
 	GRender.SetWindowHeight(GHeight);
 	GRender.SetHWND(hwnd);
 
+	char const* meshes[] =
+	{
+		"../content/spaceship",
+	};
+	CT_ASSERT( ARRAYSIZE( meshes ) == G_MAX );
+
 	wchar_t const* textures[] =
 	{
-		L"../content/blank.png",
-		L"../content/player.png",
-		L"../content/background.tif",
-		L"../content/island.png",
-		L"../content/generator.png",
-		L"../content/bullet_0.png",
-		L"../content/bullet_1.png",
-		L"../content/enemy.png",
-		L"../content/turret.png",
-		L"../content/health.png",
-		L"../content/healthEffect.tif",
-		L"../content/turretIcon.png",
-		L"../content/healthIcon.png",
-		L"../content/veins.tif",
-		L"../content/initScreen.tif",
-		L"../content/deathScreen.tif",
-		L"../content/deadEnemy.tif",
-		L"../content/ground.png",
 		L"../content/sdf_font_512.png",
+		L"../content/spaceship_d.png",
+		L"../content/spaceship_n.png",
 	};
+	CT_ASSERT( ARRAYSIZE( textures ) == T_MAX );
 
 	GRender.Init();
+	GRender.SetProjectionMatrix( Matrix4x4::Projection( 45.f, 1.f, 0.0001f, 100000.f ) );
 
 	GRender.BeginLoadResources(ARRAYSIZE(textures));
 
+	for ( UINT meshID = 0; meshID < ARRAYSIZE( meshes ); ++meshID )
+	{
+		SGeometryData geometryData;
+		GGeometryLoader.LoadMesh( geometryData, meshes[ meshID ] );
+		GGeometryInfo[ meshID ].m_geometryID = GRender.LoadResource( geometryData );
+		GGeometryInfo[ meshID ].m_indicesNum = UINT( geometryData.m_indices.size() );
+	}
+
 	for (unsigned int texutreID = 0; texutreID < ARRAYSIZE(textures); ++texutreID)
 	{
-		STexture texutre;
+		STexture texture;
 		DirectX::TexMetadata texMeta;
 		DirectX::ScratchImage image;
 		CheckResult( DirectX::LoadFromWICFile( textures[ texutreID ], DirectX::WIC_FLAGS_NONE, &texMeta, image ) );
 
-		texutre.m_data = image.GetPixels();
-		texutre.m_width = texMeta.width;
-		texutre.m_height = texMeta.height;
-		texutre.m_format = texMeta.format;
+		texture.m_data = image.GetPixels();
+		texture.m_width = texMeta.width;
+		texture.m_height = texMeta.height;
+		texture.m_format = texMeta.format;
+		texture.m_mipLevels = texMeta.mipLevels;
 
-		ASSERT( texutre.m_format != DXGI_FORMAT_UNKNOWN );
-		GRender.LoadResource(texutre);
+		ASSERT( texture.m_format != DXGI_FORMAT_UNKNOWN );
+		GRender.LoadResource(texture);
 	}
-
 
 	GRender.EndLoadResources();
 
@@ -219,15 +197,12 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, PSTR pCmdLine, 
 
 	GRender.WaitForResourcesLoad();
 
-	CStaticObject* pDeathScreen = nullptr;
-
 	MSG msg = { 0 };
 	bool run = true;
 	while (run)
 	{
 		unsigned int const gameObjectsNum = GGameObjects.size();
 		GTimer.Tick();
-		GEnemySpawner.Update();
 
 		while (PeekMessage(&msg, NULL, 0, 0, PM_REMOVE))
 		{
@@ -240,8 +215,6 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, PSTR pCmdLine, 
 			}
 		}
 
-		GBackgroundStars->SetUvOffset( Vec2( GTimer.GetSeconds( GTimer.TimeFromStart() ), 0.f ) );
-
 		for (unsigned int gameObjectID = 0; gameObjectID < gameObjectsNum; ++gameObjectID)
 		{
 			GGameObjects[gameObjectID]->Update();
@@ -250,6 +223,7 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, PSTR pCmdLine, 
 		timeToRender -= GTimer.Delta();
 		if (timeToRender < 0.f)
 		{
+			GRender.PrepareView();
 			for (unsigned int gameObjectID = 0; gameObjectID < gameObjectsNum; ++gameObjectID)
 			{
 				GGameObjects[gameObjectID]->FillRenderData();
@@ -291,26 +265,6 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, PSTR pCmdLine, 
 		}
 
 		GGameObjectsToSpawn.clear();
-
-		if ((GPlayer->GetHealth() * GGenerator->GetHealth()) <= 0.f )
-		{
-			if (!pDeathScreen)
-			{
-				pDeathScreen = new CStaticObject( -1.f, 0, RL_OVERLAY2);
-				pDeathScreen->SetScale( 400.f );
-				pDeathScreen->SetShaderID( ST_OBJECT_DRAW_BLEND );
-				pDeathScreen->SetTextureID( T_DEATH_SCREEN );
-
-				GGameObjectsToSpawn.push_back(pDeathScreen);
-
-				GTimer.SetGameScale(0.1f);
-			}
-			else if (GInputManager.IsKeyDown(' '))
-			{
-				InitGame();
-				pDeathScreen = nullptr;
-			}
-		}
 	}
 
 	unsigned int const objectToDeleteNum = GGameObjectsToDelete.size();
@@ -331,5 +285,6 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, PSTR pCmdLine, 
 
 	GRender.Release();
 	GSoundEngine.Release();
+	GGeometryLoader.Release();
 	return 0;
 }

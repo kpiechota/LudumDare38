@@ -17,5 +17,6 @@
   <ItemGroup>
     <FxCompile Include="objectDraw.hlsl" />
     <FxCompile Include="sdfDraw.hlsl" />
+    <FxCompile Include="simpleLight.hlsl" />
   </ItemGroup>
 </Project>

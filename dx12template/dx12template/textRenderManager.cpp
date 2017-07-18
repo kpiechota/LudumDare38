@@ -157,7 +157,7 @@ SGlyphData const GGlyphData[] =
 
 void CTextRenderManager::Init()
 {
-	m_dynGeometryID = GDynamicGeometryManager.AllocateGeometry( CHAR_MAX_NUM * 4 * sizeof( STextVertexFormat ), sizeof( STextVertexFormat ), CHAR_MAX_NUM * 6 * ( GDXGIFormatsBitsSize[ DXGI_FORMAT_R16_UINT ] / 8 ), DXGI_FORMAT_R16_UINT );
+	m_dynGeometryID = GDynamicGeometryManager.AllocateGeometry( CHAR_MAX_NUM * 4 * sizeof( SPosUvVertexFormat ), sizeof( SPosUvVertexFormat ), CHAR_MAX_NUM * 6 * ( GDXGIFormatsBitsSize[ DXGI_FORMAT_R16_UINT ] / 8 ), DXGI_FORMAT_R16_UINT );
 }
 
 void CTextRenderManager::Release()
@@ -171,7 +171,7 @@ void CTextRenderManager::Print( Vec4 const color, Vec2 position, float const siz
 
 	SRenderData renderData;
 
-	STextVertexFormat* vertices = nullptr;
+	SPosUvVertexFormat* vertices = nullptr;
 	UINT16* indices = nullptr;
 
 	size_t const charNum = strlen( msg );
@@ -218,7 +218,7 @@ void CTextRenderManager::Print( Vec4 const color, Vec2 position, float const siz
 
 	CBSdfDraw* constBuffer;
 	renderData.m_shaderID = EShaderType::ST_SDF_DRAW;
-	renderData.m_textureID = ETextures::T_SDF_FONT_512;
+	renderData.m_textureID[ 0 ] = ETextures::T_SDF_FONT_512;
 	renderData.m_topology = D3D_PRIMITIVE_TOPOLOGY::D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST;
 	renderData.m_dataNum = indicesToDraw;
 	renderData.m_geometryID = GDynamicGeometryManager.GetGeometryID( m_dynGeometryID );
@@ -229,7 +229,7 @@ void CTextRenderManager::Print( Vec4 const color, Vec2 position, float const siz
 	constBuffer->m_sdfColor = color;
 	constBuffer->m_cutoff.Set( 0.7f - 0.035f, 0.7f + 0.035f );
 
-	GRenderObjects[RL_OVERLAY2].push_back(renderData);
+	GRenderObjects[RL_OVERLAY].push_back(renderData);
 }
 
 CTextRenderManager GTextRenderManager;
