@@ -174,7 +174,7 @@ void CTextRenderManager::Print( Vec4 const color, Vec2 position, float const siz
 	SPosUvVertexFormat* vertices = nullptr;
 	UINT16* indices = nullptr;
 
-	size_t const charNum = strlen( msg );
+	UINT const charNum = UINT(strlen( msg ));
 
 	GDynamicGeometryManager.GetVerticesForWrite( 4 * charNum, m_dynGeometryID, reinterpret_cast< void*& >( vertices ), renderData.m_verticesStart );
 	ASSERT( vertices );
@@ -216,20 +216,18 @@ void CTextRenderManager::Print( Vec4 const color, Vec2 position, float const siz
 		position.x += 0.5f * size;
 	}
 
-	CBSdfDraw* constBuffer;
 	renderData.m_shaderID = EShaderType::ST_SDF_DRAW;
 	renderData.m_textureID[ 0 ] = ETextures::T_SDF_FONT_512;
 	renderData.m_topology = D3D_PRIMITIVE_TOPOLOGY::D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST;
 	renderData.m_dataNum = indicesToDraw;
 	renderData.m_geometryID = GDynamicGeometryManager.GetGeometryID( m_dynGeometryID );
 
-	GRender.GetRenderData( sizeof( CBSdfDraw ), renderData.m_cbOffset, reinterpret_cast< void*& >( constBuffer ) );
+	CConstBufferCtx const cbCtx = GRender.GetConstBufferCtx( renderData.m_cbOffset, EShaderType::ST_SDF_DRAW );
+	Vec2 const cutOff( 0.7f - 0.035f, 0.7f + 0.035f );
+	cbCtx.SetParam( reinterpret_cast<Byte const*>( &color ), sizeof( color ), EShaderParameters::SdfColor );
+	cbCtx.SetParam( reinterpret_cast<Byte const*>( &cutOff ), sizeof( cutOff ), EShaderParameters::Cutoff );
 
-	float const smooth = 2.f * size;
-	constBuffer->m_sdfColor = color;
-	constBuffer->m_cutoff.Set( 0.7f - 0.035f, 0.7f + 0.035f );
-
-	GRenderObjects[RL_OVERLAY].push_back(renderData);
+	GViewObject.m_renderData[ RL_OVERLAY ].push_back( renderData );
 }
 
 CTextRenderManager GTextRenderManager;

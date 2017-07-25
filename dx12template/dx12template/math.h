@@ -236,9 +236,25 @@ struct Vec3
 		z = a;
 	}
 
+	Vec3 GetNormalized() const
+	{
+		float const mag = x * x + y * y + z * z;
+		if (0.f < mag)
+		{
+			float const invMag = 1.f / sqrt(mag);
+			return Vec3(x * invMag, y * invMag, z * invMag);
+		}
+
+		return Vec3(1.f, 0.f, 0.f);
+	}
+
 	bool operator==( Vec3 const other ) const
 	{
 		return x == other.x && y == other.y && z == other.z;
+	}
+	bool operator!=( Vec3 const other ) const
+	{
+		return x != other.x && y != other.y && z != other.z;
 	}
 };
 
@@ -274,6 +290,14 @@ struct Vec4
 		this->y = y;
 		this->z = z;
 		this->w = w;
+	}
+
+	void operator=( Vec3 const& v )
+	{
+		x = v.x;
+		y = v.y;
+		z = v.z;
+		w = 1.f;
 	}
 };
 
@@ -561,10 +585,10 @@ struct Matrix4x4
 
 		det = m_data[0] * inv[0] + m_data[1] * inv[4] + m_data[2] * inv[8] + m_data[3] * inv[12];
 
-		if (det == 0)
+		if (det == 0.f)
 			return false;
 
-		det = 1.0 / det;
+		det = 1.0f / det;
 
 		for ( i = 0; i < 16; ++i )
 		{
@@ -692,10 +716,10 @@ struct Matrix4x4
 
 		det = m_data[0] * inv[0] + m_data[1] * inv[4] + m_data[2] * inv[8] + m_data[3] * inv[12];
 
-		if (det == 0)
+		if (det == 0.f)
 			return false;
 
-		det = 1.0 / det;
+		det = 1.0f / det;
 
 		for ( i = 0; i < 16; ++i )
 		{

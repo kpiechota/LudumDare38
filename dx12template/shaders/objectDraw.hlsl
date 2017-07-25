@@ -6,6 +6,8 @@ cbuffer objectBuffer : register(b0)
 
 Texture2D DiffTex : register(t0);
 Texture2D NormTex : register(t1);
+Texture2D EmissiveTex : register(t2);
+Texture2D SpecularTex : register(t3);
 SamplerState Sampler : register(s0);
 
 struct VSInput
@@ -25,8 +27,9 @@ struct PSInput
 
 struct PSOutput
 {
-	float4 m_diffuse	: SV_TARGET0;
-	float4 m_normalWS	: SV_TARGET1;
+	float4 m_diffuse		: SV_TARGET0;
+	float4 m_normalWS		: SV_TARGET1;
+	float4 m_emissiveSpec	: SV_TARGET2;
 };
 
 PSInput vsMain( VSInput input )
@@ -54,6 +57,8 @@ PSOutput psMain(PSInput input) : SV_TARGET0
 	output.m_normalWS.xyz = mul( output.m_normalWS, input.m_tbn );
 	output.m_normalWS.xyz = normalize( output.m_normalWS );
 	output.m_normalWS.xyz = mad( output.m_normalWS, 0.5f, 0.5f );
+	output.m_emissiveSpec.rgb = EmissiveTex.Sample( Sampler, float2(input.m_uv.x, 1.f - input.m_uv.y ) ).rgb;
+	output.m_emissiveSpec.a = SpecularTex.Sample( Sampler, float2(input.m_uv.x, 1.f - input.m_uv.y ) ).r;
 
 	return output;
 }

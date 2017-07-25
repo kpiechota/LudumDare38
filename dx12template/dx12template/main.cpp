@@ -5,7 +5,6 @@
 #include "input.h"
 #include "../DirectXTex/DirectXTex.h"
 
-#include "staticObject.h"
 #include "geometryLoader.h"
 
 #include <Windows.h>
@@ -14,7 +13,7 @@ CInputManager GInputManager;
 CSystemInput GSystemInput;
 CTimer GTimer;
 
-std::vector< SRenderData > GRenderObjects[ RL_MAX ];
+SViewObject GViewObject;
 std::vector< CGameObject* > GGameObjects;
 std::vector< CGameObject* > GGameObjectsToSpawn;
 std::vector< CGameObject* > GGameObjectsToDelete;
@@ -24,6 +23,9 @@ CStaticSound GSounds[SET_MAX];
 int GWidth = 800;
 int GHeight = 800;
 CStaticObject* testObject;
+CLightObject* testLightR;
+CLightObject* testLightG;
+CLightObject* testLightB;
 
 void InitGame()
 {
@@ -45,7 +47,8 @@ void InitGame()
 
 	for (unsigned int layerID = 0; layerID < RL_MAX; ++layerID)
 	{
-		GRenderObjects[layerID].clear();
+		GViewObject.m_renderData[layerID].clear();
+		GViewObject.m_lightData.clear();
 	}
 
 	GGameObjectsToDelete.clear();
@@ -58,18 +61,25 @@ void InitGame()
 	testObject->SetGeomtryInfoID( G_SPACESHIP );
 	testObject->SetTextureID( 0, T_SPACESHIP );
 	testObject->SetTextureID( 1, T_SPACESHIP_N );
-
-
-	float const axis0[] = { 0.f, -1.f, 0.f };
-	//Quaternion const q0 = Quaternion::FromAngleAxis( GTimer.GetSeconds( GTimer.TimeFromStart() ) * 30.f * MathConsts::DegToRad, axis0 );
-	Quaternion const q0 = Quaternion::FromAngleAxis( 90.f * MathConsts::DegToRad, axis0 );
-	float const axis1[] = { -1.f, 0.f, 0.f };
-	Quaternion const q1 = Quaternion::FromAngleAxis( 90.f * MathConsts::DegToRad, axis1 );
-	float const axis2[] = { 0.f, -1.f, 0.f };
-	Quaternion const q2 = Quaternion::FromAngleAxis( 15.f * MathConsts::DegToRad, axis2 );
-	testObject->SetRotation( q0 * q1 * q2 );
+	testObject->SetTextureID( 2, T_SPACESHIP_E );
+	testObject->SetTextureID( 3, T_SPACESHIP_S );
 
 	GGameObjectsToSpawn.push_back( testObject );
+
+	testLightR = new CLightObject( LT_POINT );
+	testLightR->SetColor( Vec3( 2.f, 0.f, 0.f ) );
+	testLightR->SetRadius( 3.f );
+	GGameObjectsToSpawn.push_back( testLightR );
+
+	testLightG = new CLightObject( LT_POINT );
+	testLightG->SetColor( Vec3( 0.f, 2.f, 0.f ) );
+	testLightG->SetRadius( 3.f );
+	GGameObjectsToSpawn.push_back( testLightG );
+
+	testLightB = new CLightObject( LT_POINT );
+	testLightB->SetColor( Vec3( 0.f, 0.f, 2.f ) );
+	testLightB->SetRadius( 3.f );
+	GGameObjectsToSpawn.push_back( testLightB );
 }
 
 void DrawDebugInfo()
@@ -136,10 +146,16 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, PSTR pCmdLine, 
 		L"../content/sdf_font_512.png",
 		L"../content/spaceship_d.png",
 		L"../content/spaceship_n.png",
+		L"../content/spaceship_e.png",
+		L"../content/spaceship_s.png",
 	};
 	CT_ASSERT( ARRAYSIZE( textures ) == T_MAX );
 
 	GRender.Init();
+	GRender.SetDirectLightColor( Vec3( 1.f, 1.f, 1.f ) );
+	GRender.SetDirectLightDir( Vec3( 0.f, 1.f, 1.f ).GetNormalized() );
+	GRender.SetAmbientLightColor( Vec3( 0.1f, 0.1f, 0.1f ) );
+
 	GRender.SetProjectionMatrix( Matrix4x4::Projection( 45.f, 1.f, 0.0001f, 100000.f ) );
 
 	GRender.BeginLoadResources(ARRAYSIZE(textures));
@@ -215,6 +231,22 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, PSTR pCmdLine, 
 			}
 		}
 
+		float const axis0[] = { 0.f, -1.f, 0.f };
+		Quaternion const q0 = Quaternion::FromAngleAxis( GTimer.GetSeconds( GTimer.TimeFromStart() ) * 30.f * MathConsts::DegToRad, axis0 );
+		float const axis1[] = { -1.f, 0.f, 0.f };
+		Quaternion const q1 = Quaternion::FromAngleAxis( 90.f * MathConsts::DegToRad, axis1 );
+		float const axis2[] = { 0.f, -1.f, 0.f };
+		Quaternion const q2 = Quaternion::FromAngleAxis( 15.f * MathConsts::DegToRad, axis2 );
+		testObject->SetRotation( q0 * q1 * q2 );
+
+		testLightR->SetPosition( Vec3( -2.5f * cos( GTimer.GetSeconds( GTimer.TimeFromStart() ) ), -2.f + 2.5f * sin( GTimer.GetSeconds( GTimer.TimeFromStart() ) ), 10.f ) );
+		testLightG->SetPosition( Vec3( -2.5f * cos( GTimer.GetSeconds( GTimer.TimeFromStart() ) + 2.f * MathConsts::PI / 3.f ), -2.f + 2.5f * sin( GTimer.GetSeconds( GTimer.TimeFromStart() ) + 2.f * MathConsts::PI / 3.f ), 10.f ) );
+		testLightB->SetPosition( Vec3( -2.5f * cos( GTimer.GetSeconds( GTimer.TimeFromStart() ) + 4.f * MathConsts::PI / 3.f ), -2.f + 2.5f * sin( GTimer.GetSeconds( GTimer.TimeFromStart() ) + 4.f * MathConsts::PI / 3.f ), 10.f ) );
+
+		testLightR->SetFade( sin( GTimer.GetSeconds( GTimer.TimeFromStart() ) ) * ( -0.5f ) - 0.5f );
+		testLightG->SetFade( sin( GTimer.GetSeconds( GTimer.TimeFromStart() ) ) * ( -0.5f ) - 0.5f );
+		testLightB->SetFade( sin( GTimer.GetSeconds( GTimer.TimeFromStart() ) ) * ( -0.5f ) - 0.5f );
+
 		for (unsigned int gameObjectID = 0; gameObjectID < gameObjectsNum; ++gameObjectID)
 		{
 			GGameObjects[gameObjectID]->Update();
@@ -233,7 +265,8 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, PSTR pCmdLine, 
 
 			for (unsigned int layerID = 0; layerID < RL_MAX; ++layerID)
 			{
-				GRenderObjects[layerID].clear();
+				GViewObject.m_renderData[layerID].clear();
+				GViewObject.m_lightData.clear();
 			}
 			timeToRender = 1.f / 60.f;
 		}

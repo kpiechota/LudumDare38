@@ -186,20 +186,20 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="dynamicGeometryManager.cpp" />
-    <ClCompile Include="geometry.cpp" />
     <ClCompile Include="geometryLoader.cpp" />
     <ClCompile Include="helpers.cpp" />
+    <ClCompile Include="lightObject.cpp" />
     <ClCompile Include="main.cpp" />
     <ClCompile Include="math.cpp" />
     <ClCompile Include="render.cpp" />
     <ClCompile Include="renderConstant.cpp" />
+    <ClCompile Include="shaderRes.cpp" />
     <ClCompile Include="soundEngine.cpp" />
     <ClCompile Include="staticObject.cpp" />
     <ClCompile Include="textRenderManager.cpp" />
     <ClCompile Include="vertexFormats.cpp" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="constantBuffer.h" />
     <ClInclude Include="descriptorHeap.h" />
     <ClInclude Include="dynamicGeometryManager.h" />
     <ClInclude Include="gameObject.h" />
@@ -207,6 +207,9 @@
     <ClInclude Include="geometryLoader.h" />
     <ClInclude Include="headers.h" />
     <ClInclude Include="input.h" />
+    <ClInclude Include="lightObject.h" />
+    <ClInclude Include="shaderRes.h" />
+    <ClInclude Include="viewObject.h" />
     <ClInclude Include="math.h" />
     <ClInclude Include="render.h" />
     <ClInclude Include="renderConstant.h" />

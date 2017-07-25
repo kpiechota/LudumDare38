@@ -5,6 +5,7 @@
 #include "vertexFormats.h"
 #include "geometry.h"
 #include "descriptorHeap.h"
+#include "shaderRes.h"
 
 struct SRenderFrameData
 {
@@ -30,6 +31,20 @@ struct SView
 	Matrix4x4 m_screenToWorld;
 };
 
+class CConstBufferCtx
+{
+private:
+	CShaderRes const* m_shader;
+	Byte* m_pConstBuffer;
+
+public:
+	CConstBufferCtx( CShaderRes const* shader, Byte* pConstBuffer )
+		: m_shader( shader )
+		, m_pConstBuffer( pConstBuffer )
+	{}
+	void SetParam( Byte const* pData, UINT16 const size, EShaderParameters const param ) const;
+};
+
 class CRender
 {
 private:
@@ -43,6 +58,7 @@ private:
 	{
 		GBB_DIFFUSE,
 		GBB_NORMAL,
+		GBB_EMISSIVE_SPEC,
 		GBB_DEPTH,
 
 		GBB_MAX,
@@ -82,8 +98,8 @@ private:
 	SRenderFrameData				m_frameData[FRAME_NUM];
 
 	ID3D12RootSignature*			m_mainRS;
-	ID3D12PipelineState*			m_shaders[ST_MAX];
-	ID3D12PipelineState*			m_shaderSimpleLight;
+	CShaderRes						m_shaders[ST_MAX];
+	CShaderRes						m_shaderLight[LF_MAX];
 
 	SDescriptorHeap					m_texturesDH;
 
@@ -104,6 +120,10 @@ private:
 
 	UINT							m_constBufferOffset;
 
+	Vec3							m_directLightDir;
+	Vec3							m_directLightColor;
+	Vec3							m_ambientLightColor;
+
 private:
 	void InitCommands();
 	void InitFrameData();
@@ -116,18 +136,17 @@ private:
 	void ResizeDescriptorHeap( SDescriptorHeap& descriptorHeap, UINT const size );
 	void CreateFullscreenTriangleRes();
 
-	inline void LoadShader(LPCWSTR pFileName, D3D_SHADER_MACRO const* pDefines, LPCSTR pEmtryPoint, LPCSTR pTarget, ID3DBlob** ppCode) const;
-
-	void InitShader( LPCWSTR pFileName, ID3D12PipelineState*& pso, D3D12_INPUT_ELEMENT_DESC const* vertexElements, UINT const vertexElementsNum, UINT const renderTargetNum, DXGI_FORMAT const* renderTargetFormats, ERenderTargetBlendStates const* renderTargetBlendStates, EDepthStencilStates const depthStencilState = EDepthStencilStates::EDSS_Disabled, ERasterizerStates const rasterizationState = ERasterizerStates::ERS_Default );
 	void InitShaders();
 	void DrawFullscreenTriangle( ID3D12GraphicsCommandList* commandList );
-	void DrawLayer( ID3D12GraphicsCommandList* commandList, ERenderLayer const layerID );
+	void DrawRenderData( ID3D12GraphicsCommandList* commandList, std::vector< SRenderData > const& renderData );
+	void DrawLights( ID3D12GraphicsCommandList* commandList, std::vector< SLightData > const& lightData );
 
 public:
 	void Init();
 	void DrawFrame();
 	void Release();
 
+	ID3D12RootSignature* GetMainRS() { return m_mainRS; }
 	ID3D12Device* GetDevice() { return m_device; }
 
 	void PrepareView();
@@ -142,7 +161,8 @@ public:
 	void EndLoadResources();
 	void WaitForResourcesLoad();
 
-	void GetRenderData( UINT const cbSize, D3D12_GPU_VIRTUAL_ADDRESS& outConstBufferOffset, void*& outConstBufferPtr );
+	CConstBufferCtx GetConstBufferCtx( D3D12_GPU_VIRTUAL_ADDRESS& outCbOffset, Byte const shader );
+	CConstBufferCtx GetLightConstBufferCtx( D3D12_GPU_VIRTUAL_ADDRESS& outCbOffset, Byte const shader );
 	void SetProjectionMatrix( Matrix4x4 const& projection ) { m_mainCamera.m_viewToScreen = projection; m_mainCamera.m_viewToScreen.Inverse( m_mainCamera.m_screenToView ); }
 	SView const& GetView() const { return m_mainCamera; }
 
@@ -155,6 +175,10 @@ public: //Getters/setters
 
 	void SetHWND(HWND& hwnd) { m_hwnd = hwnd; }
 	HWND SetHWND() const { return m_hwnd; }
+
+	void SetDirectLightDir( Vec3 const dir ) { m_directLightDir = dir; }
+	void SetDirectLightColor( Vec3 const color ) { m_directLightColor = color; }
+	void SetAmbientLightColor( Vec3 const color ) { m_ambientLightColor = color; }
 };
 
 extern CRender GRender;

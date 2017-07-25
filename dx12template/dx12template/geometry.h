@@ -51,6 +51,4 @@ struct SGeometry
 		m_indicesRes = nullptr;
 		m_vertexRes = nullptr;
 	}
-
-	void Load( char const* file );
 };

@@ -11,6 +11,7 @@ enum ERenderTargetBlendStates
 {
 	ERTBS_Disabled,
 	ERTBS_AlphaBlend,
+	ERTBS_RGBAdd,
 
 	ERTBS_MAX
 };
