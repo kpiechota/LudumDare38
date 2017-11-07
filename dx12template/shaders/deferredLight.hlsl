@@ -54,7 +54,7 @@ VSToPS vsMain( float2 position : POSITION )
 
 float4 psMain( VSToPS input ) : SV_TARGET
 {
-	float3 normalWS = NormalTex.Load( int3( input.m_position.xy, 0 ) ).rgb * 2.f - 1.f;
+	float3 normalWS = normalize(NormalTex.Load( int3( input.m_position.xy, 0 ) ).rgb * 2.f - 1.f);
 	float3 baseColor = DiffTex.Load( int3( input.m_position.xy, 0 ) ).rgb;
 	float4 emissiveSpec = EmissiveSpecTex.Load( int3( input.m_position.xy, 0 ) );
 	float3 positionWS = GetPositionWS( input.m_uv, input.m_position );
@@ -75,12 +75,16 @@ float4 psMain( VSToPS input ) : SV_TARGET
 	lightDirWS = LightDirWS;
 #endif
 
-	//float3 halfV = normalize( lightDirWS + normalize( -positionWS ) );
-	//float ndh = saturate( dot( normalWS, halfV ) );
-	//float specular = pow( ndh, .5f ) * emissiveSpec.a;
+	float3 eyeVector = normalize( -positionWS );
+	float3 normLigtDirWS = normalize( lightDirWS );
 
-	ndl = saturate( dot( lightDirWS, normalWS ) );
-	color = LightColor * ( baseColor * ndl * att/* + specular*/ );
+	float3 halfVec = normalize( eyeVector + normLigtDirWS );
+	float cosAngle = saturate( dot( normalWS, halfVec ) );
+	float specularCoef = pow( cosAngle, 80.f );
+	float spec = specularCoef * emissiveSpec.a;
+
+	ndl = saturate( dot( normLigtDirWS, normalWS ) );
+	color = LightColor * att * ( ndl * baseColor + spec );
 
 #ifdef AMBIENT
 	color += baseColor * AmbientColor + emissiveSpec.rgb;
