@@ -48,6 +48,7 @@ struct SLightData
 	D3D12_GPU_VIRTUAL_ADDRESS m_cbOffset;
 	Byte m_lightShader;
 };
+POD_TYPE(SLightData)
 
 enum ERenderLayer
 {
@@ -59,6 +60,6 @@ enum ERenderLayer
 
 struct SViewObject
 {
-	std::vector< SRenderData > m_renderData[ RL_MAX ];
-	std::vector< SLightData > m_lightData;
+	TArray< SRenderData > m_renderData[ RL_MAX ];
+	TArray< SLightData > m_lightData;
 };

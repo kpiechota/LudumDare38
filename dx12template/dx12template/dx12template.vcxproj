@@ -185,36 +185,46 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="components\componentLight.cpp" />
+    <ClCompile Include="components\componentsManagers.cpp" />
+    <ClCompile Include="components\componentStaticMesh.cpp" />
     <ClCompile Include="dynamicGeometryManager.cpp" />
+    <ClCompile Include="entity.cpp" />
+    <ClCompile Include="entityManager.cpp" />
     <ClCompile Include="geometryLoader.cpp" />
     <ClCompile Include="helpers.cpp" />
-    <ClCompile Include="lightObject.cpp" />
     <ClCompile Include="main.cpp" />
     <ClCompile Include="math.cpp" />
     <ClCompile Include="render.cpp" />
     <ClCompile Include="renderConstant.cpp" />
     <ClCompile Include="shaderRes.cpp" />
     <ClCompile Include="soundEngine.cpp" />
-    <ClCompile Include="staticObject.cpp" />
     <ClCompile Include="textRenderManager.cpp" />
     <ClCompile Include="vertexFormats.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="array.h" />
+    <ClInclude Include="components\componentContainer.h" />
+    <ClInclude Include="components\componentLight.h" />
+    <ClInclude Include="components\components.h" />
+    <ClInclude Include="components\componentsManagers.h" />
+    <ClInclude Include="components\componentStaticMesh.h" />
+    <ClInclude Include="components\componentTransform.h" />
+    <ClInclude Include="core.h" />
+    <ClInclude Include="entity.h" />
     <ClInclude Include="descriptorHeap.h" />
     <ClInclude Include="dynamicGeometryManager.h" />
-    <ClInclude Include="gameObject.h" />
+    <ClInclude Include="entityManager.h" />
     <ClInclude Include="geometry.h" />
     <ClInclude Include="geometryLoader.h" />
     <ClInclude Include="headers.h" />
     <ClInclude Include="input.h" />
-    <ClInclude Include="lightObject.h" />
     <ClInclude Include="shaderRes.h" />
     <ClInclude Include="viewObject.h" />
     <ClInclude Include="math.h" />
     <ClInclude Include="render.h" />
     <ClInclude Include="renderConstant.h" />
     <ClInclude Include="soundEngine.h" />
-    <ClInclude Include="staticObject.h" />
     <ClInclude Include="textRenderManager.h" />
     <ClInclude Include="texture.h" />
     <ClInclude Include="timer.h" />

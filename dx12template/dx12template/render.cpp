@@ -358,7 +358,7 @@ void CRender::Init()
 	GTextRenderManager.Init();
 }
 
-void CRender::DrawRenderData( ID3D12GraphicsCommandList* commandList, std::vector< SRenderData > const& renderData )
+void CRender::DrawRenderData( ID3D12GraphicsCommandList* commandList, TArray< SRenderData > const& renderData )
 {
 	D3D_PRIMITIVE_TOPOLOGY currentTopology = D3D_PRIMITIVE_TOPOLOGY_UNDEFINED;
 	Byte currentShader = ST_MAX;
@@ -368,7 +368,7 @@ void CRender::DrawRenderData( ID3D12GraphicsCommandList* commandList, std::vecto
 	memset( currentTexture, UINT8_MAX, sizeof( currentTexture ) );
 
 	D3D12_GPU_VIRTUAL_ADDRESS const constBufferStart = m_frameData[ m_frameID ].m_frameResource->GetGPUVirtualAddress();
-	UINT const objectsNum = UINT(renderData.size());
+	UINT const objectsNum = renderData.Size();
 	for (unsigned int objectID = 0; objectID < objectsNum; ++objectID)
 	{
 		SRenderData const& gameObject = renderData[objectID];
@@ -428,7 +428,7 @@ void CRender::DrawRenderData( ID3D12GraphicsCommandList* commandList, std::vecto
 	}
 }
 
-void CRender::DrawLights( ID3D12GraphicsCommandList * commandList, std::vector<SLightData> const & lightData )
+void CRender::DrawLights( ID3D12GraphicsCommandList * commandList, TArray<SLightData> const & lightData )
 {
 	commandList->SetGraphicsRootDescriptorTable( 1, m_texturesDH.GetGPUDescriptor( m_gbufferDescriptorsOffsets[ GBB_DIFFUSE ].m_srvOffset ) );
 	commandList->SetGraphicsRootDescriptorTable( 2, m_texturesDH.GetGPUDescriptor( m_gbufferDescriptorsOffsets[ GBB_NORMAL ].m_srvOffset ) );
@@ -462,7 +462,7 @@ void CRender::DrawLights( ID3D12GraphicsCommandList * commandList, std::vector<S
 	commandList->SetGraphicsRootConstantBufferView(0, constBufferStart + dirCbOffset );
 	DrawFullscreenTriangle( commandList );
 
-	UINT const lightNum = UINT( lightData.size() );
+	UINT const lightNum = lightData.Size();
 	UINT lightShader = LF_MAX;
 	for ( UINT lightID = 0; lightID < lightNum; ++lightID )
 	{
@@ -630,14 +630,14 @@ void CRender::Release()
 	m_depthBuffertDH.Release();
 	m_fullscreenTriangleRes->Release();
 
-	UINT const geometryNum = UINT(m_geometryResources.size());
-	for (unsigned int geometryID = 0; geometryID < geometryNum; ++geometryID)
+	UINT const geometryNum = m_geometryResources.Size();
+	for (UINT geometryID = 0; geometryID < geometryNum; ++geometryID)
 	{
 		m_geometryResources[geometryID].Release();
 	}
 
-	UINT const texutreNum = UINT(m_texturesResources.size());
-	for (unsigned int texutreID = 0; texutreID < texutreNum; ++texutreID)
+	UINT const texutreNum = m_texturesResources.Size();
+	for (UINT texutreID = 0; texutreID < texutreNum; ++texutreID)
 	{
 		m_texturesResources[texutreID]->Release();
 	}
@@ -661,8 +661,8 @@ void CRender::PrepareView()
 
 Byte CRender::AddGeometry( SGeometry const& geometry )
 {
-	Byte const geometryID = Byte( m_geometryResources.size() );
-	m_geometryResources.push_back( geometry );
+	Byte const geometryID = Byte( m_geometryResources.Size() );
+	m_geometryResources.Add( geometry );
 
 	return geometryID;
 }
@@ -723,7 +723,7 @@ void CRender::CreateFullscreenTriangleRes()
 
 	ID3D12Resource* verticesUploadRes;
 	CheckResult(m_device->CreateCommittedResource(&GHeapPropertiesUpload, D3D12_HEAP_FLAG_NONE, &descVertices, D3D12_RESOURCE_STATE_GENERIC_READ, nullptr, IID_PPV_ARGS(&verticesUploadRes)));
-	m_uploadResources.push_back(verticesUploadRes);
+	m_uploadResources.Add(verticesUploadRes);
 	void* pGPU;
 	verticesUploadRes->Map(0, nullptr, &pGPU);
 
@@ -748,7 +748,7 @@ void CRender::CreateFullscreenTriangleRes()
 	barrier.Transition.StateBefore = D3D12_RESOURCE_STATE_COPY_DEST;
 	barrier.Transition.StateAfter = D3D12_RESOURCE_STATE_VERTEX_AND_CONSTANT_BUFFER;
 	barrier.Transition.Subresource = D3D12_RESOURCE_BARRIER_ALL_SUBRESOURCES;
-	m_resourceBarrier.push_back( barrier );
+	m_resourceBarrier.Add( barrier );
 }
 
 void CRender::BeginLoadResources(unsigned int const textureNum)
@@ -797,7 +797,7 @@ void CRender::LoadResource(STexture const& texture)
 
 	ID3D12Resource* textureRes;
 	CheckResult(m_device->CreateCommittedResource(&GHeapPropertiesGPUOnly, D3D12_HEAP_FLAG_NONE, &descTexture, D3D12_RESOURCE_STATE_COPY_DEST, nullptr, IID_PPV_ARGS(&textureRes)));
-	m_texturesResources.push_back(textureRes);
+	m_texturesResources.Add(textureRes);
 
 	UINT64 bufferSize;
 	D3D12_PLACED_SUBRESOURCE_FOOTPRINT* pFootprints = new D3D12_PLACED_SUBRESOURCE_FOOTPRINT[ texture.m_mipLevels ];
@@ -814,7 +814,7 @@ void CRender::LoadResource(STexture const& texture)
 
 	ID3D12Resource* textureUploadRes;
 	CheckResult(m_device->CreateCommittedResource(&GHeapPropertiesUpload, D3D12_HEAP_FLAG_NONE, &descTexture, D3D12_RESOURCE_STATE_GENERIC_READ, nullptr, IID_PPV_ARGS(&textureUploadRes)));
-	m_uploadResources.push_back(textureUploadRes);
+	m_uploadResources.Add(textureUploadRes);
 
 	void* pGPU;
 	textureUploadRes->Map(0, nullptr, &pGPU);
@@ -851,7 +851,7 @@ void CRender::LoadResource(STexture const& texture)
 	barrier.Transition.StateBefore = D3D12_RESOURCE_STATE_COPY_DEST;
 	barrier.Transition.StateAfter = D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE;
 	barrier.Transition.Subresource = D3D12_RESOURCE_BARRIER_ALL_SUBRESOURCES;
-	m_resourceBarrier.push_back( barrier );
+	m_resourceBarrier.Add( barrier );
 
 	D3D12_SHADER_RESOURCE_VIEW_DESC srvDesc = {};
 	srvDesc.ViewDimension = D3D12_SRV_DIMENSION_TEXTURE2D;
@@ -860,15 +860,15 @@ void CRender::LoadResource(STexture const& texture)
 	srvDesc.Texture2D.MostDetailedMip = 0;
 	srvDesc.Format = texture.m_format;
 
-	m_device->CreateShaderResourceView(textureRes, &srvDesc, m_texturesDH.GetCPUDescriptor(UINT(m_texturesResources.size()) - 1));
+	m_device->CreateShaderResourceView(textureRes, &srvDesc, m_texturesDH.GetCPUDescriptor(m_texturesResources.Size() - 1));
 }
 
 Byte CRender::LoadResource( SGeometryData const & geometryData )
 {
 	SGeometry geometry;
 
-	UINT const verticesNum = UINT( geometryData.m_vertices.size() );
-	UINT const indicesNum = UINT( geometryData.m_indices.size() );
+	UINT const verticesNum = geometryData.m_vertices.Size();
+	UINT const indicesNum = geometryData.m_indices.Size();
 
 	D3D12_RESOURCE_DESC descVertices = {};
 	descVertices.DepthOrArraySize = 1;
@@ -885,10 +885,10 @@ Byte CRender::LoadResource( SGeometryData const & geometryData )
 
 	ID3D12Resource* verticesUploadRes;
 	CheckResult(m_device->CreateCommittedResource(&GHeapPropertiesUpload, D3D12_HEAP_FLAG_NONE, &descVertices, D3D12_RESOURCE_STATE_GENERIC_READ, nullptr, IID_PPV_ARGS(&verticesUploadRes)));
-	m_uploadResources.push_back(verticesUploadRes);
+	m_uploadResources.Add(verticesUploadRes);
 	void* pGPU;
 	verticesUploadRes->Map(0, nullptr, &pGPU);
-	memcpy( pGPU, geometryData.m_vertices.data(), sizeof( SSimpleObjectVertexFormat ) * verticesNum );
+	memcpy( pGPU, geometryData.m_vertices.Data(), sizeof( SSimpleObjectVertexFormat ) * verticesNum );
 	verticesUploadRes->Unmap( 0, nullptr );
 	m_copyCL->CopyResource( geometry.m_vertexRes, verticesUploadRes );
 
@@ -907,9 +907,9 @@ Byte CRender::LoadResource( SGeometryData const & geometryData )
 
 	ID3D12Resource* indicesUploadRes;
 	CheckResult(m_device->CreateCommittedResource(&GHeapPropertiesUpload, D3D12_HEAP_FLAG_NONE, &descIndices, D3D12_RESOURCE_STATE_GENERIC_READ, nullptr, IID_PPV_ARGS(&indicesUploadRes)));
-	m_uploadResources.push_back(indicesUploadRes);
+	m_uploadResources.Add(indicesUploadRes);
 	indicesUploadRes->Map(0, nullptr, &pGPU);
-	memcpy( pGPU, geometryData.m_indices.data(), sizeof( UINT16 ) * indicesNum );
+	memcpy( pGPU, geometryData.m_indices.Data(), sizeof( UINT16 ) * indicesNum );
 	indicesUploadRes->Unmap( 0, nullptr );
 	m_copyCL->CopyResource( geometry.m_indicesRes, indicesUploadRes );
 
@@ -921,8 +921,8 @@ Byte CRender::LoadResource( SGeometryData const & geometryData )
 	geometry.m_indexBufferView.Format = DXGI_FORMAT_R16_UINT;
 	geometry.m_indexBufferView.SizeInBytes = indicesNum * sizeof( UINT16 );
 
-	Byte const geometryID = Byte( m_geometryResources.size() );
-	m_geometryResources.push_back( geometry );
+	Byte const geometryID = Byte( m_geometryResources.Size() );
+	m_geometryResources.Add( geometry );
 
 	D3D12_RESOURCE_BARRIER barrier;
 	barrier.Type = D3D12_RESOURCE_BARRIER_TYPE_TRANSITION;
@@ -931,11 +931,11 @@ Byte CRender::LoadResource( SGeometryData const & geometryData )
 	barrier.Transition.StateBefore = D3D12_RESOURCE_STATE_COPY_DEST;
 	barrier.Transition.StateAfter = D3D12_RESOURCE_STATE_VERTEX_AND_CONSTANT_BUFFER;
 	barrier.Transition.Subresource = D3D12_RESOURCE_BARRIER_ALL_SUBRESOURCES;
-	m_resourceBarrier.push_back( barrier );
+	m_resourceBarrier.Add( barrier );
 
 	barrier.Transition.pResource = geometry.m_indicesRes;
 	barrier.Transition.StateAfter = D3D12_RESOURCE_STATE_INDEX_BUFFER;
-	m_resourceBarrier.push_back( barrier );
+	m_resourceBarrier.Add( barrier );
 
 	return geometryID;
 }
@@ -956,7 +956,7 @@ void CRender::WaitForResourcesLoad()
 	m_mainCA->Reset();
 	m_mainCL->Reset(m_mainCA, nullptr);
 
-	m_mainCL->ResourceBarrier(UINT(m_resourceBarrier.size()), m_resourceBarrier.data());
+	m_mainCL->ResourceBarrier(m_resourceBarrier.Size(), m_resourceBarrier.Data());
 	m_mainCL->Close();
 
 	CheckResult(m_copyCQ->Signal(m_fence, m_fenceValue));
@@ -971,13 +971,12 @@ void CRender::WaitForResourcesLoad()
 	++m_fenceValue;
 	WaitForSingleObject(m_fenceEvent, INFINITE);
 
-	UINT const uploadResNum = UINT( m_uploadResources.size() );
+	UINT const uploadResNum = m_uploadResources.Size();
 	for ( UINT uploadResID = 0; uploadResID < uploadResNum; ++uploadResID )
 	{
 		m_uploadResources[uploadResID]->Release();
 	}
-	m_uploadResources.clear();
-	m_uploadResources.shrink_to_fit();
+	m_uploadResources.Free();
 }
 
 CConstBufferCtx CRender::GetConstBufferCtx( D3D12_GPU_VIRTUAL_ADDRESS& outCbOffset, Byte const shader )

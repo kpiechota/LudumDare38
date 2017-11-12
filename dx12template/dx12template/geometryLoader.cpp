@@ -14,8 +14,8 @@ void CGeometryLoader::CreateMeshFromFbx( char const * file )
 		int const childNum = fbxNodeRoot->GetChildCount();
 		ASSERT_STR( childNum == 1, "FBX: More than 1 child not supported" );
 
-		std::vector<SSimpleObjectVertexFormat> vertices;
-		std::vector<UINT16> indices;
+		TArray<SSimpleObjectVertexFormat> vertices;
+		TArray<UINT16> indices;
 
 		FbxNode* fbxNodeChild = fbxNodeRoot->GetChild( 0 );
 		ASSERT( fbxNodeChild->GetNodeAttribute()->GetAttributeType() == FbxNodeAttribute::eMesh );
@@ -92,7 +92,7 @@ void CGeometryLoader::CreateMeshFromFbx( char const * file )
 				vertex.m_uv.Set( float( fbxUV.mData[ 0 ] ), float( fbxUV.mData[ 1 ] ) );
 
 				UINT16 newVertexID = 0;
-				UINT16 const verticesNum = UINT16( vertices.size() );
+				UINT16 const verticesNum = UINT16( vertices.Size() );
 				for ( ; newVertexID < verticesNum; ++newVertexID )
 				{
 					if ( vertices[ newVertexID ] == vertex )
@@ -103,25 +103,25 @@ void CGeometryLoader::CreateMeshFromFbx( char const * file )
 
 				if ( newVertexID == verticesNum )
 				{
-					vertices.push_back( vertex );
+					vertices.Add( vertex );
 				}
 
-				indices.push_back( newVertexID );
+				indices.Add( newVertexID );
 				++vertexID;
 			}
 		}
 
-		if ( vertices.size() )
+		if ( vertices.Size() )
 		{
 			std::fstream meshFile;
 			meshFile.open( file, std::fstream::out | std::fstream::trunc | std::fstream::binary );
 
-			UINT16 const verticesNum = UINT16( vertices.size() );
-			UINT16 const indicesNum = UINT16( indices.size() );
+			UINT16 const verticesNum = UINT16( vertices.Size() );
+			UINT16 const indicesNum = UINT16( indices.Size() );
 			meshFile.write( reinterpret_cast< char const* >( &verticesNum ), sizeof( verticesNum ) );
 			meshFile.write( reinterpret_cast< char const* >( &indicesNum ), sizeof( indicesNum ) );
-			meshFile.write( reinterpret_cast< char const* >( vertices.data() ), sizeof( SSimpleObjectVertexFormat ) * verticesNum );
-			meshFile.write( reinterpret_cast< char const* >( indices.data() ), sizeof( UINT16 ) * indicesNum );
+			meshFile.write( reinterpret_cast< char const* >( vertices.Data() ), sizeof( SSimpleObjectVertexFormat ) * verticesNum );
+			meshFile.write( reinterpret_cast< char const* >( indices.Data() ), sizeof( UINT16 ) * indicesNum );
 
 			bool c = meshFile.fail() || meshFile.bad();
 
@@ -178,7 +178,7 @@ void CGeometryLoader::LoadMesh( SGeometryData& geometryData, char const * file )
 		FILETIME fbxLastWriteTime;
 		GetFileTime( fbxFileHandle, NULL, NULL, &fbxLastWriteTime );
 		CloseHandle( fbxFileHandle );
-		UINT64 const fbxU64LastWriteTime = UINT64( fbxLastWriteTime.dwHighDateTime << (4 * 8) ) | UINT64(fbxLastWriteTime.dwLowDateTime);
+		UINT64 const fbxU64LastWriteTime = UINT64( fbxLastWriteTime.dwHighDateTime ) << UINT64(4 * 8) | UINT64(fbxLastWriteTime.dwLowDateTime);
 
 		bool needCreate = true;
 		HANDLE metaFileHandle;
@@ -216,12 +216,12 @@ void CGeometryLoader::LoadMesh( SGeometryData& geometryData, char const * file )
 	meshFile.read( reinterpret_cast< char* >( &verticesNum ), sizeof( verticesNum ) ); 
 	meshFile.read( reinterpret_cast< char* >( &indicesNum ), sizeof( indicesNum ) ); 
 
-	geometryData.m_vertices.resize( verticesNum );
-	geometryData.m_indices.resize( indicesNum );
+	geometryData.m_vertices.Resize( verticesNum );
+	geometryData.m_indices.Resize( indicesNum );
 
-	meshFile.read( reinterpret_cast< char* >( geometryData.m_vertices.data() ), sizeof( SSimpleObjectVertexFormat ) * verticesNum ); 
+	meshFile.read( reinterpret_cast< char* >( geometryData.m_vertices.Data() ), sizeof( SSimpleObjectVertexFormat ) * verticesNum ); 
 	bool c = meshFile.eof();
-	meshFile.read( reinterpret_cast< char* >( geometryData.m_indices.data() ), sizeof( UINT16 ) * indicesNum ); 
+	meshFile.read( reinterpret_cast< char* >( geometryData.m_indices.Data() ), sizeof( UINT16 ) * indicesNum ); 
 	std::streamsize x = meshFile.gcount();
 	meshFile.close();
 

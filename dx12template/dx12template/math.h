@@ -54,7 +54,7 @@ struct Vec2
 		float const radius2 = x * x + y * y;
 		if (0.f < radius2)
 		{
-			float const invRadius = 1.f / sqrt(radius2);
+			float const invRadius = 1.f / sqrtf(radius2);
 			x *= invRadius;
 			y *= invRadius;
 		}
@@ -65,7 +65,7 @@ struct Vec2
 		float const radius2 = x * x + y * y;
 		if (0.f < radius2)
 		{
-			float const invRadius = 1.f / sqrt(radius2);
+			float const invRadius = 1.f / sqrtf(radius2);
 			return Vec2(x * invRadius, y * invRadius);
 		}
 
@@ -241,7 +241,7 @@ struct Vec3
 		float const mag = x * x + y * y + z * z;
 		if (0.f < mag)
 		{
-			float const invMag = 1.f / sqrt(mag);
+			float const invMag = 1.f / sqrtf(mag);
 			return Vec3(x * invMag, y * invMag, z * invMag);
 		}
 
@@ -730,7 +730,7 @@ struct Matrix4x4
 
 	static Matrix4x4 Projection(float const hfov, float const aspect, float const nearPlane, float const farPlane)
 	{
-		float const scaleXY = 1.f / tan(hfov * MathConsts::DegToRad);
+		float const scaleXY = 1.f / tanf(hfov * MathConsts::DegToRad);
 		float const scaleZ = farPlane / (farPlane - nearPlane);
 
 		return Matrix4x4
@@ -837,10 +837,18 @@ struct Quaternion
 	static Quaternion FromAngleAxis(float const angle, float const* axis)
 	{
 		float const halfAngle = 0.5f * angle;
-		float const sinA = sin(halfAngle);
-		return Quaternion(axis[0] * sinA, axis[1] * sinA, axis[2] * sinA, cos(halfAngle));
+		float const sinA = sinf(halfAngle);
+		return Quaternion(axis[0] * sinA, axis[1] * sinA, axis[2] * sinA, cosf(halfAngle));
 	}
 };
+
+POD_TYPE(Vec2)
+POD_TYPE(Vec2i)
+POD_TYPE(Vec3)
+POD_TYPE(Vec4)
+POD_TYPE(Matrix3x3)
+POD_TYPE(Matrix4x4)
+POD_TYPE(Quaternion)
 
 extern Matrix3x3 Mul(Matrix3x3 const& a, Matrix3x3 const& b);
 extern Vec4 Mul( Vec4 const& vector, Matrix4x4 const& matrix );

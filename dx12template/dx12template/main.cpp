@@ -14,72 +14,102 @@ CSystemInput GSystemInput;
 CTimer GTimer;
 
 SViewObject GViewObject;
-std::vector< CGameObject* > GGameObjects;
-std::vector< CGameObject* > GGameObjectsToSpawn;
-std::vector< CGameObject* > GGameObjectsToDelete;
 SGeometryInfo GGeometryInfo[ G_MAX ];
 CStaticSound GSounds[SET_MAX];
 
 int GWidth = 800;
 int GHeight = 800;
-CStaticObject* testObject;
-CLightObject* testLightR;
-CLightObject* testLightG;
-CLightObject* testLightB;
+
+SComponentHandle testObjectTransformHandle;
+
+SComponentHandle testLightRTransformHandle;
+SComponentHandle testLightGTransformHandle;
+SComponentHandle testLightBTransformHandle;
+SComponentHandle testLightRHandle;
+SComponentHandle testLightGHandle;
+SComponentHandle testLightBHandle;
 
 void InitGame()
 {
-	unsigned int const objectToDeleteNum = GGameObjectsToDelete.size();
-	for (unsigned int gameObjectID = 0; gameObjectID < objectToDeleteNum; ++gameObjectID)
+	for (UINT layerID = 0; layerID < RL_MAX; ++layerID)
 	{
-		delete GGameObjectsToDelete[gameObjectID];
-	}
-	unsigned int const gameObjectsNum = GGameObjects.size();
-	for (unsigned int gameObjectID = 0; gameObjectID < gameObjectsNum; ++gameObjectID)
-	{
-		delete GGameObjects[gameObjectID];
-	}
-	unsigned int const objectToSpawnNum = GGameObjectsToSpawn.size();
-	for (unsigned int gameObjectID = 0; gameObjectID < objectToSpawnNum; ++gameObjectID)
-	{
-		delete GGameObjectsToSpawn[gameObjectID];
+		GViewObject.m_renderData[layerID].Clear();
+		GViewObject.m_lightData.Clear();
 	}
 
-	for (unsigned int layerID = 0; layerID < RL_MAX; ++layerID)
-	{
-		GViewObject.m_renderData[layerID].clear();
-		GViewObject.m_lightData.clear();
-	}
+	GEntityManager.Clear();
 
-	GGameObjectsToDelete.clear();
-	GGameObjectsToSpawn.clear();
-	GGameObjects.clear();
+	UINT testEntityID = GEntityManager.CreateEntity();
+	CEntity* testEntity = GEntityManager.GetEntity( testEntityID );
+	testLightRTransformHandle = testEntity->AddComponentTransform();
+	testLightRHandle = testEntity->AddComponentLight();
 
-	testObject = new CStaticObject( 0, RL_OPAQUE );
-	testObject->SetPosition( Vec3( 0.f, -2.f, 10.f ) );
-	testObject->SetScale( .25f );
-	testObject->SetGeomtryInfoID( G_SPACESHIP );
-	testObject->SetTextureID( 0, T_SPACESHIP );
-	testObject->SetTextureID( 1, T_SPACESHIP_N );
-	testObject->SetTextureID( 2, T_SPACESHIP_E );
-	testObject->SetTextureID( 3, T_SPACESHIP_S );
+	SComponentTransform* testObjectTransform = &GComponentTransformManager.GetComponent( testLightRTransformHandle.m_index );
+	SComponentLight* testLight = &GComponentLightManager.GetComponent( testLightRHandle.m_index );
 
-	GGameObjectsToSpawn.push_back( testObject );
+	testObjectTransform->m_position.Set( 0.f, 0.f, 0.f );
+	testLight->m_radius = 3.f;
+	testLight->m_color.Set( 2.f, 0.f, 0.f );
+	testLight->m_lighShader = LF_POINT;
+	testLight->m_fade = -1.f;
 
-	testLightR = new CLightObject( LT_POINT );
-	testLightR->SetColor( Vec3( 2.f, 0.f, 0.f ) );
-	testLightR->SetRadius( 3.f );
-	GGameObjectsToSpawn.push_back( testLightR );
+	testEntityID = GEntityManager.CreateEntity();
+	testEntity = GEntityManager.GetEntity( testEntityID );
+	testLightGTransformHandle = testEntity->AddComponentTransform();
+	testLightGHandle = testEntity->AddComponentLight();
 
-	testLightG = new CLightObject( LT_POINT );
-	testLightG->SetColor( Vec3( 0.f, 2.f, 0.f ) );
-	testLightG->SetRadius( 3.f );
-	GGameObjectsToSpawn.push_back( testLightG );
+	testObjectTransform = &GComponentTransformManager.GetComponent( testLightGTransformHandle.m_index );
+	testLight = &GComponentLightManager.GetComponent( testLightGHandle.m_index );
 
-	testLightB = new CLightObject( LT_POINT );
-	testLightB->SetColor( Vec3( 0.f, 0.f, 2.f ) );
-	testLightB->SetRadius( 3.f );
-	GGameObjectsToSpawn.push_back( testLightB );
+	testObjectTransform->m_position.Set( 0.f, 0.f, 0.f );
+	testLight->m_radius = 3.f;
+	testLight->m_color.Set( 0.f, 2.f, 0.f );
+	testLight->m_lighShader = LF_POINT;
+	testLight->m_fade = -1.f;
+
+	testEntityID = GEntityManager.CreateEntity();
+	testEntity = GEntityManager.GetEntity( testEntityID );
+	testLightBTransformHandle = testEntity->AddComponentTransform();
+	testLightBHandle = testEntity->AddComponentLight();
+
+	testObjectTransform = &GComponentTransformManager.GetComponent( testLightBTransformHandle.m_index );
+	testLight = &GComponentLightManager.GetComponent( testLightBHandle.m_index );
+
+	testObjectTransform->m_position.Set( 0.f, 0.f, 0.f );
+	testLight->m_radius = 3.f;
+	testLight->m_color.Set( 0.f, 0.f, 2.f );
+	testLight->m_lighShader = LF_POINT;
+	testLight->m_fade = -1.f;
+
+	float const axis1[] = { -1.f, 0.f, 0.f };
+	Quaternion const q1 = Quaternion::FromAngleAxis( 90.f * MathConsts::DegToRad, axis1 );
+	float const axis2[] = { 0.f, -1.f, 0.f };
+	Quaternion const q2 = Quaternion::FromAngleAxis( 15.f * MathConsts::DegToRad, axis2 );
+
+	testEntityID = GEntityManager.CreateEntity();
+	testEntity = GEntityManager.GetEntity( testEntityID );
+	testObjectTransformHandle = testEntity->AddComponentTransform();
+	SComponentHandle testObjectStaticMeshHandle = testEntity->AddComponentStaticMesh();
+
+	testObjectTransform = &GComponentTransformManager.GetComponent( testObjectTransformHandle.m_index );
+	SComponentStaticMesh& testObjectStaticMesh = GComponentStaticMeshManager.GetComponent( testObjectStaticMeshHandle.m_index );
+
+	testObjectTransform->m_position.Set( 0.f, -2.f, 10.f );
+	testObjectTransform->m_scale.Set( .25f, .25f, .25f );
+	testObjectTransform->m_rotation = q1 * q2;
+
+	testObjectStaticMesh.m_geometryInfoID = G_SPACESHIP;
+	testObjectStaticMesh.m_layer = RL_OPAQUE;
+	testObjectStaticMesh.m_shaderID = 0;
+	testObjectStaticMesh.m_textureID[ 0 ] = T_SPACESHIP;
+	testObjectStaticMesh.m_textureID[ 1 ] = T_SPACESHIP_N;
+	testObjectStaticMesh.m_textureID[ 2 ] = T_SPACESHIP_E;
+	testObjectStaticMesh.m_textureID[ 3 ] = T_SPACESHIP_S;
+
+	GComponentStaticMeshManager.RegisterRenderComponents( testObjectTransformHandle.m_index, testObjectStaticMeshHandle.m_index );
+	GComponentLightManager.RegisterRenderComponents( testLightRTransformHandle.m_index, testLightRHandle.m_index );
+	GComponentLightManager.RegisterRenderComponents( testLightGTransformHandle.m_index, testLightGHandle.m_index );
+	GComponentLightManager.RegisterRenderComponents( testLightBTransformHandle.m_index, testLightBHandle.m_index );
 }
 
 void DrawDebugInfo()
@@ -165,7 +195,7 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, PSTR pCmdLine, 
 		SGeometryData geometryData;
 		GGeometryLoader.LoadMesh( geometryData, meshes[ meshID ] );
 		GGeometryInfo[ meshID ].m_geometryID = GRender.LoadResource( geometryData );
-		GGeometryInfo[ meshID ].m_indicesNum = UINT( geometryData.m_indices.size() );
+		GGeometryInfo[ meshID ].m_indicesNum = geometryData.m_indices.Size();
 	}
 
 	for (unsigned int texutreID = 0; texutreID < ARRAYSIZE(textures); ++texutreID)
@@ -176,10 +206,10 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, PSTR pCmdLine, 
 		CheckResult( DirectX::LoadFromWICFile( textures[ texutreID ], DirectX::WIC_FLAGS_NONE, &texMeta, image ) );
 
 		texture.m_data = image.GetPixels();
-		texture.m_width = texMeta.width;
-		texture.m_height = texMeta.height;
+		texture.m_width = UINT(texMeta.width);
+		texture.m_height = UINT(texMeta.height);
 		texture.m_format = texMeta.format;
-		texture.m_mipLevels = texMeta.mipLevels;
+		texture.m_mipLevels = Byte(texMeta.mipLevels);
 
 		ASSERT( texture.m_format != DXGI_FORMAT_UNKNOWN );
 		GRender.LoadResource(texture);
@@ -217,7 +247,6 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, PSTR pCmdLine, 
 	bool run = true;
 	while (run)
 	{
-		unsigned int const gameObjectsNum = GGameObjects.size();
 		GTimer.Tick();
 
 		while (PeekMessage(&msg, NULL, 0, 0, PM_REMOVE))
@@ -237,83 +266,43 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, PSTR pCmdLine, 
 		Quaternion const q1 = Quaternion::FromAngleAxis( 90.f * MathConsts::DegToRad, axis1 );
 		float const axis2[] = { 0.f, -1.f, 0.f };
 		Quaternion const q2 = Quaternion::FromAngleAxis( 15.f * MathConsts::DegToRad, axis2 );
-		testObject->SetRotation( q0 * q1 * q2 );
 
-		testLightR->SetPosition( Vec3( -2.5f * cos( GTimer.GetSeconds( GTimer.TimeFromStart() ) ), -2.f + 2.5f * sin( GTimer.GetSeconds( GTimer.TimeFromStart() ) ), 10.f ) );
-		testLightG->SetPosition( Vec3( -2.5f * cos( GTimer.GetSeconds( GTimer.TimeFromStart() ) + 2.f * MathConsts::PI / 3.f ), -2.f + 2.5f * sin( GTimer.GetSeconds( GTimer.TimeFromStart() ) + 2.f * MathConsts::PI / 3.f ), 10.f ) );
-		testLightB->SetPosition( Vec3( -2.5f * cos( GTimer.GetSeconds( GTimer.TimeFromStart() ) + 4.f * MathConsts::PI / 3.f ), -2.f + 2.5f * sin( GTimer.GetSeconds( GTimer.TimeFromStart() ) + 4.f * MathConsts::PI / 3.f ), 10.f ) );
+		SComponentTransform& testObjectTransform = GComponentTransformManager.GetComponent( testObjectTransformHandle.m_index );
+		testObjectTransform.m_rotation = q0 * q1 * q2;
 
-		testLightR->SetFade( sin( GTimer.GetSeconds( GTimer.TimeFromStart() ) ) * ( -0.5f ) - 0.5f );
-		testLightG->SetFade( sin( GTimer.GetSeconds( GTimer.TimeFromStart() ) ) * ( -0.5f ) - 0.5f );
-		testLightB->SetFade( sin( GTimer.GetSeconds( GTimer.TimeFromStart() ) ) * ( -0.5f ) - 0.5f );
+		SComponentTransform* testLightTransform = &GComponentTransformManager.GetComponent( testLightRTransformHandle.m_index );
+		SComponentLight* testLight = &GComponentLightManager.GetComponent( testLightRHandle.m_index );
+		testLightTransform->m_position.Set( -2.5f * cos( GTimer.GetSeconds( GTimer.TimeFromStart() ) ), -2.f + 2.5f * sin( GTimer.GetSeconds( GTimer.TimeFromStart() ) ), 10.f );
+		testLight->m_fade = sin( GTimer.GetSeconds( GTimer.TimeFromStart() ) ) * ( -0.5f ) - 0.5f;
 
-		for (unsigned int gameObjectID = 0; gameObjectID < gameObjectsNum; ++gameObjectID)
-		{
-			GGameObjects[gameObjectID]->Update();
-		}
+		testLightTransform = &GComponentTransformManager.GetComponent( testLightGTransformHandle.m_index );
+		testLight = &GComponentLightManager.GetComponent( testLightGHandle.m_index );
+		testLightTransform->m_position.Set( -2.5f * cos( GTimer.GetSeconds( GTimer.TimeFromStart() ) + 2.f * MathConsts::PI / 3.f ), -2.f + 2.5f * sin( GTimer.GetSeconds( GTimer.TimeFromStart() ) + 2.f * MathConsts::PI / 3.f ), 10.f );
+		testLight->m_fade = sin( GTimer.GetSeconds( GTimer.TimeFromStart() ) ) * ( -0.5f ) - 0.5f;
+
+		testLightTransform = &GComponentTransformManager.GetComponent( testLightBTransformHandle.m_index );
+		testLight = &GComponentLightManager.GetComponent( testLightBHandle.m_index );
+		testLightTransform->m_position.Set( -2.5f * cos( GTimer.GetSeconds( GTimer.TimeFromStart() ) + 4.f * MathConsts::PI / 3.f ), -2.f + 2.5f * sin( GTimer.GetSeconds( GTimer.TimeFromStart() ) + 4.f * MathConsts::PI / 3.f ), 10.f );
+		testLight->m_fade = sin( GTimer.GetSeconds( GTimer.TimeFromStart() ) ) * ( -0.5f ) - 0.5f;
 
 		timeToRender -= GTimer.Delta();
 		if (timeToRender < 0.f)
 		{
 			GRender.PrepareView();
-			for (unsigned int gameObjectID = 0; gameObjectID < gameObjectsNum; ++gameObjectID)
-			{
-				GGameObjects[gameObjectID]->FillRenderData();
-			}
+			GComponentStaticMeshManager.FillRenderData();
+			GComponentLightManager.FillRenderData();
 			DrawDebugInfo();
 			GRender.DrawFrame();
 
-			for (unsigned int layerID = 0; layerID < RL_MAX; ++layerID)
+			for (UINT layerID = 0; layerID < RL_MAX; ++layerID)
 			{
-				GViewObject.m_renderData[layerID].clear();
-				GViewObject.m_lightData.clear();
+				GViewObject.m_renderData[layerID].Clear();
+				GViewObject.m_lightData.Clear();
 			}
 			timeToRender = 1.f / 60.f;
 		}
 
-		unsigned int const objectToDeleteNum = GGameObjectsToDelete.size();
-		for (unsigned int gameObjectID = 0; gameObjectID < objectToDeleteNum; ++gameObjectID)
-		{
-			delete GGameObjectsToDelete[gameObjectID];
-		}
-		GGameObjectsToDelete.clear();
-
-		for (unsigned int gameObjectID = 0; gameObjectID < GGameObjects.size(); ++gameObjectID)
-		{
-			if (GGameObjects[gameObjectID]->NeedDelete())
-			{
-				CGameObject* const pObject = GGameObjects[gameObjectID];
-				GGameObjectsToDelete.push_back(pObject);
-				GGameObjects[gameObjectID] = GGameObjects.back();
-				GGameObjects.pop_back();
-				--gameObjectID;
-			}
-		}
-
-		unsigned int const objectToSpawnNum = GGameObjectsToSpawn.size();
-		for (unsigned int gameObjectID = 0; gameObjectID < objectToSpawnNum; ++gameObjectID)
-		{
-			GGameObjects.push_back(GGameObjectsToSpawn[gameObjectID]);
-			GGameObjectsToSpawn[ gameObjectID ]->Start();
-		}
-
-		GGameObjectsToSpawn.clear();
-	}
-
-	unsigned int const objectToDeleteNum = GGameObjectsToDelete.size();
-	for (unsigned int gameObjectID = 0; gameObjectID < objectToDeleteNum; ++gameObjectID)
-	{
-		delete GGameObjectsToDelete[gameObjectID];
-	}
-	unsigned int const gameObjectsNum = GGameObjects.size();
-	for (unsigned int gameObjectID = 0; gameObjectID < gameObjectsNum; ++gameObjectID)
-	{
-		delete GGameObjects[gameObjectID];
-	}
-	unsigned int const objectToSpawnNum = GGameObjectsToSpawn.size();
-	for (unsigned int gameObjectID = 0; gameObjectID < objectToSpawnNum; ++gameObjectID)
-	{
-		delete GGameObjectsToSpawn[gameObjectID];
+		GEntityManager.Tick();
 	}
 
 	GRender.Release();

@@ -30,10 +30,10 @@ tDynGeometryID CDynamicGeometryManager::AllocateGeometry( UINT const byteVertexS
 	geometry.m_indexBufferView.SizeInBytes		= byteIndexSize;
 	geometry.m_indexBufferView.Format			= indicesFormat;
 
-	tDynGeometryID const dynGeomtryID = tDynGeometryID( m_dynGeometry.size() );
-	m_dynGeometry.push_back( SDynGeometry() );
+	tDynGeometryID const dynGeomtryID = tDynGeometryID( m_dynGeometry.Size() );
+	m_dynGeometry.Add( SDynGeometry() );
 
-	SDynGeometry& dynGeometry = m_dynGeometry.back();
+	SDynGeometry& dynGeometry = m_dynGeometry[ m_dynGeometry.Size() - 1 ];
 	dynGeometry.m_maxVerticesNum = byteVertexSize / byteVertexStride;
 	dynGeometry.m_byteVertexStride = byteVertexStride;
 	dynGeometry.m_verticesOffset = 0;
@@ -60,7 +60,7 @@ void CDynamicGeometryManager::GetVerticesForWrite( UINT const verticesNum, tDynG
 	void* mappedData;
 	SGeometry& geometry = GRender.GetGeometry( dynGeometry.m_geometryID );
 	CheckResult(geometry.m_vertexRes->Map( 0, nullptr, &mappedData ));
-	m_mappedResources.push_back( geometry.m_vertexRes );
+	m_mappedResources.Add( geometry.m_vertexRes );
 
 	outVerticesOffset = dynGeometry.m_verticesOffset;
 	outData = reinterpret_cast< void* >( &reinterpret_cast< Byte* >( mappedData )[ outVerticesOffset * dynGeometry.m_byteVertexStride ] );
@@ -76,7 +76,7 @@ void CDynamicGeometryManager::GetIndicesForWrite( UINT const indicesNum, tDynGeo
 	void* mappedData;
 	SGeometry& geometry = GRender.GetGeometry( dynGeometry.m_geometryID );
 	CheckResult(geometry.m_indicesRes->Map( 0, nullptr, &mappedData ));
-	m_mappedResources.push_back( geometry.m_indicesRes );
+	m_mappedResources.Add( geometry.m_indicesRes );
 
 	outIndicesOffset = dynGeometry.m_indicesOffset;
 	outData = reinterpret_cast< void* >( &reinterpret_cast< Byte* >( mappedData )[ outIndicesOffset * dynGeometry.m_byteIndexStride ] );
@@ -91,14 +91,14 @@ Byte CDynamicGeometryManager::GetGeometryID( tDynGeometryID const dynGeometryID 
 
 void CDynamicGeometryManager::PreDraw()
 {
-	UINT const mappedResNum = m_mappedResources.size();
+	UINT const mappedResNum = m_mappedResources.Size();
 	for ( UINT i = 0; i < mappedResNum; ++i )
 	{
 		m_mappedResources[ i ]->Unmap( 0, nullptr );
 	}
-	m_mappedResources.clear();
+	m_mappedResources.Clear();
 
-	UINT const dynGeometryNum = m_dynGeometry.size();
+	UINT const dynGeometryNum = m_dynGeometry.Size();
 	for ( UINT i = 0; i < dynGeometryNum; ++i )
 	{
 		m_dynGeometry[ i ].m_verticesOffset = 0;

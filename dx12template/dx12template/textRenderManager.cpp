@@ -227,7 +227,7 @@ void CTextRenderManager::Print( Vec4 const color, Vec2 position, float const siz
 	cbCtx.SetParam( reinterpret_cast<Byte const*>( &color ), sizeof( color ), EShaderParameters::SdfColor );
 	cbCtx.SetParam( reinterpret_cast<Byte const*>( &cutOff ), sizeof( cutOff ), EShaderParameters::Cutoff );
 
-	GViewObject.m_renderData[ RL_OVERLAY ].push_back( renderData );
+	GViewObject.m_renderData[ RL_OVERLAY ].Add( renderData );
 }
 
 CTextRenderManager GTextRenderManager;

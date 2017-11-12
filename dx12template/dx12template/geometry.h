@@ -3,8 +3,8 @@
 
 struct SGeometryData
 {
-	std::vector<SSimpleObjectVertexFormat> m_vertices;
-	std::vector<UINT16> m_indices;
+	TArray<SSimpleObjectVertexFormat> m_vertices;
+	TArray<UINT16> m_indices;
 };
 
 struct SGeometry

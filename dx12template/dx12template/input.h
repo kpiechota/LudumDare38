@@ -30,6 +30,7 @@ enum EKeys
 
 
 typedef TPair<char, bool> tKeyState;
+POD_TYPE(tKeyState)
 
 class IInputObserver
 {
@@ -40,8 +41,8 @@ public:
 class CInputManager
 {
 private:
-	std::vector<IInputObserver*> m_observers;
-	std::vector<tKeyState> m_keys;
+	TArray<IInputObserver*> m_observers;
+	TArray<tKeyState> m_keys;
 	HWND m_hWnd;
 
 	void SetKey( char const& key, bool const& value )
@@ -58,14 +59,14 @@ private:
 public:
 	void Init()
 	{
-		m_keys.push_back( tKeyState( 'W',		false ) );
-		m_keys.push_back( tKeyState( 'A',		false ) );
-		m_keys.push_back( tKeyState( 'S',		false ) );
-		m_keys.push_back( tKeyState( 'D',		false ) );
-		m_keys.push_back( tKeyState( 'Q',		false ) );
-		m_keys.push_back( tKeyState( 'E',		false ) );
-		m_keys.push_back( tKeyState( ' ',		false ) );
-		m_keys.push_back( tKeyState( K_LEFTM,	false ) );
+		m_keys.Add( tKeyState( 'W',		false ) );
+		m_keys.Add( tKeyState( 'A',		false ) );
+		m_keys.Add( tKeyState( 'S',		false ) );
+		m_keys.Add( tKeyState( 'D',		false ) );
+		m_keys.Add( tKeyState( 'Q',		false ) );
+		m_keys.Add( tKeyState( 'E',		false ) );
+		m_keys.Add( tKeyState( ' ',		false ) );
+		m_keys.Add( tKeyState( K_LEFTM,	false ) );
 	}
 	bool IsKeyDown( char const& key )
 	{
@@ -81,7 +82,7 @@ public:
 	}
 	void AddObserver( IInputObserver* observer )
 	{
-		m_observers.push_back( observer );
+		m_observers.Add( observer );
 	}
 	static LRESULT CALLBACK WindowProc( HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam )
 	{

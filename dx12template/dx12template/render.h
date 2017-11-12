@@ -7,6 +7,8 @@
 #include "descriptorHeap.h"
 #include "shaderRes.h"
 
+POD_TYPE(D3D12_RESOURCE_BARRIER)
+
 struct SRenderFrameData
 {
 	ID3D12CommandAllocator*		m_frameCA;
@@ -108,10 +110,10 @@ private:
 
 	SDescriptorsOffsets				m_gbufferDescriptorsOffsets[ GBB_MAX ];
 
-	std::vector< SGeometry >				m_geometryResources;
-	std::vector< ID3D12Resource* >			m_texturesResources;
-	std::vector< ID3D12Resource* >			m_uploadResources;
-	std::vector< D3D12_RESOURCE_BARRIER >	m_resourceBarrier;
+	TArray< SGeometry >				m_geometryResources;
+	TArray< ID3D12Resource* >		m_texturesResources;
+	TArray< ID3D12Resource* >		m_uploadResources;
+	TArray< D3D12_RESOURCE_BARRIER >m_resourceBarrier;
 
 	int								m_wndWidth;
 	int								m_wndHeight;
@@ -138,8 +140,8 @@ private:
 
 	void InitShaders();
 	void DrawFullscreenTriangle( ID3D12GraphicsCommandList* commandList );
-	void DrawRenderData( ID3D12GraphicsCommandList* commandList, std::vector< SRenderData > const& renderData );
-	void DrawLights( ID3D12GraphicsCommandList* commandList, std::vector< SLightData > const& lightData );
+	void DrawRenderData( ID3D12GraphicsCommandList* commandList, TArray< SRenderData > const& renderData );
+	void DrawLights( ID3D12GraphicsCommandList* commandList, TArray< SLightData > const& lightData );
 
 public:
 	void Init();

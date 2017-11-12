@@ -16,7 +16,7 @@ LPCSTR ShaderParamsNames[] =
 	"AmbientColor",
 	"LightDirWS",
 };
-CT_ASSERT( ARRAYSIZE( ShaderParamsNames ) == ( UINT(EShaderParameters::SP_MAX) ) );
+CT_ASSERT( (ARRAYSIZE( ShaderParamsNames ) == ( UINT(EShaderParameters::SP_MAX) )) );
 
 inline void CShaderRes::LoadShader(LPCWSTR pFileName, D3D_SHADER_MACRO const* pDefines, LPCSTR pEmtryPoint, LPCSTR pTarget, ID3DBlob** ppCode) const
 {

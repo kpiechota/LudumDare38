@@ -7,6 +7,7 @@ struct SPosVertexFormat
 
 	Vec2 m_position;
 };
+POD_TYPE(SPosVertexFormat)
 
 struct SPosUvVertexFormat
 {
@@ -16,6 +17,7 @@ struct SPosUvVertexFormat
 	Vec2 m_position;
 	Vec2 m_uv;
 };
+POD_TYPE(SPosUvVertexFormat)
 
 struct SSimpleObjectVertexFormat
 {
@@ -32,3 +34,4 @@ struct SSimpleObjectVertexFormat
 		return m_position == other.m_position && m_normal == other.m_normal && m_tangnet == other.m_tangnet && m_uv == other.m_uv;
 	}
 };
+POD_TYPE(SSimpleObjectVertexFormat)
