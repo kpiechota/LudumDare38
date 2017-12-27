@@ -15,4 +15,7 @@ public:
 
 	SComponentHandle AddComponentLight();
 	SComponentHandle GetComponentLight() const;
+
+	SComponentHandle AddComponentCamera();
+	SComponentHandle GetComponentCamera() const;
 };

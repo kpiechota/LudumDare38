@@ -41,11 +41,20 @@ void InitGame()
 
 	UINT testEntityID = GEntityManager.CreateEntity();
 	CEntity* testEntity = GEntityManager.GetEntity( testEntityID );
+	SComponentHandle testCameraHandle = testEntity->AddComponentCamera();
+	SComponentCamera* testCamera = &GComponentCameraManager.GetComponent( testCameraHandle );
+	GComponentCameraManager.SetMainCamera( testCameraHandle.m_index );
+	GComponentCameraManager.SetMainProjection( Matrix4x4::Projection( 40.f, 1.f, 0.0001f, 100000.f ) );
+	testCamera->m_position = Vec3::ZERO;
+	testCamera->m_rotation = Quaternion::IDENTITY;
+
+	testEntityID = GEntityManager.CreateEntity();
+	testEntity = GEntityManager.GetEntity( testEntityID );
 	testLightRTransformHandle = testEntity->AddComponentTransform();
 	testLightRHandle = testEntity->AddComponentLight();
 
-	SComponentTransform* testObjectTransform = &GComponentTransformManager.GetComponent( testLightRTransformHandle.m_index );
-	SComponentLight* testLight = &GComponentLightManager.GetComponent( testLightRHandle.m_index );
+	SComponentTransform* testObjectTransform = &GComponentTransformManager.GetComponent( testLightRTransformHandle );
+	SComponentLight* testLight = &GComponentLightManager.GetComponent( testLightRHandle );
 
 	testObjectTransform->m_position.Set( 0.f, 0.f, 0.f );
 	testLight->m_radius = 3.f;
@@ -58,8 +67,8 @@ void InitGame()
 	testLightGTransformHandle = testEntity->AddComponentTransform();
 	testLightGHandle = testEntity->AddComponentLight();
 
-	testObjectTransform = &GComponentTransformManager.GetComponent( testLightGTransformHandle.m_index );
-	testLight = &GComponentLightManager.GetComponent( testLightGHandle.m_index );
+	testObjectTransform = &GComponentTransformManager.GetComponent( testLightGTransformHandle );
+	testLight = &GComponentLightManager.GetComponent( testLightGHandle );
 
 	testObjectTransform->m_position.Set( 0.f, 0.f, 0.f );
 	testLight->m_radius = 3.f;
@@ -72,8 +81,8 @@ void InitGame()
 	testLightBTransformHandle = testEntity->AddComponentTransform();
 	testLightBHandle = testEntity->AddComponentLight();
 
-	testObjectTransform = &GComponentTransformManager.GetComponent( testLightBTransformHandle.m_index );
-	testLight = &GComponentLightManager.GetComponent( testLightBHandle.m_index );
+	testObjectTransform = &GComponentTransformManager.GetComponent( testLightBTransformHandle );
+	testLight = &GComponentLightManager.GetComponent( testLightBHandle );
 
 	testObjectTransform->m_position.Set( 0.f, 0.f, 0.f );
 	testLight->m_radius = 3.f;
@@ -81,18 +90,16 @@ void InitGame()
 	testLight->m_lighShader = LF_POINT;
 	testLight->m_fade = -1.f;
 
-	float const axis1[] = { -1.f, 0.f, 0.f };
-	Quaternion const q1 = Quaternion::FromAngleAxis( 90.f * MathConsts::DegToRad, axis1 );
-	float const axis2[] = { 0.f, -1.f, 0.f };
-	Quaternion const q2 = Quaternion::FromAngleAxis( 15.f * MathConsts::DegToRad, axis2 );
+	Quaternion const q1 = Quaternion::FromAngleAxis( 90.f * MathConsts::DegToRad, Vec3::LEFT.data );
+	Quaternion const q2 = Quaternion::FromAngleAxis( 15.f * MathConsts::DegToRad, Vec3::DOWN.data );
 
 	testEntityID = GEntityManager.CreateEntity();
 	testEntity = GEntityManager.GetEntity( testEntityID );
 	testObjectTransformHandle = testEntity->AddComponentTransform();
 	SComponentHandle testObjectStaticMeshHandle = testEntity->AddComponentStaticMesh();
 
-	testObjectTransform = &GComponentTransformManager.GetComponent( testObjectTransformHandle.m_index );
-	SComponentStaticMesh& testObjectStaticMesh = GComponentStaticMeshManager.GetComponent( testObjectStaticMeshHandle.m_index );
+	testObjectTransform = &GComponentTransformManager.GetComponent( testObjectTransformHandle );
+	SComponentStaticMesh& testObjectStaticMesh = GComponentStaticMeshManager.GetComponent( testObjectStaticMeshHandle );
 
 	testObjectTransform->m_position.Set( 0.f, -2.f, 10.f );
 	testObjectTransform->m_scale.Set( .25f, .25f, .25f );
@@ -186,8 +193,6 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, PSTR pCmdLine, 
 	GRender.SetDirectLightDir( Vec3( 0.f, 1.f, 1.f ).GetNormalized() );
 	GRender.SetAmbientLightColor( Vec3( 0.1f, 0.1f, 0.1f ) );
 
-	GRender.SetProjectionMatrix( Matrix4x4::Projection( 45.f, 1.f, 0.0001f, 100000.f ) );
-
 	GRender.BeginLoadResources(ARRAYSIZE(textures));
 
 	for ( UINT meshID = 0; meshID < ARRAYSIZE( meshes ); ++meshID )
@@ -260,35 +265,35 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, PSTR pCmdLine, 
 			}
 		}
 
-		float const axis0[] = { 0.f, -1.f, 0.f };
-		Quaternion const q0 = Quaternion::FromAngleAxis( GTimer.GetSeconds( GTimer.TimeFromStart() ) * 30.f * MathConsts::DegToRad, axis0 );
-		float const axis1[] = { -1.f, 0.f, 0.f };
-		Quaternion const q1 = Quaternion::FromAngleAxis( 90.f * MathConsts::DegToRad, axis1 );
-		float const axis2[] = { 0.f, -1.f, 0.f };
-		Quaternion const q2 = Quaternion::FromAngleAxis( 15.f * MathConsts::DegToRad, axis2 );
+		Quaternion const q0 = Quaternion::FromAngleAxis( GTimer.GetSeconds( GTimer.TimeFromStart() ) * 30.f * MathConsts::DegToRad, Vec3::DOWN.data );
+		Quaternion const q1 = Quaternion::FromAngleAxis( 90.f * MathConsts::DegToRad, Vec3::LEFT.data );
+		Quaternion const q2 = Quaternion::FromAngleAxis( 15.f * MathConsts::DegToRad, Vec3::DOWN.data );
 
-		SComponentTransform& testObjectTransform = GComponentTransformManager.GetComponent( testObjectTransformHandle.m_index );
-		testObjectTransform.m_rotation = q0 * q1 * q2;
+		SComponentTransform& testObjectTransform = GComponentTransformManager.GetComponent( testObjectTransformHandle );
+		//testObjectTransform.m_rotation = q0 * q1 * q2;
 
-		SComponentTransform* testLightTransform = &GComponentTransformManager.GetComponent( testLightRTransformHandle.m_index );
-		SComponentLight* testLight = &GComponentLightManager.GetComponent( testLightRHandle.m_index );
+		SComponentTransform* testLightTransform = &GComponentTransformManager.GetComponent( testLightRTransformHandle );
+		SComponentLight* testLight = &GComponentLightManager.GetComponent( testLightRHandle );
 		testLightTransform->m_position.Set( -2.5f * cos( GTimer.GetSeconds( GTimer.TimeFromStart() ) ), -2.f + 2.5f * sin( GTimer.GetSeconds( GTimer.TimeFromStart() ) ), 10.f );
 		testLight->m_fade = sin( GTimer.GetSeconds( GTimer.TimeFromStart() ) ) * ( -0.5f ) - 0.5f;
 
-		testLightTransform = &GComponentTransformManager.GetComponent( testLightGTransformHandle.m_index );
-		testLight = &GComponentLightManager.GetComponent( testLightGHandle.m_index );
+		testLightTransform = &GComponentTransformManager.GetComponent( testLightGTransformHandle );
+		testLight = &GComponentLightManager.GetComponent( testLightGHandle );
 		testLightTransform->m_position.Set( -2.5f * cos( GTimer.GetSeconds( GTimer.TimeFromStart() ) + 2.f * MathConsts::PI / 3.f ), -2.f + 2.5f * sin( GTimer.GetSeconds( GTimer.TimeFromStart() ) + 2.f * MathConsts::PI / 3.f ), 10.f );
 		testLight->m_fade = sin( GTimer.GetSeconds( GTimer.TimeFromStart() ) ) * ( -0.5f ) - 0.5f;
 
-		testLightTransform = &GComponentTransformManager.GetComponent( testLightBTransformHandle.m_index );
-		testLight = &GComponentLightManager.GetComponent( testLightBHandle.m_index );
+		testLightTransform = &GComponentTransformManager.GetComponent( testLightBTransformHandle );
+		testLight = &GComponentLightManager.GetComponent( testLightBHandle );
 		testLightTransform->m_position.Set( -2.5f * cos( GTimer.GetSeconds( GTimer.TimeFromStart() ) + 4.f * MathConsts::PI / 3.f ), -2.f + 2.5f * sin( GTimer.GetSeconds( GTimer.TimeFromStart() ) + 4.f * MathConsts::PI / 3.f ), 10.f );
 		testLight->m_fade = sin( GTimer.GetSeconds( GTimer.TimeFromStart() ) ) * ( -0.5f ) - 0.5f;
 
 		timeToRender -= GTimer.Delta();
 		if (timeToRender < 0.f)
 		{
-			GRender.PrepareView();
+			GComponentCameraManager.MainCameraTick();
+			GInputManager.Tick();
+
+			GComponentCameraManager.PrepareView();
 			GComponentStaticMeshManager.FillRenderData();
 			GComponentLightManager.FillRenderData();
 			DrawDebugInfo();

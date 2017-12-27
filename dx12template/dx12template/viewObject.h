@@ -1,5 +1,15 @@
 #pragma once
 
+struct SCameraMatrices
+{
+	Matrix4x4 m_viewToScreen;
+	Matrix4x4 m_screenToView;
+	Matrix4x4 m_worldToView;
+	Matrix4x4 m_viewToWorld;
+	Matrix4x4 m_worldToScreen;
+	Matrix4x4 m_screenToWorld;
+};
+
 struct SRenderData
 {
 	enum
@@ -60,6 +70,7 @@ enum ERenderLayer
 
 struct SViewObject
 {
+	SCameraMatrices m_camera;
 	TArray< SRenderData > m_renderData[ RL_MAX ];
 	TArray< SLightData > m_lightData;
 };

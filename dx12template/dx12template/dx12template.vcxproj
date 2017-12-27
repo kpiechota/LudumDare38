@@ -185,7 +185,9 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="components\componentCamera.cpp" />
     <ClCompile Include="components\componentLight.cpp" />
+    <ClCompile Include="components\componentPhysics.cpp" />
     <ClCompile Include="components\componentsManagers.cpp" />
     <ClCompile Include="components\componentStaticMesh.cpp" />
     <ClCompile Include="dynamicGeometryManager.cpp" />
@@ -194,7 +196,9 @@
     <ClCompile Include="geometryLoader.cpp" />
     <ClCompile Include="helpers.cpp" />
     <ClCompile Include="main.cpp" />
-    <ClCompile Include="math.cpp" />
+    <ClCompile Include="math\math.cpp" />
+    <ClCompile Include="math\geometricUtilities.cpp" />
+    <ClCompile Include="physics\convexUtilities.cpp" />
     <ClCompile Include="render.cpp" />
     <ClCompile Include="renderConstant.cpp" />
     <ClCompile Include="shaderRes.cpp" />
@@ -204,8 +208,10 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="array.h" />
+    <ClInclude Include="components\componentCamera.h" />
     <ClInclude Include="components\componentContainer.h" />
     <ClInclude Include="components\componentLight.h" />
+    <ClInclude Include="components\componentPhysics.h" />
     <ClInclude Include="components\components.h" />
     <ClInclude Include="components\componentsManagers.h" />
     <ClInclude Include="components\componentStaticMesh.h" />
@@ -219,6 +225,11 @@
     <ClInclude Include="geometryLoader.h" />
     <ClInclude Include="headers.h" />
     <ClInclude Include="input.h" />
+    <ClInclude Include="math\geometricUtilities.h" />
+    <ClInclude Include="math\matrix.h" />
+    <ClInclude Include="math\quaternion.h" />
+    <ClInclude Include="math\vector.h" />
+    <ClInclude Include="physics\physicsUtilities.h" />
     <ClInclude Include="shaderRes.h" />
     <ClInclude Include="viewObject.h" />
     <ClInclude Include="math.h" />

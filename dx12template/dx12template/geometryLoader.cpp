@@ -8,6 +8,7 @@ UINT64 const GStaticMeshesVersion = 0;
 
 void CGeometryLoader::CreateMeshFromFbx( char const * file )
 {
+#ifndef FINAL_BUILD
 	FbxNode* fbxNodeRoot = m_fbxScene->GetRootNode();
 	if ( fbxNodeRoot )
 	{
@@ -128,6 +129,7 @@ void CGeometryLoader::CreateMeshFromFbx( char const * file )
 			meshFile.close();
 		}
 	}
+#endif
 }
 
 void CGeometryLoader::CreateMeshMeta( char const * file, UINT64 const wrtieTime )
@@ -141,6 +143,7 @@ void CGeometryLoader::CreateMeshMeta( char const * file, UINT64 const wrtieTime 
 
 void CGeometryLoader::Init()
 {
+#ifndef FINAL_BUILD
 	m_fbxManager = FbxManager::Create();
 
 	m_fbxIOSettings = FbxIOSettings::Create(m_fbxManager, IOSROOT);
@@ -154,6 +157,7 @@ void CGeometryLoader::Init()
 	m_fbxManager->SetIOSettings(m_fbxIOSettings);
 
 	m_fbxImporter = FbxImporter::Create( m_fbxManager, "Fbx Importer" );
+#endif
 }
 
 void CGeometryLoader::LoadMesh( SGeometryData& geometryData, char const * file )
@@ -231,6 +235,7 @@ void CGeometryLoader::LoadMesh( SGeometryData& geometryData, char const * file )
 
 void CGeometryLoader::LoadFbx( char const* fbxFile, char const* meshFile, char const* meshMetaFile, UINT64 const wrtieTime )
 {
+#ifndef FINAL_BUILD
 	if ( !m_fbxImporter->Initialize( fbxFile, -1, m_fbxIOSettings ) )
 	{
 		FbxString const error = m_fbxImporter->GetStatus().GetErrorString();
@@ -252,11 +257,14 @@ void CGeometryLoader::LoadFbx( char const* fbxFile, char const* meshFile, char c
 	CreateMeshFromFbx( meshFile );
 	CreateMeshMeta( meshMetaFile, wrtieTime );
 	m_fbxScene->Destroy();
+#endif
 }
 
 void CGeometryLoader::Release()
 {
+#ifndef FINAL_BUILD
 	m_fbxManager->Destroy();
+#endif
 }
 
 CGeometryLoader GGeometryLoader;

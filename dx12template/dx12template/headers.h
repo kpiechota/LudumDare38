@@ -10,6 +10,8 @@
 #pragma comment( lib, "dxgi" )
 #pragma comment( lib, "d3dcompiler" )
 
+#include "core.h"
+
 #include <d3d12.h>
 #include <dxgi1_4.h>
 #include <d3dcompiler.h>
@@ -18,10 +20,8 @@
 #include <comdef.h>
 #include <intrin.h>
 #include <cstdlib>
-#include <assert.h>
 #include <stdarg.h>
 
-#include "core.h"
 #include "texture.h"
 
 #include "viewObject.h"

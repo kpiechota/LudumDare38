@@ -447,9 +447,10 @@ void CRender::DrawLights( ID3D12GraphicsCommandList * commandList, TArray<SLight
 	CConstBufferCtx const cbCtx = GetLightConstBufferCtx( dirCbOffset, dirLightFlags );
 	if ( dirLightFlags & Byte( LF_DIRECT ) )
 	{
-		Matrix4x4 tViewToWorld = m_mainCamera.m_viewToWorld;
+		SCameraMatrices const& cameraMatrices = GViewObject.m_camera;
+		Matrix4x4 tViewToWorld = cameraMatrices.m_viewToWorld;
 		tViewToWorld.Transpose();
-		Vec4 const perspectiveValues(1.f / m_mainCamera.m_viewToScreen.m_a00, 1.f / m_mainCamera.m_viewToScreen.m_a11, m_mainCamera.m_viewToScreen.m_a32, -m_mainCamera.m_viewToScreen.m_a22 );
+		Vec4 const perspectiveValues(1.f / cameraMatrices.m_viewToScreen.m_a00, 1.f / cameraMatrices.m_viewToScreen.m_a11, cameraMatrices.m_viewToScreen.m_a32, -cameraMatrices.m_viewToScreen.m_a22 );
 
 		cbCtx.SetParam( reinterpret_cast<Byte const*>( &tViewToWorld ),			sizeof( tViewToWorld ),			EShaderParameters::ViewToWorld );
 		cbCtx.SetParam( reinterpret_cast<Byte const*>( &perspectiveValues ),	sizeof( perspectiveValues ),	EShaderParameters::PerspectiveValues );
@@ -650,13 +651,6 @@ void CRender::Release()
 #ifdef _DEBUG
 	m_debugController->Release();
 #endif
-}
-
-void CRender::PrepareView()
-{
-	m_mainCamera.m_worldToScreen = Mul( m_mainCamera.m_worldToView, m_mainCamera.m_viewToScreen );
-	m_mainCamera.m_worldToScreen.Inverse( m_mainCamera.m_screenToWorld );
-	m_mainCamera.m_worldToView.Inverse( m_mainCamera.m_viewToWorld );
 }
 
 Byte CRender::AddGeometry( SGeometry const& geometry )

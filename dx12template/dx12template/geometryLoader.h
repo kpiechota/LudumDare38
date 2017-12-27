@@ -13,10 +13,12 @@ namespace fbxsdk
 class CGeometryLoader
 {
 private:
+#ifndef FINAL_BUILD
 	fbxsdk::FbxManager*			m_fbxManager;
 	fbxsdk::FbxImporter*		m_fbxImporter;
 	fbxsdk::FbxIOSettings*		m_fbxIOSettings;
 	fbxsdk::FbxScene*			m_fbxScene;
+#endif
 
 private:
 	void CreateMeshFromFbx( char const* file );

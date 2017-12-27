@@ -25,11 +25,19 @@ enum EKeys
 	K_E = 'e',
 	K_LESS = 44,
 	K_MORE = 46,
-	K_LEFTM = 100,
+	K_LEFT_MOUSE_BUTTON = 100,
+	K_RIGHT_MOUSE_BUTTON = 101,
 };
 
+struct SKeyInfo
+{
+	bool m_isDown : 1;
+	bool m_inFrameDown : 1;
+	bool m_inFrameUp : 1;
+};
+POD_TYPE(SKeyInfo)
 
-typedef TPair<char, bool> tKeyState;
+typedef TPair<UINT8, SKeyInfo> tKeyState;
 POD_TYPE(tKeyState)
 
 class IInputObserver
@@ -51,7 +59,9 @@ private:
 		{
 			if ( pair.m_key == key )
 			{
-				pair.m_value = value;
+				pair.m_value.m_isDown = value;
+				pair.m_value.m_inFrameDown = value ? true : false;
+				pair.m_value.m_inFrameUp = value ? false : true;
 			}
 		}
 	}
@@ -59,27 +69,64 @@ private:
 public:
 	void Init()
 	{
-		m_keys.Add( tKeyState( 'W',		false ) );
-		m_keys.Add( tKeyState( 'A',		false ) );
-		m_keys.Add( tKeyState( 'S',		false ) );
-		m_keys.Add( tKeyState( 'D',		false ) );
-		m_keys.Add( tKeyState( 'Q',		false ) );
-		m_keys.Add( tKeyState( 'E',		false ) );
-		m_keys.Add( tKeyState( ' ',		false ) );
-		m_keys.Add( tKeyState( K_LEFTM,	false ) );
+		m_keys.Add( tKeyState( 'W',						{ false, false, false } ) );
+		m_keys.Add( tKeyState( 'A',						{ false, false, false } ) );
+		m_keys.Add( tKeyState( 'S',						{ false, false, false } ) );
+		m_keys.Add( tKeyState( 'D',						{ false, false, false } ) );
+		m_keys.Add( tKeyState( 'Q',						{ false, false, false } ) );
+		m_keys.Add( tKeyState( 'E',						{ false, false, false } ) );
+		m_keys.Add( tKeyState( ' ',						{ false, false, false } ) );
+		m_keys.Add( tKeyState( K_LEFT_MOUSE_BUTTON,		{ false, false, false } ) );
+		m_keys.Add( tKeyState( K_RIGHT_MOUSE_BUTTON,	{ false, false, false } ) );
 	}
-	bool IsKeyDown( char const& key )
+	bool IsKeyDown( UINT8 const key ) const
 	{
 		for ( tKeyState const& pair : m_keys )
 		{
 			if ( pair.m_key == key )
 			{
-				return pair.m_value;
+				return pair.m_value.m_isDown;
 			}
 		}
 
 		return false;
 	}
+
+	bool KeyDownLastFrame( UINT8 const key ) const
+	{
+		for ( tKeyState const& pair : m_keys )
+		{
+			if ( pair.m_key == key )
+			{
+				return pair.m_value.m_inFrameDown;
+			}
+		}
+
+		return false;
+	}
+
+	bool KeyUpLastFrame( UINT8 const key ) const
+	{
+		for ( tKeyState const& pair : m_keys )
+		{
+			if ( pair.m_key == key )
+			{
+				return pair.m_value.m_inFrameUp;
+			}
+		}
+
+		return false;
+	}
+
+	void Tick()
+	{
+		for ( tKeyState& pair : m_keys )
+		{
+			pair.m_value.m_inFrameDown = false;
+			pair.m_value.m_inFrameUp = false;
+		}
+	}
+
 	void AddObserver( IInputObserver* observer )
 	{
 		m_observers.Add( observer );
@@ -142,10 +189,16 @@ public:
 			break;
 		}
 		case WM_LBUTTONDOWN:
-			GInputManager.SetKey(K_LEFTM, true);
+			GInputManager.SetKey(K_LEFT_MOUSE_BUTTON, true);
 			break;
 		case WM_LBUTTONUP:
-			GInputManager.SetKey(K_LEFTM, false);
+			GInputManager.SetKey(K_LEFT_MOUSE_BUTTON, false);
+			break;
+		case WM_RBUTTONDOWN:
+			GInputManager.SetKey(K_RIGHT_MOUSE_BUTTON, true);
+			break;
+		case WM_RBUTTONUP:
+			GInputManager.SetKey(K_RIGHT_MOUSE_BUTTON, false);
 			break;
 		case WM_CHAR:
 		{

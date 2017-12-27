@@ -46,14 +46,6 @@ private:
 			T* oldData = m_data;
 			m_data = nullptr;
 
-			if ( !IsPOD< T >::value )
-			{
-				for ( UINT i = size; i < m_size; ++i )
-				{
-					oldData[ i ].~T();
-				}
-			}
-
 			if ( 0 < size )
 			{
 				m_data = (T*)malloc( size * sizeof( T ) );
@@ -70,6 +62,14 @@ private:
 					memcpy( m_data, oldData, copySize * sizeof( T ) );
 				}
 			}
+
+			if ( !IsPOD< T >::value )
+			{
+				for ( UINT i = size; i < m_size; ++i )
+				{
+					oldData[ i ].~T();
+				}
+			}
 			free( oldData );
 
 			m_allocSize = size;
@@ -83,6 +83,34 @@ public:
 		, m_allocSize( 0 )
 		, m_size( 0 )
 	{}
+
+	TArray( UINT const allocSize )
+		: m_data( nullptr )
+		, m_allocSize( 0 )
+		, m_size( 0 )
+	{
+		Reallocate( allocSize );
+	}
+
+	TArray( TArray<T> const& other )
+	{
+		m_allocSize = other.m_allocSize;
+		m_size = other.m_size;
+		m_data = (T*)malloc( m_allocSize * sizeof( T ) );
+
+		if ( !IsPOD< T >::value )
+		{
+			for ( UINT i = 0; i < m_size; ++i )
+			{
+				new ( &m_data[ i ] ) T( other[ i ] );
+			}
+		}
+		else
+		{
+			memcpy( m_data, other.m_data, m_size * sizeof( T ) );
+		}
+	}
+
 	~TArray()
 	{
 		if ( !IsPOD< T >::value )
@@ -238,5 +266,36 @@ public:
 	FORCE_INLINE UINT Size() const
 	{
 		return m_size;
+	}
+
+	void operator=( TArray<T> const& other )
+	{
+		if ( !IsPOD< T >::value )
+		{
+			for ( UINT i = 0; i < m_size; ++i )
+			{
+				m_data[ i ].~T();
+			}
+		}
+
+		if ( m_allocSize != other.m_allocSize )
+		{
+			free( m_data );
+			m_data = (T*)malloc( other.m_allocSize * sizeof( T ) );
+			m_allocSize = other.m_allocSize;
+		}
+
+		m_size = other.m_size;
+		if ( !IsPOD< T >::value )
+		{
+			for ( UINT i = 0; i < m_size; ++i )
+			{
+				new ( &m_data[ i ] ) T( other[ i ] );
+			}
+		}
+		else
+		{
+			memcpy( m_data, other.m_data, m_size * sizeof( T ) );
+		}
 	}
 };

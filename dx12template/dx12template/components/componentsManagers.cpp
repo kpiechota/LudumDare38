@@ -3,3 +3,5 @@
 CComponentTransformManager		GComponentTransformManager;
 CComponentStaticMeshManager		GComponentStaticMeshManager;
 CComponentLightManager			GComponentLightManager;
+CComponentPhysicsManager		GComponentPhysicsManager;
+CComponentCameraManager			GComponentCameraManager;

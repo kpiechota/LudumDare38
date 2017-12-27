@@ -69,6 +69,8 @@ enum EComponentType
 	CT_Transform,
 	CT_StaticMesh,
 	CT_Light,
+	CT_Physics,
+	CT_Camera,
 
 	CT_Num,
 };
@@ -85,5 +87,7 @@ POD_TYPE( SComponentHandle )
 #include "componentTransform.h"
 #include "componentStaticMesh.h"
 #include "componentLight.h"
+#include "componentPhysics.h"
+#include "componentCamera.h"
 
 #include "componentsManagers.h"

@@ -23,16 +23,6 @@ struct SDescriptorsOffsets
 	UINT8 m_srvOffset;
 };
 
-struct SView
-{
-	Matrix4x4 m_viewToScreen;
-	Matrix4x4 m_screenToView;
-	Matrix4x4 m_worldToView;
-	Matrix4x4 m_viewToWorld;
-	Matrix4x4 m_worldToScreen;
-	Matrix4x4 m_screenToWorld;
-};
-
 class CConstBufferCtx
 {
 private:
@@ -76,8 +66,6 @@ private:
 	ID3D12Fence*					m_fence;
 	HANDLE							m_fenceEvent;
 	UINT							m_fenceValue;
-
-	SView							m_mainCamera;
 
 	D3D12_VIEWPORT					m_viewport;
 	D3D12_RECT						m_scissorRect;
@@ -151,8 +139,6 @@ public:
 	ID3D12RootSignature* GetMainRS() { return m_mainRS; }
 	ID3D12Device* GetDevice() { return m_device; }
 
-	void PrepareView();
-
 	Byte AddGeometry( SGeometry const& geometry );
 	SGeometry& GetGeometry( Byte const geometryID );
 	void ReleaseGeometry( Byte const geometryID );
@@ -165,8 +151,6 @@ public:
 
 	CConstBufferCtx GetConstBufferCtx( D3D12_GPU_VIRTUAL_ADDRESS& outCbOffset, Byte const shader );
 	CConstBufferCtx GetLightConstBufferCtx( D3D12_GPU_VIRTUAL_ADDRESS& outCbOffset, Byte const shader );
-	void SetProjectionMatrix( Matrix4x4 const& projection ) { m_mainCamera.m_viewToScreen = projection; m_mainCamera.m_viewToScreen.Inverse( m_mainCamera.m_screenToView ); }
-	SView const& GetView() const { return m_mainCamera; }
 
 public: //Getters/setters
 	void SetWindowWidth(int const wndWidth) { m_wndWidth = wndWidth; }

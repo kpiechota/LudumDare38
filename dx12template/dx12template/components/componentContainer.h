@@ -30,21 +30,33 @@ public:
 		return handle;
 	}
 
-	void RemoveComponent( UINT const id )
+	void RemoveComponent( SComponentHandle const handle )
 	{
-		ASSERT( id < m_components.Size() );
-		m_freeComponents.Add( id );
+		ASSERT( handle.m_type == componentType );
+		ASSERT( handle.m_index < m_components.Size() );
+		m_freeComponents.Add( handle.m_index );
 		if ( !IsPOD< T >::value )
 		{
-			m_components[ id ].~T();
+			m_components[ handle.m_index ].~T();
 		}
 	}
 
-	FORCE_INLINE T& GetComponent( UINT const id )
+	FORCE_INLINE T& GetComponent( SComponentHandle const handle )
+	{
+		ASSERT( handle.m_type == componentType );
+		return m_components[ handle.m_index ];
+	}
+	FORCE_INLINE T const& GetComponent( SComponentHandle const handle ) const
+	{
+		ASSERT( handle.m_type == componentType );
+		return m_components[ handle.m_index ];
+	}
+
+	FORCE_INLINE T& GetComponentNoCheck( UINT const id )
 	{
 		return m_components[ id ];
 	}
-	FORCE_INLINE T const& GetComponent( UINT const id ) const
+	FORCE_INLINE T const& GetComponentNoCheck( UINT const id ) const
 	{
 		return m_components[ id ];
 	}

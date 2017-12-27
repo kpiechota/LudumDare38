@@ -6,14 +6,15 @@ void CComponentStaticMeshManager::FillRenderData() const
 	SRenderData renderData;
 	renderData.m_topology = D3D_PRIMITIVE_TOPOLOGY::D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST;
 
+	Matrix4x4 const worldToScreen = GViewObject.m_camera.m_worldToScreen;
 	UINT const renderComponentsNum = m_renderComponents.Size();
 	for ( UINT i = 0; i < renderComponentsNum; ++i )
 	{
-		SComponentTransform const transform = GComponentTransformManager.GetComponent( m_renderComponents[ i ].m_transformID );
-		SComponentStaticMesh const staticMesh = GetComponent( m_renderComponents[ i ].m_staticMeshID );
+		SComponentTransform const transform = GComponentTransformManager.GetComponentNoCheck( m_renderComponents[ i ].m_transformID );
+		SComponentStaticMesh const staticMesh = GetComponentNoCheck( m_renderComponents[ i ].m_staticMeshID );
 
 		Matrix4x4 tObjectToWorld = Matrix4x4::GetTranslateRotationSize( transform.m_position, transform.m_rotation, transform.m_scale );
-		Matrix4x4 tObjectToScreen = Mul( tObjectToWorld, GRender.GetView().m_worldToScreen );
+		Matrix4x4 tObjectToScreen = Math::Mul( tObjectToWorld, worldToScreen );
 		tObjectToWorld.Transpose();
 		tObjectToScreen.Transpose();
 
