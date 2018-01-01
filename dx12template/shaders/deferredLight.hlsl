@@ -8,7 +8,7 @@ cbuffer objectBuffer : register(b0)
 	float2 Attenuation; //x - invRadius, y - fade
 #endif
 
-	float3 LightColor;
+	float3 Color;
 
 #ifdef AMBIENT
 	float3 AmbientColor;
@@ -84,7 +84,7 @@ float4 psMain( VSToPS input ) : SV_TARGET
 	float spec = specularCoef * emissiveSpec.a;
 
 	ndl = saturate( dot( normLigtDirWS, normalWS ) );
-	color = LightColor * att * ( ndl * baseColor + spec );
+	color = Color * att * ( ndl * baseColor + spec );
 
 #ifdef AMBIENT
 	color += baseColor * AmbientColor + emissiveSpec.rgb;

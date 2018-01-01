@@ -1,4 +1,4 @@
-#include "headers.h"
+#include "../headers.h"
 #include "vertexFormats.h"
 
 char const* POSITION	= "POSITION";

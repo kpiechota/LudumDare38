@@ -1,6 +1,7 @@
 #include "headers.h"
 #include "geometryLoader.h"
-#include "vertexFormats.h"
+#include "rendering\vertexFormats.h"
+#include "rendering\textRenderManager.h"
 #include "utility\fbxsdk.h"
 #include <fstream>
 

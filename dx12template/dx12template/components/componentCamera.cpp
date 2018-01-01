@@ -5,7 +5,7 @@
 void CComponentCameraManager::MainCameraTick()
 {
 	static Vec2i const midPos(GWidth / 2, GHeight / 2);
-	SComponentCamera& mainCamera = m_components[ m_mainCameraID ];
+	SComponentCamera& mainCamera = m_components[ m_graphicsCAmeraID ];
 
 	if ( GInputManager.IsKeyDown( EKeys::K_RIGHT_MOUSE_BUTTON ) )
 	{
@@ -55,7 +55,7 @@ void CComponentCameraManager::MainCameraTick()
 
 void CComponentCameraManager::PrepareView()
 {
-	SComponentCamera& mainCamera = m_components[ m_mainCameraID ];
+	SComponentCamera& mainCamera = m_components[ m_graphicsCAmeraID ];
 	SCameraMatrices& cameraMatrices = GViewObject.m_camera;
 
 	cameraMatrices.m_viewToScreen = mainCamera.m_projectionMatrix;
@@ -70,6 +70,18 @@ void CComponentCameraManager::PrepareView()
 
 void CComponentCameraManager::SetMainProjection( Matrix4x4 const& projection )
 {
-	SComponentCamera& mainCamera = m_components[ m_mainCameraID ];
+	SComponentCamera& mainCamera = m_components[ m_graphicsCAmeraID ];
 	mainCamera.m_projectionMatrix = projection;
+}
+
+Vec3 CComponentCameraManager::GetMainCameraPosition() const
+{
+	SComponentCamera const& mainCamera = m_components[ m_graphicsCAmeraID ];
+	return mainCamera.m_position;
+}
+
+Vec3 CComponentCameraManager::GetMainCameraForward() const
+{
+	SComponentCamera const& mainCamera = m_components[ m_graphicsCAmeraID ];
+	return mainCamera.m_rotation * Vec3::FORWARD;
 }

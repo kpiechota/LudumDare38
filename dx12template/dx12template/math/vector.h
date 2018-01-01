@@ -331,6 +331,45 @@ struct Vec3
 	}
 };
 
+struct Vec3i
+{
+	union
+	{
+		struct
+		{
+			int x, y, z;
+		};
+		int data[3];
+	};
+
+	Vec3i()
+		: x(0)
+		, y(0)
+		, z(0)
+	{}
+	Vec3i(Vec3i const& v)
+		: x(v.x)
+		, y(v.y)
+		, z(v.z)
+	{}
+	Vec3i(int const x, int const y, int const z)
+		: x(x)
+		, y(y)
+		, z(z)
+	{}
+	void operator -=(Vec3i const& v)
+	{
+		x -= v.x;
+		y -= v.y;
+		z -= v.z;
+	}
+
+	operator Vec3() const
+	{
+		return Vec3((float)x, (float)y, (float)z);
+	}
+};
+
 struct Vec4
 {
 	union
@@ -372,5 +411,8 @@ struct Vec4
 		z = v.z;
 		w = 1.f;
 	}
+
+	static Vec4 const ONE;
+	static Vec4 const ZERO;
 };
 

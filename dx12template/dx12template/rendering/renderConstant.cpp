@@ -1,4 +1,4 @@
-#include "headers.h"
+#include "../headers.h"
 #include "renderConstant.h"
 
 D3D12_RASTERIZER_DESC const GRasterizerStates[ ERS_MAX ] =
@@ -100,6 +100,24 @@ D3D12_DEPTH_STENCIL_DESC const GDepthStencilStates[ EDSS_MAX ] =
 		/*BackFace.StencilDepthFailOp*/			,D3D12_STENCIL_OP_REPLACE
 		/*BackFace.StencilPassOp*/				,D3D12_STENCIL_OP_REPLACE
 		/*BackFace.StencilFunc*/				,D3D12_COMPARISON_FUNC_ALWAYS }
+	},
+
+	//EDSS_DepthTest
+	{
+	/*DepthEnable*/							TRUE
+	/*DepthWriteMask*/						,D3D12_DEPTH_WRITE_MASK_ZERO
+	/*DepthFunc*/							,D3D12_COMPARISON_FUNC_LESS
+	/*StencilEnable*/						,FALSE
+	/*StencilReadMask*/						,D3D12_DEFAULT_STENCIL_READ_MASK
+	/*StencilWriteMask*/					,D3D12_DEFAULT_STENCIL_WRITE_MASK
+	/*FrontFace.StencilFailOp*/				,{ D3D12_STENCIL_OP_REPLACE
+	/*FrontFace.StencilDepthFailOp*/		,D3D12_STENCIL_OP_REPLACE
+	/*FrontFace.StencilPassOp*/				,D3D12_STENCIL_OP_REPLACE
+	/*FrontFace.StencilFunc*/				,D3D12_COMPARISON_FUNC_ALWAYS }
+	/*BackFace.StencilFailOp*/				,{ D3D12_STENCIL_OP_REPLACE
+	/*BackFace.StencilDepthFailOp*/			,D3D12_STENCIL_OP_REPLACE
+	/*BackFace.StencilPassOp*/				,D3D12_STENCIL_OP_REPLACE
+	/*BackFace.StencilFunc*/				,D3D12_COMPARISON_FUNC_ALWAYS }
 	}
 };
 

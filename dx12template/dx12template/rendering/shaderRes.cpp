@@ -1,4 +1,4 @@
-#include "headers.h"
+#include "../headers.h"
 #include "render.h"
 #include "shaderRes.h"
 
@@ -6,15 +6,16 @@ LPCSTR ShaderParamsNames[] =
 {
 	"ObjectToScreen",
 	"ObjectToWorld",
+	"WorldToScreen",
 	"ViewToWorld",
 	"PerspectiveValues",
 	"LightPos",
-	"LightColor",
 	"Attenuation",
-	"SdfColor",
+	"Color",
 	"Cutoff",
 	"AmbientColor",
 	"LightDirWS",
+	"CameraPositionWS",
 };
 CT_ASSERT( (ARRAYSIZE( ShaderParamsNames ) == ( UINT(EShaderParameters::SP_MAX) )) );
 
@@ -106,4 +107,44 @@ void CShaderRes::InitShader( LPCWSTR pFileName, D3D12_INPUT_ELEMENT_DESC const* 
 
 	vsShader->Release();
 	psShader->Release();
+}
+
+void CShaderRes::InitComputeShader( LPCWSTR pFileName, ID3D12RootSignature* pRootSignature, D3D_SHADER_MACRO const* pDefines )
+{
+	m_bufferSize = 0;
+	memset( m_paramOffsets, 0xFF, sizeof( m_paramOffsets ) );
+
+	D3D12_COMPUTE_PIPELINE_STATE_DESC descPSO = {};
+	descPSO.pRootSignature = pRootSignature;
+
+	ID3D12ShaderReflection* shaderRefl;
+	ID3D12ShaderReflectionConstantBuffer* shaderCBRefl = nullptr;
+	ID3D12ShaderReflectionVariable*	shaderVaribleRefl = nullptr;
+	D3D12_SHADER_BUFFER_DESC bufferDesc;
+	D3D12_SHADER_VARIABLE_DESC variableDesc;
+
+	ID3DBlob* csShader;
+	LoadShader(pFileName, pDefines, "csMain", "cs_5_1", &csShader);
+	descPSO.CS = { csShader->GetBufferPointer(), csShader->GetBufferSize() };
+	D3DReflect( csShader->GetBufferPointer(), csShader->GetBufferSize(), IID_PPV_ARGS( &shaderRefl ) );
+	shaderCBRefl = shaderRefl->GetConstantBufferByIndex( 0 );
+	shaderCBRefl->GetDesc( &bufferDesc );
+	if ( shaderCBRefl->GetDesc( &bufferDesc ) == S_OK )
+	{
+		m_bufferSize = UINT16( bufferDesc.Size );
+
+		for ( UINT i = 0; i < ARRAYSIZE( ShaderParamsNames ); ++i )
+		{
+			shaderVaribleRefl = shaderCBRefl->GetVariableByName( ShaderParamsNames[ i ] );
+			if ( shaderVaribleRefl->GetDesc( &variableDesc ) == S_OK )
+			{
+				m_paramOffsets[ i ] = UINT16(variableDesc.StartOffset);
+			}
+		}
+	}
+
+	m_bufferSize = (m_bufferSize + 255) & ~255;
+	CheckResult(GRender.GetDevice()->CreateComputePipelineState(&descPSO, IID_PPV_ARGS(&m_pso)));
+
+	csShader->Release();
 }

@@ -1,10 +1,12 @@
 #include "../headers.h"
-#include "../render.h"
+#include "../rendering/render.h"
 
 void CComponentStaticMeshManager::FillRenderData() const
 {
 	SRenderData renderData;
 	renderData.m_topology = D3D_PRIMITIVE_TOPOLOGY::D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST;
+	renderData.m_drawType = SRenderData::EDrawType::DrawIndexedInstanced;
+	renderData.m_instancesNum = 1;
 
 	Matrix4x4 const worldToScreen = GViewObject.m_camera.m_worldToScreen;
 	UINT const renderComponentsNum = m_renderComponents.Size();
@@ -18,8 +20,8 @@ void CComponentStaticMeshManager::FillRenderData() const
 		tObjectToWorld.Transpose();
 		tObjectToScreen.Transpose();
 
-		renderData.m_dataNum = GGeometryInfo[ staticMesh.m_geometryInfoID ].m_indicesNum;
-		renderData.m_dataNum = GGeometryInfo[ staticMesh.m_geometryInfoID ].m_indicesNum;
+		renderData.m_indicesNum = GGeometryInfo[ staticMesh.m_geometryInfoID ].m_indicesNum;
+		renderData.m_indicesNum = GGeometryInfo[ staticMesh.m_geometryInfoID ].m_indicesNum;
 		renderData.m_geometryID = GGeometryInfo[ staticMesh.m_geometryInfoID ].m_geometryID;
 		renderData.m_shaderID = staticMesh.m_shaderID;
 

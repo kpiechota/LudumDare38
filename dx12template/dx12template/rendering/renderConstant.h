@@ -21,6 +21,7 @@ enum EDepthStencilStates
 {
 	EDSS_Disabled,
 	EDSS_DepthEnable,
+	EDSS_DepthTest,
 
 	EDSS_MAX
 };

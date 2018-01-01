@@ -138,6 +138,19 @@ struct Matrix4x4
 		, m_a20(mat3x3.m_a20),	m_a21(mat3x3.m_a21),	m_a22(mat3x3.m_a22),	m_a23(0.f)
 		, m_a30(0.f),			m_a31(0.f),				m_a32(0.f),				m_a33(1.f)
 	{}
+
+	void Set(
+		float const _a00, float const _a01, float const _a02, float const _a03,
+		float const _a10, float const _a11, float const _a12, float const _a13,
+		float const _a20, float const _a21, float const _a22, float const _a23,
+		float const _a30, float const _a31, float const _a32, float const _a33)
+	{
+		m_a00 = _a00; m_a01 = _a01; m_a02 = _a02; m_a03 = _a03;
+		m_a10 = _a10; m_a11 = _a11; m_a12 = _a12; m_a13 = _a13;
+		m_a20 = _a20; m_a21 = _a21; m_a22 = _a22; m_a23 = _a23;
+		m_a30 = _a30; m_a31 = _a31; m_a32 = _a32; m_a33 = _a33;
+	}
+
 	void Transpose()
 	{
 		float x;

@@ -17,11 +17,20 @@ struct SRenderData
 		MAX_TEXTURES_NUM = 4
 	};
 
+	enum class EDrawType : Byte
+	{
+		DrawInstanced,
+		DrawIndexedInstanced,
+
+		DrawInvalid
+	};
+
 	D3D12_GPU_VIRTUAL_ADDRESS m_cbOffset;
 
 	UINT m_verticesStart;
 	UINT m_indicesStart;
-	UINT m_dataNum;
+	UINT m_indicesNum;
+	UINT m_instancesNum;
 
 	D3D_PRIMITIVE_TOPOLOGY m_topology;
 
@@ -29,15 +38,18 @@ struct SRenderData
 
 	Byte m_textureID[ MAX_TEXTURES_NUM ];
 	Byte m_shaderID;
+	EDrawType m_drawType;
 
 	SRenderData()
 		: m_cbOffset( 0 )
 		, m_verticesStart( 0 )
 		, m_indicesStart( 0 )
-		, m_dataNum( 0 )
+		, m_indicesNum( 0 )
+		, m_instancesNum( 0 )
 		, m_topology( D3D_PRIMITIVE_TOPOLOGY_TRIANGLESTRIP )
-		, m_geometryID( UINT8_MAX )
+		, m_geometryID( 0 )
 		, m_shaderID( 0 )
+		, m_drawType( EDrawType::DrawInvalid )
 	{
 		memset( m_textureID, UINT8_MAX, sizeof( m_textureID ) );
 	}
@@ -63,6 +75,7 @@ POD_TYPE(SLightData)
 enum ERenderLayer
 {
 	RL_OPAQUE,
+	RL_TRANSLUCENT,
 	RL_OVERLAY,
 
 	RL_MAX

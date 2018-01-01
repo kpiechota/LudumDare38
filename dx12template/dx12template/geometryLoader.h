@@ -1,5 +1,5 @@
 #pragma once
-#include "geometry.h"
+#include "rendering/geometry.h"
 
 namespace fbxsdk
 {

@@ -47,7 +47,7 @@ PSInput vsMain( VSInput input )
 	return output;
 }
 
-PSOutput psMain(PSInput input) : SV_TARGET0
+PSOutput psMain(PSInput input)
 {
 	PSOutput output;
 	output.m_normalWS = NormTex.Sample( Sampler, float2(input.m_uv.x, 1.f - input.m_uv.y ) );

@@ -22,15 +22,10 @@
 #include <cstdlib>
 #include <stdarg.h>
 
-#include "texture.h"
-
 #include "viewObject.h"
 #include "components\components.h"
 #include "entity.h"
 #include "entityManager.h"
-
-#include "dynamicGeometryManager.h"
-#include "textRenderManager.h"
 
 extern int GWidth;
 extern int GHeight;

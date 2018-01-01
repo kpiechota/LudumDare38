@@ -1,5 +1,5 @@
 #include "headers.h"
-#include "render.h"
+#include "rendering/render.h"
 #include "soundEngine.h"
 #include "timer.h"
 #include "input.h"
@@ -293,10 +293,10 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, PSTR pCmdLine, 
 			GComponentCameraManager.MainCameraTick();
 			GInputManager.Tick();
 
-			GComponentCameraManager.PrepareView();
-			GComponentStaticMeshManager.FillRenderData();
-			GComponentLightManager.FillRenderData();
+			GRender.PreDrawFrame();
+
 			DrawDebugInfo();
+
 			GRender.DrawFrame();
 
 			for (UINT layerID = 0; layerID < RL_MAX; ++layerID)

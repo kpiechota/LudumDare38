@@ -22,6 +22,7 @@
 POD_TYPE(Vec2)
 POD_TYPE(Vec2i)
 POD_TYPE(Vec3)
+POD_TYPE(Vec3i)
 POD_TYPE(Vec4)
 POD_TYPE(Matrix3x3)
 POD_TYPE(Matrix4x4)

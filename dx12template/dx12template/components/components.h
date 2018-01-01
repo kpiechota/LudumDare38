@@ -4,6 +4,7 @@ enum EShaderType
 {
 	ST_OBJECT_DRAW,
 	ST_SDF_DRAW,
+	ST_ENV_PARTICLE,
 
 	ST_MAX
 };

@@ -1,6 +1,6 @@
 cbuffer objectBuffer : register(b0)
 {
-	float4 SdfColor;
+	float4 Color;
 	float2 Cutoff;
 }
 
@@ -33,5 +33,5 @@ float4 psMain(PSInput input) : SV_TARGET0
 	float dist = DistTex.Sample(Sampler, input.m_uv).r;
 	clip( dist - Cutoff.x );
 	float alpha = smoothstep( Cutoff.x, Cutoff.y, dist );
-	return float4( SdfColor.rgb, SdfColor.a * alpha );
+	return float4( Color.rgb, Color.a * alpha );
 }

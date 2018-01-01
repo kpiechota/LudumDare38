@@ -4,15 +4,16 @@ enum class EShaderParameters : Byte
 {
 	ObjectToScreen,
 	ObjectToWorld,
+	WorldToScreen,
 	ViewToWorld,
 	PerspectiveValues,
 	LightPos,
-	LightColor,
 	Attenuation,
-	SdfColor,
+	Color,
 	Cutoff,
 	AmbientColor,
 	LightDirWS,
+	CameraPositionWS,
 
 	SP_MAX
 };
@@ -29,6 +30,7 @@ private:
 
 public:
 	void InitShader( LPCWSTR pFileName, D3D12_INPUT_ELEMENT_DESC const* vertexElements, UINT const vertexElementsNum, UINT const renderTargetNum, DXGI_FORMAT const* renderTargetFormats, ERenderTargetBlendStates const* renderTargetBlendStates, EDepthStencilStates const depthStencilState = EDepthStencilStates::EDSS_Disabled, ERasterizerStates const rasterizationState = ERasterizerStates::ERS_Default, D3D_SHADER_MACRO const* pDefines = nullptr );
+	void InitComputeShader( LPCWSTR pFileName, ID3D12RootSignature* pRootSignature, D3D_SHADER_MACRO const* pDefines = nullptr );
 	ID3D12PipelineState* GetPSO() { return m_pso; }
 	void Release() { m_pso->Release(); }
 	UINT16 GetOffset( EShaderParameters const param ) const { return m_paramOffsets[ UINT(param) ]; }

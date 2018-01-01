@@ -1,7 +1,3 @@
-#include "headers.h"
-#include "textRenderManager.h"
-#include "dynamicGeometryManager.h"
-#include "vertexFormats.h"
 #include "render.h"
 
 struct SGlyphData
@@ -160,16 +156,12 @@ void CTextRenderManager::Init()
 	m_dynGeometryID = GDynamicGeometryManager.AllocateGeometry( CHAR_MAX_NUM * 4 * sizeof( SPosUvVertexFormat ), sizeof( SPosUvVertexFormat ), CHAR_MAX_NUM * 6 * ( GDXGIFormatsBitsSize[ DXGI_FORMAT_R16_UINT ] / 8 ), DXGI_FORMAT_R16_UINT );
 }
 
-void CTextRenderManager::Release()
-{
-	GDynamicGeometryManager.ReleaseGeometry( m_dynGeometryID );
-}
-
 void CTextRenderManager::Print( Vec4 const color, Vec2 position, float const size, char const* msg )
 {
 	position = 2.f * position - 1.f;
 
 	SRenderData renderData;
+	renderData.m_drawType = SRenderData::EDrawType::DrawIndexedInstanced;
 
 	SPosUvVertexFormat* vertices = nullptr;
 	UINT16* indices = nullptr;
@@ -219,12 +211,13 @@ void CTextRenderManager::Print( Vec4 const color, Vec2 position, float const siz
 	renderData.m_shaderID = EShaderType::ST_SDF_DRAW;
 	renderData.m_textureID[ 0 ] = ETextures::T_SDF_FONT_512;
 	renderData.m_topology = D3D_PRIMITIVE_TOPOLOGY::D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST;
-	renderData.m_dataNum = indicesToDraw;
+	renderData.m_indicesNum = indicesToDraw;
+	renderData.m_instancesNum = 1;
 	renderData.m_geometryID = GDynamicGeometryManager.GetGeometryID( m_dynGeometryID );
 
 	CConstBufferCtx const cbCtx = GRender.GetConstBufferCtx( renderData.m_cbOffset, EShaderType::ST_SDF_DRAW );
 	Vec2 const cutOff( 0.7f - 0.035f, 0.7f + 0.035f );
-	cbCtx.SetParam( reinterpret_cast<Byte const*>( &color ), sizeof( color ), EShaderParameters::SdfColor );
+	cbCtx.SetParam( reinterpret_cast<Byte const*>( &color ), sizeof( color ), EShaderParameters::Color );
 	cbCtx.SetParam( reinterpret_cast<Byte const*>( &cutOff ), sizeof( cutOff ), EShaderParameters::Cutoff );
 
 	GViewObject.m_renderData[ RL_OVERLAY ].Add( renderData );

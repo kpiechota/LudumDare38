@@ -1,11 +1,14 @@
 #pragma once
 
-#include "headers.h"
+#include "../headers.h"
 #include "renderConstant.h"
 #include "vertexFormats.h"
 #include "geometry.h"
 #include "descriptorHeap.h"
 #include "shaderRes.h"
+#include "texture.h"
+#include "textRenderManager.h"
+#include "environmentParticleManager.h"
 
 POD_TYPE(D3D12_RESOURCE_BARRIER)
 
@@ -74,9 +77,12 @@ private:
 	ID3D12CommandAllocator*			m_copyCA;
 	ID3D12GraphicsCommandList*		m_copyCL;
 
-	ID3D12CommandQueue*				m_mainCQ;
-	ID3D12CommandAllocator*			m_mainCA;
-	ID3D12GraphicsCommandList*		m_mainCL;
+	ID3D12CommandQueue*				m_graphicsCQ;
+	ID3D12CommandAllocator*			m_graphicsCA;
+	ID3D12GraphicsCommandList*		m_graphicsCL;
+
+	ID3D12CommandQueue*				m_computeCQ;
+	TArray< ID3D12CommandList* >	m_computeCommandLists;
 
 	IDXGISwapChain3*				m_swapChain;
 
@@ -87,7 +93,7 @@ private:
 
 	SRenderFrameData				m_frameData[FRAME_NUM];
 
-	ID3D12RootSignature*			m_mainRS;
+	ID3D12RootSignature*			m_graphicsRS;
 	CShaderRes						m_shaders[ST_MAX];
 	CShaderRes						m_shaderLight[LF_MAX];
 
@@ -128,15 +134,17 @@ private:
 
 	void InitShaders();
 	void DrawFullscreenTriangle( ID3D12GraphicsCommandList* commandList );
+	FORCE_INLINE void DrawOpaque( ID3D12GraphicsCommandList* commandList );
 	void DrawRenderData( ID3D12GraphicsCommandList* commandList, TArray< SRenderData > const& renderData );
 	void DrawLights( ID3D12GraphicsCommandList* commandList, TArray< SLightData > const& lightData );
 
 public:
 	void Init();
+	void PreDrawFrame();
 	void DrawFrame();
 	void Release();
 
-	ID3D12RootSignature* GetMainRS() { return m_mainRS; }
+	ID3D12RootSignature* GetMainRS() { return m_graphicsRS; }
 	ID3D12Device* GetDevice() { return m_device; }
 
 	Byte AddGeometry( SGeometry const& geometry );
@@ -151,6 +159,15 @@ public:
 
 	CConstBufferCtx GetConstBufferCtx( D3D12_GPU_VIRTUAL_ADDRESS& outCbOffset, Byte const shader );
 	CConstBufferCtx GetLightConstBufferCtx( D3D12_GPU_VIRTUAL_ADDRESS& outCbOffset, Byte const shader );
+	void SetConstBuffer( D3D12_GPU_VIRTUAL_ADDRESS& outConstBufferAddress, Byte* const pData, UINT const size );
+
+	void ExecuteComputeQueue( UINT const commandListNum, ID3D12CommandList* const* pCommandLists );
+
+	void WaitForCopyQueue();
+	void WaitForGraphicsQueue();
+	void WaitForComputeQueue();
+
+	void AddComputeCommandList( ID3D12CommandList* pCommandList );
 
 public: //Getters/setters
 	void SetWindowWidth(int const wndWidth) { m_wndWidth = wndWidth; }

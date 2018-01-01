@@ -1,5 +1,5 @@
 #include "../headers.h"
-#include "../render.h"
+#include "../rendering/render.h"
 
 void CComponentLightManager::FillRenderData() const
 {
@@ -27,7 +27,7 @@ void CComponentLightManager::FillRenderData() const
 		cbCtx.SetParam( reinterpret_cast<Byte const*>( &tViewToWorld ),				sizeof( tViewToWorld ),					EShaderParameters::ViewToWorld );
 		cbCtx.SetParam( reinterpret_cast<Byte const*>( &perspectiveValues ),		sizeof( perspectiveValues ),			EShaderParameters::PerspectiveValues );
 		cbCtx.SetParam( reinterpret_cast<Byte const*>( &transform.m_position ),		sizeof( transform.m_position ),			EShaderParameters::LightPos );
-		cbCtx.SetParam( reinterpret_cast<Byte const*>( &light.m_color ),			sizeof( light.m_color ),				EShaderParameters::LightColor );
+		cbCtx.SetParam( reinterpret_cast<Byte const*>( &light.m_color ),			sizeof( light.m_color ),				EShaderParameters::Color );
 		cbCtx.SetParam( reinterpret_cast<Byte const*>( &attenuation ),				sizeof( attenuation ),					EShaderParameters::Attenuation );
 
 		GViewObject.m_lightData.Add( lightData );

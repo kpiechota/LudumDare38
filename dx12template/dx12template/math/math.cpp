@@ -60,6 +60,16 @@ Matrix4x4 Math::Mul(Matrix4x4 const& matrixA, Matrix4x4 const& matrixB)
 	);
 }
 
+float Math::Snap( float const value, float const snap )
+{
+	return snap * floorf( value / snap );
+}
+
+Vec3 Math::Snap( Vec3 const value, Vec3 const snap )
+{
+	return Vec3( Snap( value.x, snap.x ), Snap( value.y, snap.y ), Snap( value.z, snap.z ) );
+}
+
 Vec2 operator*( float const a, Vec2 const v )
 {
 	return Vec2( a * v.x, a * v.y );
@@ -68,6 +78,11 @@ Vec2 operator*( float const a, Vec2 const v )
 Vec3 operator*( float const a, Vec3 const v )
 {
 	return Vec3( a * v.x, a * v.y, a * v.z );
+}
+
+Vec3 operator*( Vec3 const v0, Vec3 const v1 )
+{
+	return Vec3( v0.x * v1.x, v0.y * v1.y, v0.z * v1.z );
 }
 
 float RandFloat()
@@ -83,5 +98,8 @@ Vec3 const Vec3::UP( 0.f, 1.f, 0.f );
 Vec3 const Vec3::DOWN( 0.f, -1.f, 0.f );
 Vec3 const Vec3::LEFT( -1.f, 0.f, 0.f );
 Vec3 const Vec3::RIGHT( 1.f, 0.f, 0.f );
+
+Vec4 const Vec4::ONE( 1.f, 1.f, 1.f, 1.f );
+Vec4 const Vec4::ZERO( 0.f, 0.f, 0.f, 0.f );
 
 Quaternion const Quaternion::IDENTITY(0.f, 0.f, 0.f, 1.f);
