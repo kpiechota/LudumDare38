@@ -185,6 +185,7 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, PSTR pCmdLine, 
 		L"../content/spaceship_n.png",
 		L"../content/spaceship_e.png",
 		L"../content/spaceship_s.png",
+		L"../content/rainDrop.png",
 	};
 	CT_ASSERT( ARRAYSIZE( textures ) == T_MAX );
 
@@ -226,8 +227,6 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, PSTR pCmdLine, 
 
 	GInputManager.Init();
 	GInputManager.AddObserver(&GSystemInput);
-
-	float timeToRender = 0.f;
 
 	InitGame();
 
@@ -287,24 +286,19 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, PSTR pCmdLine, 
 		testLightTransform->m_position.Set( -2.5f * cos( GTimer.GetSeconds( GTimer.TimeFromStart() ) + 4.f * MathConsts::PI / 3.f ), -2.f + 2.5f * sin( GTimer.GetSeconds( GTimer.TimeFromStart() ) + 4.f * MathConsts::PI / 3.f ), 10.f );
 		testLight->m_fade = sin( GTimer.GetSeconds( GTimer.TimeFromStart() ) ) * ( -0.5f ) - 0.5f;
 
-		timeToRender -= GTimer.Delta();
-		if (timeToRender < 0.f)
+		GComponentCameraManager.MainCameraTick();
+		GInputManager.Tick();
+
+		GRender.PreDrawFrame();
+
+		DrawDebugInfo();
+
+		GRender.DrawFrame();
+
+		for (UINT layerID = 0; layerID < RL_MAX; ++layerID)
 		{
-			GComponentCameraManager.MainCameraTick();
-			GInputManager.Tick();
-
-			GRender.PreDrawFrame();
-
-			DrawDebugInfo();
-
-			GRender.DrawFrame();
-
-			for (UINT layerID = 0; layerID < RL_MAX; ++layerID)
-			{
-				GViewObject.m_renderData[layerID].Clear();
-				GViewObject.m_lightData.Clear();
-			}
-			timeToRender = 1.f / 60.f;
+			GViewObject.m_renderData[layerID].Clear();
+			GViewObject.m_lightData.Clear();
 		}
 
 		GEntityManager.Tick();

@@ -357,6 +357,14 @@ struct Vec3i
 		, y(y)
 		, z(z)
 	{}
+
+	void Set(int const _x, int const _y, int const _z)
+	{
+		x = _x;
+		y = _y;
+		z = _z;
+	}
+
 	void operator -=(Vec3i const& v)
 	{
 		x -= v.x;

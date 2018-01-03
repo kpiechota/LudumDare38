@@ -1,7 +1,7 @@
 cbuffer objectBuffer : register(b0)
 {
 	float4x4 ObjectToScreen;
-	float4x4 ObjectToWorld;
+	float4x3 ObjectToWorld;
 }
 
 Texture2D DiffTex : register(t0);
@@ -35,12 +35,11 @@ struct PSOutput
 PSInput vsMain( VSInput input )
 {
 	float3 bitangent = cross( input.m_tangent, input.m_normal );
-	float3x3 objectToWorld3x3 = (float3x3)ObjectToWorld;
 
 	PSInput output;
-	output.m_tbn[ 0 ] = mul( input.m_tangent, objectToWorld3x3 );
-	output.m_tbn[ 1 ] = mul( bitangent, objectToWorld3x3 );
-	output.m_tbn[ 2 ] = mul( input.m_normal, objectToWorld3x3 );
+	output.m_tbn[ 0 ] = mul( float4( input.m_tangent, 0.f ), ObjectToWorld ).xyz;
+	output.m_tbn[ 1 ] = mul( float4( bitangent, 0.f ), ObjectToWorld ).xyz;
+	output.m_tbn[ 2 ] = mul( float4( input.m_normal, 0.f ), ObjectToWorld ).xyz;
 	output.m_position = mul( float4( input.m_position, 1.f ), ObjectToScreen );
 	output.m_uv = input.m_uv;
 

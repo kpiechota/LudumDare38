@@ -24,7 +24,7 @@ void CComponentLightManager::FillRenderData() const
 		tViewToWorld.Transpose();
 		Vec4 const perspectiveValues(1.f / viewToScreen.m_a00, 1.f / viewToScreen.m_a11, viewToScreen.m_a32, -viewToScreen.m_a22 );
 		Vec2 const attenuation( 1.f / light.m_radius, light.m_fade );
-		cbCtx.SetParam( reinterpret_cast<Byte const*>( &tViewToWorld ),				sizeof( tViewToWorld ),					EShaderParameters::ViewToWorld );
+		cbCtx.SetParam( reinterpret_cast<Byte const*>( &tViewToWorld ),				3 * sizeof( Vec4 ),						EShaderParameters::ViewToWorld );
 		cbCtx.SetParam( reinterpret_cast<Byte const*>( &perspectiveValues ),		sizeof( perspectiveValues ),			EShaderParameters::PerspectiveValues );
 		cbCtx.SetParam( reinterpret_cast<Byte const*>( &transform.m_position ),		sizeof( transform.m_position ),			EShaderParameters::LightPos );
 		cbCtx.SetParam( reinterpret_cast<Byte const*>( &light.m_color ),			sizeof( light.m_color ),				EShaderParameters::Color );

@@ -39,18 +39,6 @@ void CRender::InitCommands()
 
 void CRender::InitFrameData()
 {
-	D3D12_RESOURCE_DESC descResource = {};
-	descResource.Dimension = D3D12_RESOURCE_DIMENSION_BUFFER;
-	descResource.Alignment = 0;
-	descResource.Height = 1;
-	descResource.DepthOrArraySize = 1;
-	descResource.MipLevels = 1;
-	descResource.Format = DXGI_FORMAT_UNKNOWN;
-	descResource.SampleDesc.Count = 1;
-	descResource.Layout = D3D12_TEXTURE_LAYOUT_ROW_MAJOR;
-	descResource.Flags = D3D12_RESOURCE_FLAG_NONE;
-	descResource.Width = 256 * MAX_OBJECTS;
-
 	for (UINT frameID = 0; frameID < FRAME_NUM; ++frameID)
 	{
 		SRenderFrameData& frameData = m_frameData[frameID];
@@ -61,12 +49,27 @@ void CRender::InitFrameData()
 		CheckResult(m_device->CreateCommandList(0, D3D12_COMMAND_LIST_TYPE_DIRECT, frameData.m_frameCA, nullptr, IID_PPV_ARGS(&frameData.m_frameCL)));
 		frameData.m_frameCL->SetName(L"FrameCommandList");
 		CheckResult(frameData.m_frameCL->Close());
-
-		CheckResult(m_device->CreateCommittedResource(&GHeapPropertiesUpload, D3D12_HEAP_FLAG_NONE, &descResource, D3D12_RESOURCE_STATE_GENERIC_READ, nullptr, IID_PPV_ARGS(&frameData.m_frameResource)));
-		frameData.m_frameResource->SetName(L"FrameResource");
-
-		CheckResult(frameData.m_frameResource->Map(0, nullptr, (void**)(&frameData.m_pResourceData)));
 	}
+}
+
+void CRender::InitConstBuffer()
+{
+	D3D12_RESOURCE_DESC descResource = {};
+	descResource.Dimension = D3D12_RESOURCE_DIMENSION_BUFFER;
+	descResource.Alignment = 0;
+	descResource.Height = 1;
+	descResource.DepthOrArraySize = 1;
+	descResource.MipLevels = 1;
+	descResource.Format = DXGI_FORMAT_UNKNOWN;
+	descResource.SampleDesc.Count = 1;
+	descResource.Layout = D3D12_TEXTURE_LAYOUT_ROW_MAJOR;
+	descResource.Flags = D3D12_RESOURCE_FLAG_NONE;
+	descResource.Width = 1024 * MAX_OBJECTS;
+
+	CheckResult(m_device->CreateCommittedResource(&GHeapPropertiesUpload, D3D12_HEAP_FLAG_NONE, &descResource, D3D12_RESOURCE_STATE_GENERIC_READ, nullptr, IID_PPV_ARGS(&m_constBufferResource)));
+	m_constBufferResource->SetName(L"ConstBufferResource");
+
+	CheckResult(m_constBufferResource->Map(0, nullptr, (void**)(&m_pConstBufferData)));
 }
 
 void CRender::InitSwapChain()
@@ -361,13 +364,14 @@ void CRender::Init()
 	InitDescriptorHeaps();
 	InitCommands();
 	InitFrameData();
+	InitConstBuffer();
 	InitSwapChain();
 	InitRenderTargets();
 	InitRootSignatures();
 	InitShaders();
 
 	GTextRenderManager.Init();
-	GEnvironmentParticleManager.Init( 25 );
+	GEnvironmentParticleManager.Init( 20, 6, 3, 6, 2.f, 2.f, 2.f );
 }
 
 void CRender::DrawOpaque(ID3D12GraphicsCommandList* commandList)
@@ -391,7 +395,7 @@ void CRender::DrawRenderData( ID3D12GraphicsCommandList* commandList, TArray< SR
 	Byte currentTexture[ SRenderData::MAX_TEXTURES_NUM ];
 	memset( currentTexture, UINT8_MAX, sizeof( currentTexture ) );
 
-	D3D12_GPU_VIRTUAL_ADDRESS const constBufferStart = m_frameData[ m_frameID ].m_frameResource->GetGPUVirtualAddress();
+	D3D12_GPU_VIRTUAL_ADDRESS const constBufferStart = m_constBufferResource->GetGPUVirtualAddress();
 	UINT const objectsNum = renderData.Size();
 	for (unsigned int objectID = 0; objectID < objectsNum; ++objectID)
 	{
@@ -468,7 +472,7 @@ void CRender::DrawLights( ID3D12GraphicsCommandList * commandList, TArray<SLight
 	commandList->SetGraphicsRootDescriptorTable( 4, m_texturesDH.GetGPUDescriptor( m_gbufferDescriptorsOffsets[ GBB_EMISSIVE_SPEC ].m_srvOffset ) );
 	commandList->SetGraphicsRootDescriptorTable( 5, m_texturesDH.GetGPUDescriptor( m_gbufferDescriptorsOffsets[ GBB_DEPTH ].m_srvOffset ) );
 
-	D3D12_GPU_VIRTUAL_ADDRESS const constBufferStart = m_frameData[ m_frameID ].m_frameResource->GetGPUVirtualAddress();
+	D3D12_GPU_VIRTUAL_ADDRESS const constBufferStart = m_constBufferResource->GetGPUVirtualAddress();
 
 	D3D12_GPU_VIRTUAL_ADDRESS dirCbOffset;
 	Byte dirLightFlags = Byte( LF_AMBIENT );
@@ -485,7 +489,7 @@ void CRender::DrawLights( ID3D12GraphicsCommandList * commandList, TArray<SLight
 		tViewToWorld.Transpose();
 		Vec4 const perspectiveValues(1.f / cameraMatrices.m_viewToScreen.m_a00, 1.f / cameraMatrices.m_viewToScreen.m_a11, cameraMatrices.m_viewToScreen.m_a32, -cameraMatrices.m_viewToScreen.m_a22 );
 
-		cbCtx.SetParam( reinterpret_cast<Byte const*>( &tViewToWorld ),			sizeof( tViewToWorld ),			EShaderParameters::ViewToWorld );
+		cbCtx.SetParam( reinterpret_cast<Byte const*>( &tViewToWorld ),			3 * sizeof( Vec4 ),			EShaderParameters::ViewToWorld );
 		cbCtx.SetParam( reinterpret_cast<Byte const*>( &perspectiveValues ),	sizeof( perspectiveValues ),	EShaderParameters::PerspectiveValues );
 		cbCtx.SetParam( reinterpret_cast< Byte const* >( &m_directLightDir ),	sizeof( m_directLightDir ),		EShaderParameters::LightDirWS );
 		cbCtx.SetParam( reinterpret_cast< Byte const* >( &m_directLightColor ), sizeof( m_directLightColor ),	EShaderParameters::Color );
@@ -663,10 +667,11 @@ void CRender::Release()
 		SRenderFrameData& frameData = m_frameData[frameID];
 		frameData.m_frameCA->Release();
 		frameData.m_frameCL->Release();
-		frameData.m_frameResource->Unmap(0, nullptr);
-		frameData.m_frameResource->Release();
-		frameData.m_pResourceData = nullptr;
 	}
+
+	m_constBufferResource->Unmap(0, nullptr);
+	m_constBufferResource->Release();
+	m_pConstBufferData = nullptr;
 
 	for ( UINT gbufferID = 0; gbufferID < GBB_MAX; ++gbufferID )
 	{
@@ -1017,8 +1022,8 @@ CConstBufferCtx CRender::GetConstBufferCtx( D3D12_GPU_VIRTUAL_ADDRESS& outCbOffs
 {
 	UINT16 const cbSize = m_shaders[ shader ].GetBufferSize();
 	ASSERT_STR( ( cbSize & 0xFF ) == 0, "Const buffer not alignet to 256B" );
-	ASSERT_STR( m_constBufferOffset + cbSize <= 256 * MAX_OBJECTS, "Not enough space for constant buffer" );
-	Byte* constBufferPtr = &m_frameData[ m_frameID ].m_pResourceData[ m_constBufferOffset ];
+	ASSERT_STR( m_constBufferOffset + cbSize <= 1024 * MAX_OBJECTS, "Not enough space for constant buffer" );
+	Byte* constBufferPtr = &m_pConstBufferData[ m_constBufferOffset ];
 	outCbOffset = m_constBufferOffset;
 	m_constBufferOffset += cbSize;
 
@@ -1029,8 +1034,8 @@ CConstBufferCtx CRender::GetLightConstBufferCtx( D3D12_GPU_VIRTUAL_ADDRESS& outC
 {
 	UINT16 const cbSize = m_shaderLight[ shader ].GetBufferSize();
 	ASSERT_STR( ( cbSize & 0xFF ) == 0, "Const buffer not alignet ty 256B" );
-	ASSERT_STR( m_constBufferOffset + cbSize <= 256 * MAX_OBJECTS, "Not enough space for constant buffer" );
-	Byte* constBufferPtr = &m_frameData[ m_frameID ].m_pResourceData[ m_constBufferOffset ];
+	ASSERT_STR( m_constBufferOffset + cbSize <= 1024 * MAX_OBJECTS, "Not enough space for constant buffer" );
+	Byte* constBufferPtr = &m_pConstBufferData[ m_constBufferOffset ];
 	outCbOffset = m_constBufferOffset;
 	m_constBufferOffset += cbSize;
 
@@ -1041,10 +1046,10 @@ void CRender::SetConstBuffer( D3D12_GPU_VIRTUAL_ADDRESS& outConstBufferAddress, 
 {
 	UINT const cbSize = (size + 255) & ~255;
 	ASSERT_STR( ( cbSize & 0xFF ) == 0, "Const buffer not alignet ty 256B" );
-	ASSERT_STR( m_constBufferOffset + cbSize <= 256 * MAX_OBJECTS, "Not enough space for constant buffer" );
+	ASSERT_STR( m_constBufferOffset + cbSize <= 1024 * MAX_OBJECTS, "Not enough space for constant buffer" );
 
-	Byte* constBufferPtr = &m_frameData[ m_frameID ].m_pResourceData[ m_constBufferOffset ];
-	outConstBufferAddress = m_frameData[ m_frameID ].m_frameResource->GetGPUVirtualAddress() + m_constBufferOffset;
+	Byte* constBufferPtr = &m_pConstBufferData[ m_constBufferOffset ];
+	outConstBufferAddress = m_constBufferResource->GetGPUVirtualAddress() + m_constBufferOffset;
 	memcpy( constBufferPtr, pData, size );
 
 	m_constBufferOffset += cbSize;

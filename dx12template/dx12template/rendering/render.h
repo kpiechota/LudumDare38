@@ -16,8 +16,6 @@ struct SRenderFrameData
 {
 	ID3D12CommandAllocator*		m_frameCA;
 	ID3D12GraphicsCommandList*	m_frameCL;
-	ID3D12Resource*				m_frameResource;
-	Byte*						m_pResourceData;
 };
 
 struct SDescriptorsOffsets
@@ -114,6 +112,8 @@ private:
 	HWND							m_hwnd;
 	UINT							m_frameID;
 
+	ID3D12Resource*					m_constBufferResource;
+	Byte*							m_pConstBufferData;
 	UINT							m_constBufferOffset;
 
 	Vec3							m_directLightDir;
@@ -123,6 +123,7 @@ private:
 private:
 	void InitCommands();
 	void InitFrameData();
+	void InitConstBuffer();
 	void InitSwapChain();
 	void InitRenderTargets();
 	void InitDescriptorHeaps();
