@@ -84,11 +84,31 @@ void CEnvironmentParticleManager::InitParticles()
 {
 	struct CBuffer
 	{
-		float m_seed;
+		float m_velocity[3];
+		float m_padding;
+		float m_initSize[2];
+		float m_sizeRand[2];
+		float m_velocityOffsetRand[2];
+		float m_speedRand[2];
+		UINT m_seed;
 		UINT m_particleNum;
 	} cbuffer;
+
+	cbuffer.m_velocity[ 0 ] = 4.f;
+	cbuffer.m_velocity[ 1 ] = 3.f;
+	cbuffer.m_velocity[ 2 ] = 1.f;
+	cbuffer.m_initSize[ 0 ] = .5f;
+	cbuffer.m_initSize[ 1 ] = 8.f;
+	cbuffer.m_sizeRand[ 0 ] = 0.005f;
+	cbuffer.m_sizeRand[ 1 ] = 0.01f;
+	cbuffer.m_velocityOffsetRand[ 0 ] = -.2f;
+	cbuffer.m_velocityOffsetRand[ 1 ] = .2f;
+	cbuffer.m_speedRand[ 0 ] = 2.f;
+	cbuffer.m_speedRand[ 1 ] = 3.f;
 	cbuffer.m_seed = rand();
 	cbuffer.m_particleNum = m_particlesNum;
+	( ( Vec3* )( &cbuffer.m_velocity[ 0 ] ) )->Normalize();
+
 	D3D12_GPU_VIRTUAL_ADDRESS constBufferAddress;
 	GRender.SetConstBuffer( constBufferAddress, (Byte*)&cbuffer, sizeof( cbuffer ) );
 
@@ -137,7 +157,7 @@ void CEnvironmentParticleManager::FillRenderData()
 {
 	Vec3 const cameraPosition = GComponentCameraManager.GetMainCameraPosition();
 	Vec3 position = cameraPosition;
-	position = Math::Snap( position, m_boxesSize ) - 0.5f * m_boxesSize;
+	position = Math::Snap( position, m_boxesSize ) - ( Vec3( 0.5f, -0.5f, 0.5f ) * m_boxesSize );
 
 	SRenderData renderData;
 	renderData.m_verticesStart = 0;
@@ -154,7 +174,6 @@ void CEnvironmentParticleManager::FillRenderData()
 	Matrix4x4 objectToWorld = m_boxMatrix;
 
 	Vec4 const color( 0.1f, 0.1f, 0.1f, 1.f );
-	float const size = 0.05f;
 
 	for ( int x = -m_boxesNum.x; x <= m_boxesNum.x; ++x )
 	{

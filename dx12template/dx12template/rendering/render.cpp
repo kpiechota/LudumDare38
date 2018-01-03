@@ -371,7 +371,7 @@ void CRender::Init()
 	InitShaders();
 
 	GTextRenderManager.Init();
-	GEnvironmentParticleManager.Init( 20, 6, 3, 6, 2.f, 2.f, 2.f );
+	GEnvironmentParticleManager.Init( 20, 3, 3, 3, 2.f, 2.f, 2.f );
 }
 
 void CRender::DrawOpaque(ID3D12GraphicsCommandList* commandList)

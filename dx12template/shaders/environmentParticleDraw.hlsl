@@ -6,6 +6,7 @@ cbuffer objectBuffer : register(b0)
 	float4x3 ObjectToWorld;
 	float4 Color;
 	float3 CameraPositionWS;
+	//float FadeDistanceSq;
 }
 StructuredBuffer< SEnvironmentParticle > Particles : register( t0 );
 
@@ -17,6 +18,7 @@ struct VStoPS
 {
 	float4 m_position : SV_POSITION;
 	float2 m_uv : TEXCOORD0;
+	float m_fade : TEXCOORD1;
 };
 
 VStoPS vsMain(uint vertexID : SV_VertexID ) 
@@ -25,13 +27,11 @@ VStoPS vsMain(uint vertexID : SV_VertexID )
 
 	SEnvironmentParticle particle = Particles[ instanceID ];
 	float3 velocityOS = particle.m_velocity;
-	float3 velocityWS = normalize( mul( float4( velocityOS, 0.f ), ObjectToWorld ).xyz );
 	float3 positionWS = mul( float4( particle.m_position, 1.f ), ObjectToWorld ).xyz;
-	
-	float3 perpendicularVector = particle.m_size * cross( normalize( CameraPositionWS - positionWS ), velocityWS );
-	
-	float velocityScale = max( particle.m_size, particle.m_size * particle.m_speed * 0.1f );
-	velocityWS *= velocityScale;
+	float3 positionToCameraWS = CameraPositionWS - positionWS;
+	float3 velocityWS = normalize( mul( float4( velocityOS, 0.f ), ObjectToWorld ).xyz );
+	float3 perpendicularVector = particle.m_size.x * cross( normalize( positionToCameraWS ), velocityWS );
+	velocityWS *= particle.m_size.y;
 
 	float3 verticesPositions[] =
 	{
@@ -58,12 +58,12 @@ VStoPS vsMain(uint vertexID : SV_VertexID )
 	VStoPS output;
 	output.m_position = mul( float4( vertexPosition, 1.f ), WorldToScreen );
 	output.m_uv = verticesUV[ vertexID % 6 ];
-
+	output.m_fade = 1.f;
 	return output;
 }
 
 float4 psMain(VStoPS input) : SV_TARGET0
 {
-	float depthHW = DepthTex.Load( int3( input.m_position.xy, 0 ) ).r;
-	return ColorTex.Sample( Sampler, input.m_uv ) * 2.f * smoothstep( input.m_position.z, 1.f, depthHW );
+	clip( input.m_fade - 0.002f );
+	return input.m_fade * ColorTex.Sample( Sampler, input.m_uv );
 }
