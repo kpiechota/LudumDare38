@@ -3,6 +3,9 @@
 typedef Byte tDynGeometryID;
 struct SDynGeometry
 {
+	void* m_pVertices;
+	void* m_pIndices;
+
 	UINT m_maxIndicesNum;
 	UINT m_indicesOffset;
 	UINT m_byteIndexStride;
@@ -18,7 +21,6 @@ POD_TYPE(SDynGeometry)
 class CDynamicGeometryManager
 {
 private:
-	TArray<ID3D12Resource*> m_mappedResources;
 	TArray< SDynGeometry > m_dynGeometry;
 
 public:

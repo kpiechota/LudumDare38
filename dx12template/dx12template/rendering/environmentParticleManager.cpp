@@ -66,7 +66,7 @@ void CEnvironmentParticleManager::AllocateBuffers()
 
 	D3D12_RESOURCE_DESC particleResDesc = {};
 	particleResDesc.Dimension = D3D12_RESOURCE_DIMENSION::D3D12_RESOURCE_DIMENSION_BUFFER;
-	particleResDesc.Width = m_particlesNum * 8 * sizeof( float ); //position + velocity
+	particleResDesc.Width = m_particlesNum * 9 * sizeof( float ); //position + velocity
 	particleResDesc.Height = 1;
 	particleResDesc.DepthOrArraySize = 1;
 	particleResDesc.MipLevels = 1;

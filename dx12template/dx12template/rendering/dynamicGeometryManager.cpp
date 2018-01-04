@@ -44,11 +44,19 @@ tDynGeometryID CDynamicGeometryManager::AllocateGeometry( UINT const byteVertexS
 
 	dynGeometry.m_geometryID = GRender.AddGeometry( geometry );
 
+	CheckResult( geometry.m_vertexRes->Map( 0, nullptr, &dynGeometry.m_pVertices ) );
+	CheckResult( geometry.m_indicesRes->Map( 0, nullptr, &dynGeometry.m_pIndices ) );
+
 	return dynGeomtryID;
 }
 
 void CDynamicGeometryManager::ReleaseGeometry( tDynGeometryID const dynGeometryID )
 {
+	Byte const geometryID = m_dynGeometry[ dynGeometryID ].m_geometryID;
+	SGeometry& geometry = GRender.GetGeometry( geometryID );
+	geometry.m_vertexRes->Unmap( 0, nullptr );
+	geometry.m_indicesRes->Unmap( 0, nullptr );
+
 	GRender.ReleaseGeometry( m_dynGeometry[ dynGeometryID ].m_geometryID );
 }
 
@@ -57,13 +65,8 @@ void CDynamicGeometryManager::GetVerticesForWrite( UINT const verticesNum, tDynG
 	SDynGeometry& dynGeometry = m_dynGeometry[ dynGeometryID ];
 	ASSERT( verticesNum + dynGeometry.m_verticesOffset < dynGeometry.m_maxVerticesNum );
 
-	void* mappedData;
-	SGeometry& geometry = GRender.GetGeometry( dynGeometry.m_geometryID );
-	CheckResult(geometry.m_vertexRes->Map( 0, nullptr, &mappedData ));
-	m_mappedResources.Add( geometry.m_vertexRes );
-
 	outVerticesOffset = dynGeometry.m_verticesOffset;
-	outData = reinterpret_cast< void* >( &reinterpret_cast< Byte* >( mappedData )[ outVerticesOffset * dynGeometry.m_byteVertexStride ] );
+	outData = reinterpret_cast< void* >( &reinterpret_cast< Byte* >( dynGeometry.m_pVertices )[ outVerticesOffset * dynGeometry.m_byteVertexStride ] );
 
 	dynGeometry.m_verticesOffset += verticesNum;
 }
@@ -73,13 +76,8 @@ void CDynamicGeometryManager::GetIndicesForWrite( UINT const indicesNum, tDynGeo
 	SDynGeometry& dynGeometry = m_dynGeometry[ dynGeometryID ];
 	ASSERT( indicesNum + dynGeometry.m_indicesOffset < dynGeometry.m_maxIndicesNum );
 
-	void* mappedData;
-	SGeometry& geometry = GRender.GetGeometry( dynGeometry.m_geometryID );
-	CheckResult(geometry.m_indicesRes->Map( 0, nullptr, &mappedData ));
-	m_mappedResources.Add( geometry.m_indicesRes );
-
 	outIndicesOffset = dynGeometry.m_indicesOffset;
-	outData = reinterpret_cast< void* >( &reinterpret_cast< Byte* >( mappedData )[ outIndicesOffset * dynGeometry.m_byteIndexStride ] );
+	outData = reinterpret_cast< void* >( &reinterpret_cast< Byte* >( dynGeometry.m_pIndices )[ outIndicesOffset * dynGeometry.m_byteIndexStride ] );
 
 	dynGeometry.m_indicesOffset += indicesNum;
 }
@@ -91,13 +89,6 @@ Byte CDynamicGeometryManager::GetGeometryID( tDynGeometryID const dynGeometryID 
 
 void CDynamicGeometryManager::PreDraw()
 {
-	UINT const mappedResNum = m_mappedResources.Size();
-	for ( UINT i = 0; i < mappedResNum; ++i )
-	{
-		m_mappedResources[ i ]->Unmap( 0, nullptr );
-	}
-	m_mappedResources.Clear();
-
 	UINT const dynGeometryNum = m_dynGeometry.Size();
 	for ( UINT i = 0; i < dynGeometryNum; ++i )
 	{
