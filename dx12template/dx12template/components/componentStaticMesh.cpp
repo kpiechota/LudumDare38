@@ -8,6 +8,9 @@ void CComponentStaticMeshManager::FillRenderData() const
 	renderData.m_drawType = SRenderData::EDrawType::DrawIndexedInstanced;
 	renderData.m_instancesNum = 1;
 
+	renderData.m_verticesStart = 0;
+	renderData.m_indicesStart = 0;
+
 	Matrix4x4 const worldToScreen = GViewObject.m_camera.m_worldToScreen;
 	UINT const renderComponentsNum = m_renderComponents.Size();
 	for ( UINT i = 0; i < renderComponentsNum; ++i )
@@ -21,13 +24,14 @@ void CComponentStaticMeshManager::FillRenderData() const
 		tObjectToScreen.Transpose();
 
 		renderData.m_indicesNum = GGeometryInfo[ staticMesh.m_geometryInfoID ].m_indicesNum;
-		renderData.m_indicesNum = GGeometryInfo[ staticMesh.m_geometryInfoID ].m_indicesNum;
 		renderData.m_geometryID = GGeometryInfo[ staticMesh.m_geometryInfoID ].m_geometryID;
 		renderData.m_shaderID = staticMesh.m_shaderID;
 
+		renderData.m_texturesOffset = GRender.GetTexturesOffset();
+		renderData.m_texturesNum = ARRAYSIZE( staticMesh.m_textureID );
 		for ( UINT texture = 0; texture < ARRAYSIZE( staticMesh.m_textureID ); ++texture )
 		{
-			renderData.m_textureID[ texture ] = staticMesh.m_textureID[ texture ];
+			GRender.AddTextureID( staticMesh.m_textureID[ texture ] );
 		}
 
 		CConstBufferCtx const cbCtx = GRender.GetConstBufferCtx( renderData.m_cbOffset, staticMesh.m_shaderID );

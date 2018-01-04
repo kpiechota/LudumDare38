@@ -19,7 +19,7 @@
 #include <string>
 #include <comdef.h>
 #include <intrin.h>
-#include <cstdlib>
+
 #include <stdarg.h>
 
 #include "viewObject.h"

@@ -102,10 +102,11 @@ private:
 
 	SDescriptorsOffsets				m_gbufferDescriptorsOffsets[ GBB_MAX ];
 
-	TArray< SGeometry >				m_geometryResources;
-	TArray< ID3D12Resource* >		m_texturesResources;
-	TArray< ID3D12Resource* >		m_uploadResources;
-	TArray< D3D12_RESOURCE_BARRIER >m_resourceBarrier;
+	TArray< SGeometry >						m_geometryResources;
+	TArray< ID3D12Resource* >				m_texturesResources;
+	TArray< ID3D12Resource* >				m_uploadResources;
+	TArray< D3D12_RESOURCE_BARRIER >		m_resourceBarrier;
+	TStaticArray< Byte, 4 * MAX_OBJECTS>	m_texturesIDs;
 
 	int								m_wndWidth;
 	int								m_wndHeight;
@@ -136,8 +137,8 @@ private:
 	void InitShaders();
 	void DrawFullscreenTriangle( ID3D12GraphicsCommandList* commandList );
 	FORCE_INLINE void DrawOpaque( ID3D12GraphicsCommandList* commandList );
-	void DrawRenderData( ID3D12GraphicsCommandList* commandList, TArray< SRenderData > const& renderData );
-	void DrawLights( ID3D12GraphicsCommandList* commandList, TArray< SLightData > const& lightData );
+	FORCE_INLINE void DrawRenderData( ID3D12GraphicsCommandList* commandList, TArray< SRenderData > const& renderData );
+	FORCE_INLINE void DrawLights( ID3D12GraphicsCommandList* commandList, TArray< SLightData > const& lightData );
 
 public:
 	void Init();
@@ -169,6 +170,9 @@ public:
 	void WaitForComputeQueue();
 
 	void AddComputeCommandList( ID3D12CommandList* pCommandList );
+
+	UINT GetTexturesOffset() const { return m_texturesIDs.Size(); }
+	void AddTextureID( Byte const textureID ) { m_texturesIDs.Add(textureID); }
 
 public: //Getters/setters
 	void SetWindowWidth(int const wndWidth) { m_wndWidth = wndWidth; }

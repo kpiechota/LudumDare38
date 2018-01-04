@@ -1,5 +1,4 @@
 #include "../core.h"
-#include <cstdlib>
 
 Matrix4x4 Matrix4x4::GetTranslateRotationSize( Vec3 const& translate, Quaternion const& rotation, Vec3 const& scale )
 {

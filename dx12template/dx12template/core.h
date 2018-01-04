@@ -17,8 +17,20 @@
 
 #include "types.h"
 #include "array.h"
+#include "staticArray.h"
 #include "math.h"
-
+#include <string.h>
+#include <cstdlib>
+POD_TYPE(bool)
+POD_TYPE(UINT16)
+POD_TYPE(UINT32)
+POD_TYPE(INT16)
+POD_TYPE(INT32)
+POD_TYPE(INT64)
+POD_TYPE(unsigned char)
+POD_TYPE(char)
+POD_TYPE(float)
+POD_TYPE(double)
 POD_TYPE(Vec2)
 POD_TYPE(Vec2i)
 POD_TYPE(Vec3)

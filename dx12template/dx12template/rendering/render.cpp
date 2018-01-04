@@ -396,39 +396,41 @@ void CRender::DrawRenderData( ID3D12GraphicsCommandList* commandList, TArray< SR
 	memset( currentTexture, UINT8_MAX, sizeof( currentTexture ) );
 
 	D3D12_GPU_VIRTUAL_ADDRESS const constBufferStart = m_constBufferResource->GetGPUVirtualAddress();
-	UINT const objectsNum = renderData.Size();
-	for (unsigned int objectID = 0; objectID < objectsNum; ++objectID)
+	SRenderData const* pRenderData = renderData.begin();
+	SRenderData const* const pRenderDataEnd = renderData.end();
+	for (;pRenderData != pRenderDataEnd; ++pRenderData)
 	{
-		SRenderData const& gameObject = renderData[objectID];
-		commandList->SetGraphicsRootConstantBufferView(0, constBufferStart + gameObject.m_cbOffset );
+		commandList->SetGraphicsRootConstantBufferView(0, constBufferStart + pRenderData->m_cbOffset );
 
-		for ( UINT texture = 0; texture < ARRAYSIZE( currentTexture ); ++texture )
+		UINT const textureNum = pRenderData->m_texturesNum;
+		for ( UINT textureID = 0; textureID < textureNum; ++textureID )
 		{
-			if ( currentTexture[ texture ] != gameObject.m_textureID[ texture ] )
+			Byte const texture = m_texturesIDs[ pRenderData->m_texturesOffset + textureID ];
+			if ( currentTexture[ textureID ] != texture )
 			{
-				if ( gameObject.m_textureID[ texture ] != UINT8_MAX )
+				if ( texture != UINT8_MAX )
 				{
-					commandList->SetGraphicsRootDescriptorTable( texture + 2, m_texturesDH.GetGPUDescriptor( gameObject.m_textureID[ texture ] ) );
+					commandList->SetGraphicsRootDescriptorTable( textureID + 2, m_texturesDH.GetGPUDescriptor( texture ) );
+					currentTexture[ textureID ] = texture;
 				}
-				currentTexture[ texture ] = gameObject.m_textureID[ texture ];
 			}
 		}
 
-		if ( currentTopology != gameObject.m_topology )
+		if ( currentTopology != pRenderData->m_topology )
 		{
-			commandList->IASetPrimitiveTopology( gameObject.m_topology );
-			currentTopology = gameObject.m_topology;
+			commandList->IASetPrimitiveTopology( pRenderData->m_topology );
+			currentTopology = pRenderData->m_topology;
 		}
 
-		if (currentShader != gameObject.m_shaderID)
+		if (currentShader != pRenderData->m_shaderID)
 		{
-			commandList->SetPipelineState( m_shaders[ gameObject.m_shaderID ].GetPSO());
-			currentShader = gameObject.m_shaderID;
+			commandList->SetPipelineState( m_shaders[ pRenderData->m_shaderID ].GetPSO());
+			currentShader = pRenderData->m_shaderID;
 		}
 
-		if ( currentGeometry != gameObject.m_geometryID )
+		if ( currentGeometry != pRenderData->m_geometryID )
 		{
-			currentGeometry = gameObject.m_geometryID;
+			currentGeometry = pRenderData->m_geometryID;
 			SGeometry const& geometry = m_geometryResources[ currentGeometry ];
 
 			if ( geometry.m_indicesRes )
@@ -450,13 +452,13 @@ void CRender::DrawRenderData( ID3D12GraphicsCommandList* commandList, TArray< SR
 			}
 		}
 
-		switch ( gameObject.m_drawType )
+		switch ( pRenderData->m_drawType )
 		{
 			case SRenderData::EDrawType::DrawIndexedInstanced:
-				commandList->DrawIndexedInstanced( gameObject.m_indicesNum, gameObject.m_instancesNum, gameObject.m_indicesStart, gameObject.m_verticesStart, 0 );
+				commandList->DrawIndexedInstanced( pRenderData->m_indicesNum, pRenderData->m_instancesNum, pRenderData->m_indicesStart, pRenderData->m_verticesStart, 0 );
 				break;
 			case SRenderData::EDrawType::DrawInstanced:
-				commandList->DrawInstanced(gameObject.m_indicesNum, gameObject.m_instancesNum, gameObject.m_verticesStart, 0);
+				commandList->DrawInstanced(pRenderData->m_indicesNum, pRenderData->m_instancesNum, pRenderData->m_verticesStart, 0);
 				break;
 			case SRenderData::EDrawType::DrawInvalid:
 				ASSERT_STR( false, "Invalid draw type" );
@@ -629,6 +631,7 @@ void CRender::DrawFrame()
 	CheckResult(m_swapChain->Present(0, 0));
 	m_frameID = (m_frameID + 1) % FRAME_NUM;
 
+	m_texturesIDs.Clear();
 	m_constBufferOffset = 0;
 }
 

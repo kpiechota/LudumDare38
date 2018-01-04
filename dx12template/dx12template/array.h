@@ -7,6 +7,54 @@ struct IsPOD
 	{
 		value = false
 	};
+	static void Create( T* pointer )
+	{
+		new ( pointer ) T();
+	}
+	static void Create( T* pointer, T const* oldData )
+	{
+		new ( pointer ) T( *oldData );
+	}
+	static void Create( T* pointer, T const* oldData, UINT const num )
+	{
+		for ( UINT i = 0; i < num; ++i )
+		{
+			new ( &pointer[i] ) T( oldData[i] );
+		}
+	}
+	static void Create( T* pointer, UINT const num )
+	{
+		for ( UINT i = 0; i < num; ++i )
+		{
+			new ( &pointer[i] ) T();
+		}
+	}
+	static void Create( T* pointer, UINT start, UINT const num )
+	{
+		for ( ; start < num; ++start )
+		{
+			new ( &pointer[start] ) T();
+		}
+	}
+	static void Destroy(T* pointer)
+	{
+		pointer->~T();
+	}
+
+	static void Destroy(T* pointer, UINT const num )
+	{
+		for ( UINT i = 0; i < num; ++i )
+		{
+			pointer[i].~T();
+		}
+	}
+	static void Destroy(T* pointer, UINT start, UINT const num)
+	{
+		for ( ; start < num; ++start )
+		{
+			pointer[start].~T();
+		}
+	}
 };
 template <typename T>
 struct IsPOD<T*>
@@ -15,20 +63,49 @@ struct IsPOD<T*>
 	{
 		value = true
 	};
+	static void Create( T** pointer )
+	{
+	}
+	static void Create( T** pointer, T* const* oldData )
+	{
+	}
+	static void Create( T** pointer, T* const* oldData, UINT const num )
+	{
+		memcpy( pointer, oldData, num * sizeof( T ) );
+	}
+	static void Create( T** pointer, UINT start, UINT const num )
+	{
+	}
+	static void Create( T** pointer, UINT const num )
+	{
+	}
+	static void Destroy(T** pointer)
+	{
+	}
+	static void Destroy(T** pointer, UINT const num )
+	{
+	}
+	static void Destroy(T** pointer, UINT start, UINT const num)
+	{
+	}
 };
 
-#define POD_TYPE( type ) template<> struct IsPOD< type > { enum { value = true }; };
-
-POD_TYPE(bool)
-POD_TYPE(UINT16)
-POD_TYPE(UINT32)
-POD_TYPE(INT16)
-POD_TYPE(INT32)
-POD_TYPE(INT64)
-POD_TYPE(unsigned char)
-POD_TYPE(char)
-POD_TYPE(float)
-POD_TYPE(double)
+#define POD_TYPE( T )													\
+template<> struct IsPOD< T >											\
+{																		\
+enum { value = true };													\
+static void Create( T* pointer ){}										\
+static void Create( T* pointer, T const* oldData ){}					\
+static void Create( T* pointer, T const* oldData, UINT const num )		\
+{																		\
+	memcpy( pointer, oldData, num * sizeof( T ) );						\
+}																		\
+static void Create( T* pointer, UINT const num ){}						\
+static void Create( T* pointer, UINT start, UINT const num ){}			\
+static void Destroy(T* pointer){}										\
+static void Destroy(T* pointer, UINT const num ){}						\
+static void Destroy(T* pointer, UINT start, UINT const num){}			\
+};																		\
 
 template <typename T >
 class TArray
@@ -50,26 +127,10 @@ private:
 			{
 				m_data = (T*)malloc( size * sizeof( T ) );
 				UINT const copySize = size < m_size ? size : m_size;
-				if ( !IsPOD< T >::value )
-				{
-					for ( UINT i = 0; i < copySize; ++i )
-					{
-						new ( &m_data[ i ] ) T( oldData[ i ] );
-					}
-				}
-				else
-				{
-					memcpy( m_data, oldData, copySize * sizeof( T ) );
-				}
+				IsPOD< T >::Create( m_data, oldData, copySize );
 			}
 
-			if ( !IsPOD< T >::value )
-			{
-				for ( UINT i = size; i < m_size; ++i )
-				{
-					oldData[ i ].~T();
-				}
-			}
+			IsPOD< T >::Destroy( oldData, m_size );
 			free( oldData );
 
 			m_allocSize = size;
@@ -98,29 +159,12 @@ public:
 		m_size = other.m_size;
 		m_data = (T*)malloc( m_allocSize * sizeof( T ) );
 
-		if ( !IsPOD< T >::value )
-		{
-			for ( UINT i = 0; i < m_size; ++i )
-			{
-				new ( &m_data[ i ] ) T( other[ i ] );
-			}
-		}
-		else
-		{
-			memcpy( m_data, other.m_data, m_size * sizeof( T ) );
-		}
+		IsPOD< T >::Create( m_data, other.m_data, m_size );
 	}
 
 	~TArray()
 	{
-		if ( !IsPOD< T >::value )
-		{
-			for ( UINT i = 0; i < m_size; ++i )
-			{
-				m_data[ i ].~T();
-			}
-		}
-
+		IsPOD< T >::Destroy( m_data, m_size );
 		free( m_data );
 	}
 
@@ -133,23 +177,11 @@ public:
 				Reallocate( size );
 			}
 
-			if ( !IsPOD< T >::value )
-			{
-				for ( UINT i = m_size; i < size; ++i )
-				{
-					new (&m_data[ i ]) T();
-				}
-			}
+			IsPOD< T >::Create( &m_data[ m_size ], m_size, size );
 		}
 		else if ( size < m_size )
 		{
-			if ( !IsPOD< T >::value )
-			{
-				for ( UINT i = size; i < m_size; ++i )
-				{
-					m_data[ i ].~T();
-				}
-			}
+			IsPOD< T >::Destroy( &m_data[size], size, m_size );
 		}
 		m_size = size;
 	}
@@ -180,33 +212,20 @@ public:
 		}
 		else
 		{
-			if ( !IsPOD< T >::value )
-			{
-				new ( &m_data[ m_size ] ) T();
-			}
+			IsPOD< T >::Create( &m_data[ m_size ] );
 		}
 		++m_size;
 	}
 	void EraseBack()
 	{
 		ASSERT( 0 < m_size );
-		if ( !IsPOD< T >::value )
-		{
-			m_data[ m_size - 1 ].~T();
-		}
+		IsPOD< T >::Destroy( &m_data[ m_size - 1 ] );
 		--m_size;
 	}
 
 	void Clear()
 	{
-		if ( !IsPOD< T >::value )
-		{
-			for ( UINT i = 0; i < m_size; ++i )
-			{
-				m_data[ i ].~T();
-			}
-		}
-
+		IsPOD< T >::Destroy( m_data, m_size );
 		m_size = 0;
 	}
 
@@ -270,13 +289,7 @@ public:
 
 	void operator=( TArray<T> const& other )
 	{
-		if ( !IsPOD< T >::value )
-		{
-			for ( UINT i = 0; i < m_size; ++i )
-			{
-				m_data[ i ].~T();
-			}
-		}
+		IsPOD< T >::Destroy( m_data, m_size );
 
 		if ( m_allocSize != other.m_allocSize )
 		{
@@ -286,16 +299,6 @@ public:
 		}
 
 		m_size = other.m_size;
-		if ( !IsPOD< T >::value )
-		{
-			for ( UINT i = 0; i < m_size; ++i )
-			{
-				new ( &m_data[ i ] ) T( other[ i ] );
-			}
-		}
-		else
-		{
-			memcpy( m_data, other.m_data, m_size * sizeof( T ) );
-		}
+		IsPOD< T >::Create( m_data, other.m_data, m_size );
 	}
 };

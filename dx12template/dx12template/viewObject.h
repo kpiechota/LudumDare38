@@ -32,28 +32,17 @@ struct SRenderData
 	UINT m_indicesNum;
 	UINT m_instancesNum;
 
+	UINT m_texturesOffset;
+	UINT m_texturesNum;
+
 	D3D_PRIMITIVE_TOPOLOGY m_topology;
 
 	Byte m_geometryID;
 
-	Byte m_textureID[ MAX_TEXTURES_NUM ];
 	Byte m_shaderID;
 	EDrawType m_drawType;
-
-	SRenderData()
-		: m_cbOffset( 0 )
-		, m_verticesStart( 0 )
-		, m_indicesStart( 0 )
-		, m_indicesNum( 0 )
-		, m_instancesNum( 0 )
-		, m_topology( D3D_PRIMITIVE_TOPOLOGY_TRIANGLESTRIP )
-		, m_geometryID( 0 )
-		, m_shaderID( 0 )
-		, m_drawType( EDrawType::DrawInvalid )
-	{
-		memset( m_textureID, UINT8_MAX, sizeof( m_textureID ) );
-	}
 };
+POD_TYPE( SRenderData )
 
 enum ELightFlags
 {

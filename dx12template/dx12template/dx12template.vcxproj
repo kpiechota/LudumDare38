@@ -239,6 +239,7 @@
     <ClInclude Include="math\vector.h" />
     <ClInclude Include="physics\physicsUtilities.h" />
     <ClInclude Include="rendering\shaderRes.h" />
+    <ClInclude Include="staticArray.h" />
     <ClInclude Include="viewObject.h" />
     <ClInclude Include="math.h" />
     <ClInclude Include="rendering\render.h" />

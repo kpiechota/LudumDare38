@@ -209,7 +209,9 @@ void CTextRenderManager::Print( Vec4 const color, Vec2 position, float const siz
 	}
 
 	renderData.m_shaderID = EShaderType::ST_SDF_DRAW;
-	renderData.m_textureID[ 0 ] = ETextures::T_SDF_FONT_512;
+	renderData.m_texturesOffset = GRender.GetTexturesOffset();
+	renderData.m_texturesNum = 1;
+	GRender.AddTextureID( ETextures::T_SDF_FONT_512 );
 	renderData.m_topology = D3D_PRIMITIVE_TOPOLOGY::D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST;
 	renderData.m_indicesNum = indicesToDraw;
 	renderData.m_instancesNum = 1;

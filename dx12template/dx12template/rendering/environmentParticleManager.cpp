@@ -164,9 +164,12 @@ void CEnvironmentParticleManager::FillRenderData()
 	renderData.m_indicesStart = 0;
 	renderData.m_indicesNum = 6 * m_particlesNum;
 	renderData.m_instancesNum = 1;
-
+	renderData.m_geometryID = 0;
+		
 	renderData.m_topology = D3D_PRIMITIVE_TOPOLOGY::D3D10_PRIMITIVE_TOPOLOGY_TRIANGLELIST;
-	renderData.m_textureID[ 0 ] = T_RAIN_DROP;
+	renderData.m_texturesOffset = GRender.GetTexturesOffset();
+	renderData.m_texturesNum = 1;
+	GRender.AddTextureID( T_RAIN_DROP );
 	renderData.m_shaderID = EShaderType::ST_ENV_PARTICLE;
 	renderData.m_drawType = SRenderData::EDrawType::DrawInstanced;
 
