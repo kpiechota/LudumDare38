@@ -528,9 +528,7 @@ void CRender::PreDrawFrame()
 
 	m_computeCQ->ExecuteCommandLists( m_computeCommandLists.Size(), m_computeCommandLists.Data() );
 	m_computeCQ->Signal( m_fence, m_fenceValue );
-	m_graphicsCQ->Wait( m_fence, m_fenceValue );
-	++m_fenceValue;
-
+	
 	m_computeCommandLists.Clear();
 
 	GComponentStaticMeshManager.FillRenderData();
@@ -625,7 +623,8 @@ void CRender::DrawFrame()
 	commandList->ResourceBarrier(1, barriers);
 
 	CheckResult(commandList->Close());
-
+	m_graphicsCQ->Wait( m_fence, m_fenceValue );
+	++m_fenceValue;
 	m_graphicsCQ->ExecuteCommandLists(1, (ID3D12CommandList**)(&commandList));
 
 	CheckResult(m_swapChain->Present(0, 0));
