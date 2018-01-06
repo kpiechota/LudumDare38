@@ -9,14 +9,14 @@ CEnvironmentParticleManager::CEnvironmentParticleManager()
 	, m_particlesNum( 0 )
 {}
 
-void CEnvironmentParticleManager::Init( UINT const initParticleNum, int const boxesNumX, int const boxesNumY, int const boxesNumZ, float const boxesSizeX, float const boxesSizeY, float const boxesSizeZ )
+void CEnvironmentParticleManager::Init( UINT const initParticleNum, int const boxesNumX, int const boxesNumY, int const boxesNumZ, float const boxesSize )
 {
-	m_boxesSize.Set( boxesSizeX, boxesSizeY, boxesSizeZ );
+	m_boxesSize = boxesSize;
 	m_boxesNum.Set( boxesNumX, boxesNumY, boxesNumZ );
 
-	m_boxMatrix.m_a00 = m_boxesSize.x;
-	m_boxMatrix.m_a11 = -m_boxesSize.y;
-	m_boxMatrix.m_a22 = m_boxesSize.z;
+	m_boxMatrix.m_a00 = m_boxesSize;
+	m_boxMatrix.m_a11 = -m_boxesSize;
+	m_boxMatrix.m_a22 = m_boxesSize;
 
 	ID3D12Device* const device = GRender.GetDevice();
 
@@ -153,11 +153,14 @@ void CEnvironmentParticleManager::UpdateParticles()
 
 	GRender.AddComputeCommandList( m_particleCL );
 }
+
 void CEnvironmentParticleManager::FillRenderData()
 {
 	Vec3 const cameraPosition = GComponentCameraManager.GetMainCameraPosition();
-	Vec3 position = cameraPosition;
-	position = Math::Snap( position, m_boxesSize ) - ( Vec3( 0.5f, -0.5f, 0.5f ) * m_boxesSize );
+	Vec3 const boxCenterOffset = ( Vec3( 0.5f, -0.5f, 0.5f ) * m_boxesSize );
+	Vec3 const startPosition = Math::Snap( cameraPosition, m_boxesSize ) - boxCenterOffset;
+	Vec3 const fadeDistance = 0.5f * m_boxesSize * Vec3( float( m_boxesNum.x ), float( m_boxesNum.y ), float( m_boxesNum.z ) );
+	float const invBoxSize = 1.f / m_boxesSize;
 
 	SRenderData renderData;
 	renderData.m_verticesStart = 0;
@@ -184,25 +187,35 @@ void CEnvironmentParticleManager::FillRenderData()
 		{
 			for ( int z = -m_boxesNum.z; z <= m_boxesNum.z; ++z )
 			{
-				Vec3 const boxPosition = Vec3( float( x ), float( y ), float( z ) ) * m_boxesSize + position;
+				Vec3 const boxPosition = Vec3( float( x ), float( y ), float( z ) ) * m_boxesSize;
+				Vec3 const boxPositionWS = boxPosition + startPosition;
+				Vec3 const boxCenter = boxPositionWS + boxCenterOffset;
+				Vec3 distanceVec = Math::Abs( boxCenter - cameraPosition );
+				distanceVec -= fadeDistance;
+				float distance = max( max( distanceVec.x, distanceVec.y ), distanceVec.z );
+				distance *= invBoxSize;
+				float const fade = 1.f - Math::Clamp01( distance );
+				if ( 0.002f < fade )
+				{
+					objectToWorld.m_a30 = boxPositionWS.x;
+					objectToWorld.m_a31 = boxPositionWS.y;
+					objectToWorld.m_a32 = boxPositionWS.z;
 
-				objectToWorld.m_a30 = boxPosition.x;
-				objectToWorld.m_a31 = boxPosition.y;
-				objectToWorld.m_a32 = boxPosition.z;
+					Matrix4x4 tObjectToWorld = objectToWorld;
+					Matrix4x4 tWorldToScreen = worldToScreen;
 
-				Matrix4x4 tObjectToWorld = objectToWorld;
-				Matrix4x4 tWorldToScreen = worldToScreen;
+					tObjectToWorld.Transpose();
+					tWorldToScreen.Transpose();
 
-				tObjectToWorld.Transpose();
-				tWorldToScreen.Transpose();
+					CConstBufferCtx const cbCtx = GRender.GetConstBufferCtx( renderData.m_cbOffset, renderData.m_shaderID );
+					cbCtx.SetParam( reinterpret_cast< Byte const* >( &tWorldToScreen ), sizeof( tWorldToScreen ), EShaderParameters::WorldToScreen );
+					cbCtx.SetParam( reinterpret_cast< Byte const* >( &tObjectToWorld ), 3 * sizeof( Vec4 ), EShaderParameters::ObjectToWorld );
+					cbCtx.SetParam( reinterpret_cast< Byte const* >( &color ), sizeof( color ), EShaderParameters::Color );
+					cbCtx.SetParam( reinterpret_cast< Byte const* >( &cameraPosition ), sizeof( cameraPosition ), EShaderParameters::CameraPositionWS );
+					cbCtx.SetParam( reinterpret_cast< Byte const* >( &fade ), sizeof( fade ), EShaderParameters::Fade );
 
-				CConstBufferCtx const cbCtx = GRender.GetConstBufferCtx( renderData.m_cbOffset, renderData.m_shaderID );
-				cbCtx.SetParam( reinterpret_cast<Byte const*>( &tWorldToScreen ), sizeof( tWorldToScreen ), EShaderParameters::WorldToScreen );
-				cbCtx.SetParam( reinterpret_cast<Byte const*>( &tObjectToWorld ), 3 * sizeof( Vec4 ), EShaderParameters::ObjectToWorld );
-				cbCtx.SetParam( reinterpret_cast<Byte const*>( &color ), sizeof( color ), EShaderParameters::Color );
-				cbCtx.SetParam( reinterpret_cast<Byte const*>( &cameraPosition ), sizeof( cameraPosition ), EShaderParameters::CameraPositionWS );
-
-				GViewObject.m_renderData[ERenderLayer::RL_TRANSLUCENT].Add(renderData);
+					GViewObject.m_renderData[ ERenderLayer::RL_TRANSLUCENT ].Add( renderData );
+				}
 			}
 		}
 	}

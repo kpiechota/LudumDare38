@@ -14,7 +14,7 @@ enum class EShaderParameters : Byte
 	AmbientColor,
 	LightDirWS,
 	CameraPositionWS,
-	FadeDistanceSq,
+	Fade,
 
 	SP_MAX
 };

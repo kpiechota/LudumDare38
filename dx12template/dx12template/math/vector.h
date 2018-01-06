@@ -256,6 +256,13 @@ struct Vec3
 		z += v.z;
 	}
 
+	void operator-=(Vec3 const& v)
+	{
+		x -= v.x;
+		y -= v.y;
+		z -= v.z;
+	}
+
 	Vec3 operator+(Vec3 const v) const
 	{
 		return Vec3( x + v.x, y + v.y, z + v.z );

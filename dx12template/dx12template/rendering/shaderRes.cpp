@@ -16,7 +16,7 @@ LPCSTR ShaderParamsNames[] =
 	"AmbientColor",
 	"LightDirWS",
 	"CameraPositionWS",
-	"FadeDistanceSq",
+	"Fade",
 };
 CT_ASSERT( (ARRAYSIZE( ShaderParamsNames ) == ( UINT(EShaderParameters::SP_MAX) )) );
 

@@ -15,7 +15,7 @@ private:
 
 	Matrix4x4 m_boxMatrix;
 	Vec3i m_boxesNum;
-	Vec3 m_boxesSize;
+	float m_boxesSize;
 	UINT m_particlesNum;
 
 private:
@@ -25,7 +25,7 @@ private:
 public:
 	CEnvironmentParticleManager();
 
-	void Init( UINT const initParticleNum, int const boxesNumX, int const boxesNumY, int const boxesNumZ, float const boxesSizeX, float const boxesSizeY, float const boxesSizeZ );
+	void Init( UINT const initParticleNum, int const boxesNumX, int const boxesNumY, int const boxesNumZ, float const boxesSize );
 	void UpdateParticles();
 	void FillRenderData();
 

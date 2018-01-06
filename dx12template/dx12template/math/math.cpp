@@ -69,6 +69,21 @@ Vec3 Math::Snap( Vec3 const value, Vec3 const snap )
 	return Vec3( Snap( value.x, snap.x ), Snap( value.y, snap.y ), Snap( value.z, snap.z ) );
 }
 
+Vec3 Math::Snap( Vec3 const value, float const snap )
+{
+	return Vec3( Snap( value.x, snap ), Snap( value.y, snap ), Snap( value.z, snap ) );
+}
+
+float Math::Clamp01( float const value )
+{
+	return min( max( value, 0.f ), 1.f );
+}
+
+Vec3 Math::Abs( Vec3 const value )
+{
+	return Vec3( abs( value.x ), abs( value.y ), abs( value.z ) );
+}
+
 Vec2 operator*( float const a, Vec2 const v )
 {
 	return Vec2( a * v.x, a * v.y );
