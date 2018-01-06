@@ -186,6 +186,7 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, PSTR pCmdLine, 
 		L"../content/spaceship_e.png",
 		L"../content/spaceship_s.png",
 		L"../content/rainDrop.png",
+		L"../content/snow.png",
 	};
 	CT_ASSERT( ARRAYSIZE( textures ) == T_MAX );
 

@@ -31,6 +31,7 @@ enum ETextures
 	T_SPACESHIP_E,
 	T_SPACESHIP_S,
 	T_RAIN_DROP,
+	T_SNOW,
 
 	T_MAX
 };

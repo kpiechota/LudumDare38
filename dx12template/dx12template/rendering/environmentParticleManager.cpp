@@ -94,17 +94,31 @@ void CEnvironmentParticleManager::InitParticles()
 		UINT m_particleNum;
 	} cbuffer;
 
-	cbuffer.m_velocity[ 0 ] = 4.f;
+	//RAIN
+	//cbuffer.m_velocity[ 0 ] = 4.f;
+	//cbuffer.m_velocity[ 1 ] = 3.f;
+	//cbuffer.m_velocity[ 2 ] = 1.f;
+	//cbuffer.m_initSize[ 0 ] = .5f;
+	//cbuffer.m_initSize[ 1 ] = 8.f;
+	//cbuffer.m_sizeRand[ 0 ] = 0.005f;
+	//cbuffer.m_sizeRand[ 1 ] = 0.01f;
+	//cbuffer.m_velocityOffsetRand[ 0 ] = -.2f;
+	//cbuffer.m_velocityOffsetRand[ 1 ] = .2f;
+	//cbuffer.m_speedRand[ 0 ] = 2.f;
+	//cbuffer.m_speedRand[ 1 ] = 3.f;
+	//SNOW
+	cbuffer.m_velocity[ 0 ] = 2.f;
 	cbuffer.m_velocity[ 1 ] = 3.f;
 	cbuffer.m_velocity[ 2 ] = 1.f;
-	cbuffer.m_initSize[ 0 ] = .5f;
-	cbuffer.m_initSize[ 1 ] = 8.f;
+	cbuffer.m_initSize[ 0 ] = 1.f;
+	cbuffer.m_initSize[ 1 ] = 1.f;
 	cbuffer.m_sizeRand[ 0 ] = 0.005f;
 	cbuffer.m_sizeRand[ 1 ] = 0.01f;
-	cbuffer.m_velocityOffsetRand[ 0 ] = -.2f;
-	cbuffer.m_velocityOffsetRand[ 1 ] = .2f;
-	cbuffer.m_speedRand[ 0 ] = 2.f;
-	cbuffer.m_speedRand[ 1 ] = 3.f;
+	cbuffer.m_velocityOffsetRand[ 0 ] = -.4f;
+	cbuffer.m_velocityOffsetRand[ 1 ] = .4f;
+	cbuffer.m_speedRand[ 0 ] = .4f;
+	cbuffer.m_speedRand[ 1 ] = .8f;
+
 	cbuffer.m_seed = rand();
 	cbuffer.m_particleNum = m_particlesNum;
 	( ( Vec3* )( &cbuffer.m_velocity[ 0 ] ) )->Normalize();
@@ -172,7 +186,8 @@ void CEnvironmentParticleManager::FillRenderData()
 	renderData.m_topology = D3D_PRIMITIVE_TOPOLOGY::D3D10_PRIMITIVE_TOPOLOGY_TRIANGLELIST;
 	renderData.m_texturesOffset = GRender.GetTexturesOffset();
 	renderData.m_texturesNum = 1;
-	GRender.AddTextureID( T_RAIN_DROP );
+	//GRender.AddTextureID( T_RAIN_DROP );
+	GRender.AddTextureID( T_SNOW );
 	renderData.m_shaderID = EShaderType::ST_ENV_PARTICLE;
 	renderData.m_drawType = SRenderData::EDrawType::DrawInstanced;
 
