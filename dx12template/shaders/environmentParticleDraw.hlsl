@@ -6,7 +6,7 @@ cbuffer objectBuffer : register(b0)
 	float4x3 ObjectToWorld;
 	float4 Color;
 	float3 CameraPositionWS;
-	float Fade;
+	float2 Fade;
 }
 StructuredBuffer< SEnvironmentParticle > Particles : register( t0 );
 
@@ -18,6 +18,7 @@ struct VStoPS
 {
 	float4 m_position : SV_POSITION;
 	float2 m_uv : TEXCOORD0;
+	float m_distance : TEXCOORD1;
 };
 
 VStoPS vsMain(uint vertexID : SV_VertexID ) 
@@ -57,10 +58,14 @@ VStoPS vsMain(uint vertexID : SV_VertexID )
 	VStoPS output;
 	output.m_position = mul( float4( vertexPosition, 1.f ), WorldToScreen );
 	output.m_uv = verticesUV[ vertexID % 6 ];
+	float3 axisDistance = abs( positionToCameraWS );
+	output.m_distance = max( max( axisDistance.x, axisDistance.y ), axisDistance.z );
 	return output;
 }
 
 float4 psMain(VStoPS input) : SV_TARGET0
 {
-	return Fade * ColorTex.Sample( Sampler, input.m_uv );
+	float fade = 1.f - smoothstep( Fade.x, Fade.y, input.m_distance );
+	clip( fade - 0.002f );
+	return fade * ColorTex.Sample( Sampler, input.m_uv );
 }
