@@ -194,20 +194,19 @@ void CEnvironmentParticleManager::FillRenderData()
 	Matrix4x4 objectToWorld = m_boxMatrix;
 
 	Vec4 const color( 0.1f, 0.1f, 0.1f, 1.f );
+	float const size = float( m_boxesNum ) * m_boxesSize;
+	Vec3 const boxesMin = startPosition + boxCenterOffset - size;
+	Vec3 const boxesMax = startPosition + boxCenterOffset + size;
 
-	for ( int x = -m_boxesNum; x <= m_boxesNum; ++x )
+	for ( float x = boxesMin.x; x <= boxesMax.x; x += m_boxesSize )
 	{
-		for ( int y = -m_boxesNum; y <= m_boxesNum; ++y )
+		for ( float y = boxesMin.y; y <= boxesMax.y; y += m_boxesSize )
 		{
-			for ( int z = -m_boxesNum; z <= m_boxesNum; ++z )
+			for ( float z = boxesMin.z; z <= boxesMax.z; z += m_boxesSize )
 			{
-				Vec3 const boxPosition = Vec3( float( x ), float( y ), float( z ) ) * m_boxesSize;
-				Vec3 const boxPositionWS = boxPosition + startPosition;
-				Vec3 const boxCenter = boxPositionWS + boxCenterOffset;
-
-				objectToWorld.m_a30 = boxPositionWS.x;
-				objectToWorld.m_a31 = boxPositionWS.y;
-				objectToWorld.m_a32 = boxPositionWS.z;
+				objectToWorld.m_a30 = x;
+				objectToWorld.m_a31 = y;
+				objectToWorld.m_a32 = z;
 
 				Matrix4x4 tObjectToWorld = objectToWorld;
 				Matrix4x4 tWorldToScreen = worldToScreen;

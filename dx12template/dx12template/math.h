@@ -11,15 +11,15 @@ namespace MathConsts
 	float constexpr PI = 3.14159265359f;
 	float constexpr DegToRad = PI / 180.f;
 }
-extern float RandFloat();
+float RandFloat();
 
 #include "math\vector.h"
 #include "math\matrix.h"
 #include "math\quaternion.h"
 
-extern Vec2 operator*( float const a, Vec2 const v );
-extern Vec3 operator*( float const a, Vec3 const v );
-extern Vec3 operator*( Vec3 const v0, Vec3 const v1 );
+Vec2 operator*( float const a, Vec2 const v );
+Vec3 operator*( float const a, Vec3 const v );
+Vec3 operator*( Vec3 const v0, Vec3 const v1 );
 
 #include "math\geometricUtilities.h"
 

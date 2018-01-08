@@ -268,9 +268,19 @@ struct Vec3
 		return Vec3( x + v.x, y + v.y, z + v.z );
 	}
 
+	Vec3 operator+(float const a) const
+	{
+		return Vec3( x + a, y + a, z + a );
+	}
+
 	Vec3 operator-(Vec3 const v) const
 	{
 		return Vec3( x - v.x, y - v.y, z - v.z );
+	}
+
+	Vec3 operator-(float const a) const
+	{
+		return Vec3( x - a, y - a, z - a );
 	}
 
 	Vec3 operator*(float const a) const

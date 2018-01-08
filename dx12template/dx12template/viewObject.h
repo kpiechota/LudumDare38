@@ -26,16 +26,15 @@ struct SRenderData
 	};
 
 	D3D12_GPU_VIRTUAL_ADDRESS m_cbOffset;
-
-	UINT m_verticesStart;
-	UINT m_indicesStart;
-	UINT m_indicesNum;
-	UINT m_instancesNum;
-
-	UINT m_texturesOffset;
-	UINT m_texturesNum;
-
 	D3D_PRIMITIVE_TOPOLOGY m_topology;
+
+	UINT16 m_verticesStart;
+	UINT16 m_indicesStart;
+	UINT16 m_indicesNum;
+	UINT16 m_instancesNum;
+
+	UINT8 m_texturesOffset;
+	UINT8 m_texturesNum;
 
 	Byte m_geometryID;
 

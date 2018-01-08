@@ -60,7 +60,7 @@ void CDynamicGeometryManager::ReleaseGeometry( tDynGeometryID const dynGeometryI
 	GRender.ReleaseGeometry( m_dynGeometry[ dynGeometryID ].m_geometryID );
 }
 
-void CDynamicGeometryManager::GetVerticesForWrite( UINT const verticesNum, tDynGeometryID const dynGeometryID, void*& outData, UINT& outVerticesOffset )
+void CDynamicGeometryManager::GetVerticesForWrite( UINT const verticesNum, tDynGeometryID const dynGeometryID, void*& outData, UINT16& outVerticesOffset )
 {
 	SDynGeometry& dynGeometry = m_dynGeometry[ dynGeometryID ];
 	ASSERT( verticesNum + dynGeometry.m_verticesOffset < dynGeometry.m_maxVerticesNum );
@@ -71,7 +71,7 @@ void CDynamicGeometryManager::GetVerticesForWrite( UINT const verticesNum, tDynG
 	dynGeometry.m_verticesOffset += verticesNum;
 }
 
-void CDynamicGeometryManager::GetIndicesForWrite( UINT const indicesNum, tDynGeometryID const dynGeometryID, void *& outData, UINT & outIndicesOffset )
+void CDynamicGeometryManager::GetIndicesForWrite( UINT const indicesNum, tDynGeometryID const dynGeometryID, void *& outData, UINT16& outIndicesOffset )
 {
 	SDynGeometry& dynGeometry = m_dynGeometry[ dynGeometryID ];
 	ASSERT( indicesNum + dynGeometry.m_indicesOffset < dynGeometry.m_maxIndicesNum );

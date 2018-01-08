@@ -112,8 +112,8 @@ class TArray
 {
 private:
 	T* m_data;
-	UINT m_allocSize;
 	UINT m_size;
+	UINT m_allocSize;
 
 private:
 	void Reallocate( UINT const size )

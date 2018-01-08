@@ -26,8 +26,8 @@ private:
 public:
 	tDynGeometryID AllocateGeometry( UINT const byteVertexSize, UINT const byteVertexStride, UINT const byteIndexSize, DXGI_FORMAT const indicesFormat );
 	void ReleaseGeometry( tDynGeometryID const dynGeometryID );
-	void GetVerticesForWrite( UINT const verticesNum, tDynGeometryID const dynGeometryID, void*& outData, UINT& outVerticesOffset );
-	void GetIndicesForWrite( UINT const indicesNum, tDynGeometryID const dynGeometryID, void*& outData, UINT& outIndicesOffset );
+	void GetVerticesForWrite( UINT const verticesNum, tDynGeometryID const dynGeometryID, void*& outData, UINT16& outVerticesOffset );
+	void GetIndicesForWrite( UINT const indicesNum, tDynGeometryID const dynGeometryID, void*& outData, UINT16& outIndicesOffset );
 	Byte GetGeometryID( tDynGeometryID const dynGeometryID ) const;
 	void PreDraw();
 };
