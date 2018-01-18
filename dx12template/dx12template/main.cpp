@@ -325,11 +325,31 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, PSTR pCmdLine, 
 		profileFile << "frameID,time,fps\n";
 		char profText[ 256 ];
 		int const start = max( 0, GFrameProfID - GFrameProfNum );
+		INT64 iMin = INT64_MAX, iMax = 0, iSum = 0;
+		float fMin = 100000.f, fMax = 0.f, fSum = 0.f;
 		for ( int i = start; i < GFrameProfID; ++i )
 		{
-			sprintf_s( profText, 256, "%i,%lli,%.4f\n", i - start, GFramesProf[ i % GFrameProfNum ], 1.f / GTimer.GetSeconds( GFramesProf[ i % GFrameProfNum ] ) );
+			INT64 const time = GFramesProf[ i % GFrameProfNum ];
+			float const fps = 1.f / GTimer.GetSeconds( time );
+			iMin = min( time, iMin );
+			iMax = max( time, iMax );
+			iSum += time;
+
+			fMin = min( fps, fMin );
+			fMax = max( fps, fMax );
+			fSum += fps;
+
+			sprintf_s( profText, 256, "%i,%lli,%.4f\n", i - start, time, fps );
 			profileFile << profText;
 		}
+
+		sprintf_s( profText, 256, "\nmin,max,avg\n" );
+		profileFile << profText;
+		sprintf_s( profText, 256, "%lli,%lli,%.4f\n", iMin, iMax, static_cast<float>(iSum ) / static_cast<float>( GFrameProfID - start ) );
+		profileFile << profText;
+		sprintf_s( profText, 256, "%.4f,%.4f,%.4f\n", fMin, fMax, static_cast<float>(fSum ) / static_cast<float>( GFrameProfID - start ) );
+		profileFile << profText;
+
 		profileFile.close();
 	}
 #endif
