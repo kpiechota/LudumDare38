@@ -9,7 +9,7 @@ CEnvironmentParticleManager::CEnvironmentParticleManager()
 	, m_particlesNum( 0 )
 {}
 
-void CEnvironmentParticleManager::Init( UINT const initParticleNum, int const boxesNum, float const boxesSize )
+void CEnvironmentParticleManager::Init( UINT const initParticleNum, UINT const boxesNum, float const boxesSize )
 {
 	m_boxesSize = boxesSize;
 	m_boxesNum = boxesNum;
@@ -175,7 +175,7 @@ void CEnvironmentParticleManager::FillRenderData()
 	Vec3 const startPosition = Math::Snap( cameraPosition, m_boxesSize ) - boxCenterOffset;
 	Vec2 const fade( m_boxesSize * float( m_boxesNum - 1 ), m_boxesSize * float( m_boxesNum ) );
 
-	SRenderData renderData;
+	SCommonRenderData renderData;
 	renderData.m_verticesStart = 0;
 	renderData.m_indicesStart = 0;
 	renderData.m_indicesNum = 6 * m_particlesNum;
@@ -188,9 +188,9 @@ void CEnvironmentParticleManager::FillRenderData()
 	//GRender.AddTextureID( T_RAIN_DROP );
 	GRender.AddTextureID( T_SNOW );
 	renderData.m_shaderID = EShaderType::ST_ENV_PARTICLE;
-	renderData.m_drawType = SRenderData::EDrawType::DrawInstanced;
+	renderData.m_drawType = EDrawType::DrawInstanced;
 
-	Matrix4x4 const worldToScreen = GViewObject.m_camera.m_worldToScreen;
+	Matrix4x4 const worldToScreen = GViewObject[EViews::SCENE].m_camera.m_worldToScreen;
 	Matrix4x4 objectToWorld = m_boxMatrix;
 
 	Vec4 const color( 0.1f, 0.1f, 0.1f, 1.f );
@@ -198,6 +198,8 @@ void CEnvironmentParticleManager::FillRenderData()
 	Vec3 const boxesMin = startPosition + boxCenterOffset - size;
 	Vec3 const boxesMax = startPosition + boxCenterOffset + size;
 
+	UINT const boxesOnAxis = m_boxesNum * 2 + 1;
+	GRender.CommandRenderDataReserveNext( boxesOnAxis * boxesOnAxis * boxesOnAxis, ERenderLayer::RL_TRANSLUCENT );
 	for ( float x = boxesMin.x; x <= boxesMax.x; x += m_boxesSize )
 	{
 		for ( float y = boxesMin.y; y <= boxesMax.y; y += m_boxesSize )
@@ -221,7 +223,7 @@ void CEnvironmentParticleManager::FillRenderData()
 				cbCtx.SetParam( reinterpret_cast< Byte const* >( &cameraPosition ), sizeof( cameraPosition ), EShaderParameters::CameraPositionWS );
 				cbCtx.SetParam( reinterpret_cast< Byte const* >( &fade ), sizeof( fade ), EShaderParameters::Fade );
 
-				GViewObject.m_renderData[ ERenderLayer::RL_TRANSLUCENT ].Add( renderData );
+				GRender.AddCommonRenderData( renderData, ERenderLayer::RL_TRANSLUCENT );
 			}
 		}
 	}

@@ -1,7 +1,7 @@
 #include "render.h"
 #include <math.h>
 
-extern SViewObject GViewObject;
+extern SViewObject GViewObject[ EViews::MAX ];
 CRender GRender;
 
 void CRender::InitCommands()
@@ -125,28 +125,28 @@ void CRender::InitRenderTargets()
 
 	gbufferViewDesc.Format = DXGI_FORMAT_R8G8B8A8_UNORM;
 	gbufferDesc.Format = DXGI_FORMAT_R8G8B8A8_UNORM;
-	m_gbufferDescriptorsOffsets[ GBB_DIFFUSE ].m_rtvOffset = rtvID;
-	CheckResult( m_device->CreateCommittedResource( &GHeapPropertiesGPUOnly, D3D12_HEAP_FLAG_NONE, &gbufferDesc, D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE, &gbufferClearValue, IID_PPV_ARGS( &m_gbufferBuffers[ GBB_DIFFUSE ] ) ) );
-	m_device->CreateRenderTargetView( m_gbufferBuffers[ GBB_DIFFUSE ], &gbufferViewDesc, m_renderTargetDH.GetCPUDescriptor(rtvID) );
+	m_globalBufferDescriptorsOffsets[ GBB_DIFFUSE ].m_rtvOffset = rtvID;
+	CheckResult( m_device->CreateCommittedResource( &GHeapPropertiesGPUOnly, D3D12_HEAP_FLAG_NONE, &gbufferDesc, D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE, &gbufferClearValue, IID_PPV_ARGS( &m_globalBufferBuffers[ GBB_DIFFUSE ] ) ) );
+	m_device->CreateRenderTargetView( m_globalBufferBuffers[ GBB_DIFFUSE ], &gbufferViewDesc, m_renderTargetDH.GetCPUDescriptor(rtvID) );
 	++rtvID;
 
 	gbufferClearValue.Format = DXGI_FORMAT_R10G10B10A2_UNORM;
 	gbufferViewDesc.Format = DXGI_FORMAT_R10G10B10A2_UNORM;
 	gbufferDesc.Format = DXGI_FORMAT_R10G10B10A2_UNORM;
-	m_gbufferDescriptorsOffsets[ GBB_NORMAL ].m_rtvOffset = rtvID;
-	CheckResult( m_device->CreateCommittedResource( &GHeapPropertiesGPUOnly, D3D12_HEAP_FLAG_NONE, &gbufferDesc, D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE, &gbufferClearValue, IID_PPV_ARGS( &m_gbufferBuffers[ GBB_NORMAL ] ) ) );
-	m_device->CreateRenderTargetView( m_gbufferBuffers[ GBB_NORMAL ], &gbufferViewDesc, m_renderTargetDH.GetCPUDescriptor(rtvID) );
+	m_globalBufferDescriptorsOffsets[ GBB_NORMAL ].m_rtvOffset = rtvID;
+	CheckResult( m_device->CreateCommittedResource( &GHeapPropertiesGPUOnly, D3D12_HEAP_FLAG_NONE, &gbufferDesc, D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE, &gbufferClearValue, IID_PPV_ARGS( &m_globalBufferBuffers[ GBB_NORMAL ] ) ) );
+	m_device->CreateRenderTargetView( m_globalBufferBuffers[ GBB_NORMAL ], &gbufferViewDesc, m_renderTargetDH.GetCPUDescriptor(rtvID) );
 	++rtvID;
 
 	gbufferClearValue.Format = DXGI_FORMAT_R8G8B8A8_UNORM;
 	gbufferViewDesc.Format = DXGI_FORMAT_R8G8B8A8_UNORM;
 	gbufferDesc.Format = DXGI_FORMAT_R8G8B8A8_UNORM;
-	m_gbufferDescriptorsOffsets[ GBB_EMISSIVE_SPEC ].m_rtvOffset = rtvID;
-	CheckResult( m_device->CreateCommittedResource( &GHeapPropertiesGPUOnly, D3D12_HEAP_FLAG_NONE, &gbufferDesc, D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE, &gbufferClearValue, IID_PPV_ARGS( &m_gbufferBuffers[ GBB_EMISSIVE_SPEC ] ) ) );
-	m_device->CreateRenderTargetView( m_gbufferBuffers[ GBB_EMISSIVE_SPEC ], &gbufferViewDesc, m_renderTargetDH.GetCPUDescriptor(rtvID) );
+	m_globalBufferDescriptorsOffsets[ GBB_EMISSIVE_SPEC ].m_rtvOffset = rtvID;
+	CheckResult( m_device->CreateCommittedResource( &GHeapPropertiesGPUOnly, D3D12_HEAP_FLAG_NONE, &gbufferDesc, D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE, &gbufferClearValue, IID_PPV_ARGS( &m_globalBufferBuffers[ GBB_EMISSIVE_SPEC ] ) ) );
+	m_device->CreateRenderTargetView( m_globalBufferBuffers[ GBB_EMISSIVE_SPEC ], &gbufferViewDesc, m_renderTargetDH.GetCPUDescriptor(rtvID) );
 	++rtvID;
 
-	ResizeDescriptorHeap( m_depthBuffertDH, 1 );
+	ResizeDescriptorHeap( m_depthBuffertDH, 2 );
 
 	D3D12_RESOURCE_DESC depthDesc = {};
 	depthDesc.DepthOrArraySize = 1;
@@ -163,8 +163,8 @@ void CRender::InitRenderTargets()
 	depthClearValue.Format = DXGI_FORMAT_D24_UNORM_S8_UINT;
 	depthClearValue.DepthStencil.Depth = 1.f;
 	depthClearValue.DepthStencil.Stencil = 0;
-	m_gbufferDescriptorsOffsets[ GBB_DEPTH ].m_rtvOffset = 0;
-	CheckResult( m_device->CreateCommittedResource( &GHeapPropertiesGPUOnly, D3D12_HEAP_FLAG_NONE, &depthDesc, D3D12_RESOURCE_STATE_DEPTH_READ | D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE, &depthClearValue, IID_PPV_ARGS( &m_gbufferBuffers[ GBB_DEPTH ] ) ) );
+	m_globalBufferDescriptorsOffsets[ GBB_DEPTH ].m_rtvOffset = 0;
+	CheckResult( m_device->CreateCommittedResource( &GHeapPropertiesGPUOnly, D3D12_HEAP_FLAG_NONE, &depthDesc, D3D12_RESOURCE_STATE_DEPTH_READ | D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE, &depthClearValue, IID_PPV_ARGS( &m_globalBufferBuffers[ GBB_DEPTH ] ) ) );
 
 	D3D12_DEPTH_STENCIL_VIEW_DESC depthViewDesc = {};
 	depthViewDesc.Format = DXGI_FORMAT_D24_UNORM_S8_UINT;
@@ -172,7 +172,33 @@ void CRender::InitRenderTargets()
 	depthViewDesc.Flags = D3D12_DSV_FLAG_NONE;
 	depthViewDesc.Texture2D.MipSlice = 0;
 
-	m_device->CreateDepthStencilView( m_gbufferBuffers[ GBB_DEPTH ], &depthViewDesc, m_depthBuffertDH.GetCPUDescriptor( 0 ) );
+	m_device->CreateDepthStencilView( m_globalBufferBuffers[ GBB_DEPTH ], &depthViewDesc, m_depthBuffertDH.GetCPUDescriptor( 0 ) );
+
+	D3D12_RESOURCE_DESC rainDepthDesc = {};
+	rainDepthDesc.DepthOrArraySize = 1;
+	rainDepthDesc.SampleDesc.Count = 1;
+	rainDepthDesc.Flags = D3D12_RESOURCE_FLAG_ALLOW_DEPTH_STENCIL;
+	rainDepthDesc.Dimension = D3D12_RESOURCE_DIMENSION_TEXTURE2D;
+	rainDepthDesc.Layout = D3D12_TEXTURE_LAYOUT_UNKNOWN;
+	rainDepthDesc.MipLevels = 1;
+	rainDepthDesc.Width = 512;
+	rainDepthDesc.Height = 512;
+	rainDepthDesc.Format = DXGI_FORMAT_D32_FLOAT;
+
+	D3D12_CLEAR_VALUE rainDepthClearValue;
+	rainDepthClearValue.Format = DXGI_FORMAT_D32_FLOAT;
+	rainDepthClearValue.DepthStencil.Depth = 1.f;
+	rainDepthClearValue.DepthStencil.Stencil = 0;
+	m_globalBufferDescriptorsOffsets[ GBB_RAIN_DEPTH ].m_rtvOffset = 1;
+	CheckResult( m_device->CreateCommittedResource( &GHeapPropertiesGPUOnly, D3D12_HEAP_FLAG_NONE, &rainDepthDesc, D3D12_RESOURCE_STATE_DEPTH_READ | D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE, &rainDepthClearValue, IID_PPV_ARGS( &m_globalBufferBuffers[ GBB_RAIN_DEPTH ] ) ) );
+
+	D3D12_DEPTH_STENCIL_VIEW_DESC rainDepthViewDesc = {};
+	rainDepthViewDesc.Format = DXGI_FORMAT_D32_FLOAT;
+	rainDepthViewDesc.ViewDimension = D3D12_DSV_DIMENSION_TEXTURE2D;
+	rainDepthViewDesc.Flags = D3D12_DSV_FLAG_NONE;
+	rainDepthViewDesc.Texture2D.MipSlice = 0;
+
+	m_device->CreateDepthStencilView( m_globalBufferBuffers[ GBB_RAIN_DEPTH ], &rainDepthViewDesc, m_depthBuffertDH.GetCPUDescriptor( 1 ) );
 }
 
 void CRender::InitDescriptorHeaps()
@@ -287,6 +313,11 @@ void CRender::InitShaders()
 	ERenderTargetBlendStates const objectDrawRenderTargetsBlend[] = { ERTBS_Disabled, ERTBS_Disabled, ERTBS_Disabled };
 	m_shaders[ ST_OBJECT_DRAW ].InitShader( L"../shaders/objectDraw.hlsl", SSimpleObjectVertexFormat::desc, SSimpleObjectVertexFormat::descNum, 3, objectDrawRenderTargets, objectDrawRenderTargetsBlend, EDSS_DepthEnable );
 
+	D3D_SHADER_MACRO geometryOnlyMacro[2];
+	memset( geometryOnlyMacro, 0, sizeof( geometryOnlyMacro ) );
+	geometryOnlyMacro[0].Name = "GEOMETRY_ONLY";
+	m_shaders[ ST_OBJECT_DRAW_GEOMETRY_ONLY ].InitShader( L"../shaders/objectDraw.hlsl", SSimpleObjectVertexFormat::desc, SSimpleObjectVertexFormat::descNum, 0, nullptr, nullptr, EDSS_DepthEnable, ERS_Default, geometryOnlyMacro );
+
 	DXGI_FORMAT const sdfDrawRenderTargets[] = { DXGI_FORMAT_R8G8B8A8_UNORM };
 	ERenderTargetBlendStates const sdfDrawRenderTargetsBlend[] = { ERTBS_AlphaBlend };
 	m_shaders[ ST_SDF_DRAW ].InitShader( L"../shaders/sdfDraw.hlsl", SPosUvVertexFormat::desc, SPosUvVertexFormat::descNum, 1, sdfDrawRenderTargets, sdfDrawRenderTargetsBlend );
@@ -376,28 +407,28 @@ void CRender::Init()
 
 void CRender::DrawOpaque(ID3D12GraphicsCommandList* commandList)
 {
-	D3D12_CPU_DESCRIPTOR_HANDLE renderTargetDH = m_renderTargetDH.GetCPUDescriptor( m_gbufferDescriptorsOffsets[ GBB_DIFFUSE ].m_rtvOffset );
+	D3D12_CPU_DESCRIPTOR_HANDLE renderTargetDH = m_renderTargetDH.GetCPUDescriptor( m_globalBufferDescriptorsOffsets[ GBB_DIFFUSE ].m_rtvOffset );
 	D3D12_CPU_DESCRIPTOR_HANDLE depthBufferDH = m_depthBuffertDH.GetCPUDescriptor( 0 );
 	commandList->OMSetRenderTargets(3, &renderTargetDH, true, &depthBufferDH);
 
 	commandList->ClearDepthStencilView( depthBufferDH, D3D12_CLEAR_FLAG_DEPTH, 1.f, 0, 0, nullptr );
 	commandList->ClearRenderTargetView( renderTargetDH, Vec4::ZERO.data, 0, nullptr );
-	commandList->ClearRenderTargetView( m_renderTargetDH.GetCPUDescriptor( m_gbufferDescriptorsOffsets[ GBB_NORMAL ].m_rtvOffset), Vec4::ZERO.data, 0, nullptr );
-	commandList->ClearRenderTargetView( m_renderTargetDH.GetCPUDescriptor( m_gbufferDescriptorsOffsets[ GBB_EMISSIVE_SPEC ].m_rtvOffset), Vec4::ZERO.data, 0, nullptr );
-	DrawRenderData( commandList, GViewObject.m_renderData[RL_OPAQUE] );
+	commandList->ClearRenderTargetView( m_renderTargetDH.GetCPUDescriptor( m_globalBufferDescriptorsOffsets[ GBB_NORMAL ].m_rtvOffset), Vec4::ZERO.data, 0, nullptr );
+	commandList->ClearRenderTargetView( m_renderTargetDH.GetCPUDescriptor( m_globalBufferDescriptorsOffsets[ GBB_EMISSIVE_SPEC ].m_rtvOffset), Vec4::ZERO.data, 0, nullptr );
+	DrawRenderData( commandList, m_commonRenderData[RL_OPAQUE] );
 }
 
-void CRender::DrawRenderData( ID3D12GraphicsCommandList* commandList, TArray< SRenderData > const& renderData )
+void CRender::DrawRenderData( ID3D12GraphicsCommandList* commandList, TArray< SCommonRenderData > const& renderData )
 {
 	D3D_PRIMITIVE_TOPOLOGY currentTopology = D3D_PRIMITIVE_TOPOLOGY_UNDEFINED;
 	Byte currentShader = ST_MAX;
 	Byte currentGeometry = UINT8_MAX;
-	Byte currentTexture[ SRenderData::MAX_TEXTURES_NUM ];
+	Byte currentTexture[ SCommonRenderData::MAX_TEXTURES_NUM ];
 	memset( currentTexture, UINT8_MAX, sizeof( currentTexture ) );
 
 	D3D12_GPU_VIRTUAL_ADDRESS const constBufferStart = m_constBufferResource->GetGPUVirtualAddress();
-	SRenderData const* pRenderData = renderData.begin();
-	SRenderData const* const pRenderDataEnd = renderData.end();
+	SCommonRenderData const* pRenderData = renderData.begin();
+	SCommonRenderData const* const pRenderDataEnd = renderData.end();
 	for (;pRenderData != pRenderDataEnd; ++pRenderData)
 	{
 		commandList->SetGraphicsRootConstantBufferView(0, constBufferStart + pRenderData->m_cbOffset );
@@ -454,25 +485,25 @@ void CRender::DrawRenderData( ID3D12GraphicsCommandList* commandList, TArray< SR
 
 		switch ( pRenderData->m_drawType )
 		{
-			case SRenderData::EDrawType::DrawIndexedInstanced:
+			case EDrawType::DrawIndexedInstanced:
 				commandList->DrawIndexedInstanced( pRenderData->m_indicesNum, pRenderData->m_instancesNum, pRenderData->m_indicesStart, pRenderData->m_verticesStart, 0 );
 				break;
-			case SRenderData::EDrawType::DrawInstanced:
+			case EDrawType::DrawInstanced:
 				commandList->DrawInstanced(pRenderData->m_indicesNum, pRenderData->m_instancesNum, pRenderData->m_verticesStart, 0);
 				break;
-			case SRenderData::EDrawType::DrawInvalid:
+			case EDrawType::DrawInvalid:
 				ASSERT_STR( false, "Invalid draw type" );
 				break;
 		}
 	}
 }
 
-void CRender::DrawLights( ID3D12GraphicsCommandList * commandList, TArray<SLightData> const & lightData )
+void CRender::DrawLights( ID3D12GraphicsCommandList * commandList, TArray<SLightRenderData> const & lightData )
 {
-	commandList->SetGraphicsRootDescriptorTable( 2, m_texturesDH.GetGPUDescriptor( m_gbufferDescriptorsOffsets[ GBB_DIFFUSE ].m_srvOffset ) );
-	commandList->SetGraphicsRootDescriptorTable( 3, m_texturesDH.GetGPUDescriptor( m_gbufferDescriptorsOffsets[ GBB_NORMAL ].m_srvOffset ) );
-	commandList->SetGraphicsRootDescriptorTable( 4, m_texturesDH.GetGPUDescriptor( m_gbufferDescriptorsOffsets[ GBB_EMISSIVE_SPEC ].m_srvOffset ) );
-	commandList->SetGraphicsRootDescriptorTable( 5, m_texturesDH.GetGPUDescriptor( m_gbufferDescriptorsOffsets[ GBB_DEPTH ].m_srvOffset ) );
+	commandList->SetGraphicsRootDescriptorTable( 2, m_texturesDH.GetGPUDescriptor( m_globalBufferDescriptorsOffsets[ GBB_DIFFUSE ].m_srvOffset ) );
+	commandList->SetGraphicsRootDescriptorTable( 3, m_texturesDH.GetGPUDescriptor( m_globalBufferDescriptorsOffsets[ GBB_NORMAL ].m_srvOffset ) );
+	commandList->SetGraphicsRootDescriptorTable( 4, m_texturesDH.GetGPUDescriptor( m_globalBufferDescriptorsOffsets[ GBB_EMISSIVE_SPEC ].m_srvOffset ) );
+	commandList->SetGraphicsRootDescriptorTable( 5, m_texturesDH.GetGPUDescriptor( m_globalBufferDescriptorsOffsets[ GBB_DEPTH ].m_srvOffset ) );
 
 	D3D12_GPU_VIRTUAL_ADDRESS const constBufferStart = m_constBufferResource->GetGPUVirtualAddress();
 
@@ -486,7 +517,7 @@ void CRender::DrawLights( ID3D12GraphicsCommandList * commandList, TArray<SLight
 	CConstBufferCtx const cbCtx = GetLightConstBufferCtx( dirCbOffset, dirLightFlags );
 	if ( dirLightFlags & Byte( LF_DIRECT ) )
 	{
-		SCameraMatrices const& cameraMatrices = GViewObject.m_camera;
+		SCameraMatrices const& cameraMatrices = GViewObject[EViews::SCENE].m_camera;
 		Matrix4x4 tViewToWorld = cameraMatrices.m_viewToWorld;
 		tViewToWorld.Transpose();
 		Vec4 const perspectiveValues(1.f / cameraMatrices.m_viewToScreen.m_a00, 1.f / cameraMatrices.m_viewToScreen.m_a11, cameraMatrices.m_viewToScreen.m_a32, -cameraMatrices.m_viewToScreen.m_a22 );
@@ -506,7 +537,7 @@ void CRender::DrawLights( ID3D12GraphicsCommandList * commandList, TArray<SLight
 	UINT lightShader = LF_MAX;
 	for ( UINT lightID = 0; lightID < lightNum; ++lightID )
 	{
-		SLightData const& light = lightData[ lightID ];
+		SLightRenderData const& light = lightData[ lightID ];
 		if ( lightShader != light.m_lightShader )
 		{
 			lightShader = light.m_lightShader;
@@ -560,28 +591,28 @@ void CRender::DrawFrame()
 
 	barriers[1].Type = D3D12_RESOURCE_BARRIER_TYPE_TRANSITION;
 	barriers[1].Flags = D3D12_RESOURCE_BARRIER_FLAG_NONE;
-	barriers[1].Transition.pResource = m_gbufferBuffers[ GBB_DIFFUSE ];
+	barriers[1].Transition.pResource = m_globalBufferBuffers[ GBB_DIFFUSE ];
 	barriers[1].Transition.StateAfter = D3D12_RESOURCE_STATE_RENDER_TARGET;
 	barriers[1].Transition.StateBefore = D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE;
 	barriers[1].Transition.Subresource = D3D12_RESOURCE_BARRIER_ALL_SUBRESOURCES;
 
 	barriers[2].Type = D3D12_RESOURCE_BARRIER_TYPE_TRANSITION;
 	barriers[2].Flags = D3D12_RESOURCE_BARRIER_FLAG_NONE;
-	barriers[2].Transition.pResource = m_gbufferBuffers[ GBB_NORMAL ];
+	barriers[2].Transition.pResource = m_globalBufferBuffers[ GBB_NORMAL ];
 	barriers[2].Transition.StateAfter = D3D12_RESOURCE_STATE_RENDER_TARGET;
 	barriers[2].Transition.StateBefore = D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE;
 	barriers[2].Transition.Subresource = D3D12_RESOURCE_BARRIER_ALL_SUBRESOURCES;
 
 	barriers[3].Type = D3D12_RESOURCE_BARRIER_TYPE_TRANSITION;
 	barriers[3].Flags = D3D12_RESOURCE_BARRIER_FLAG_NONE;
-	barriers[3].Transition.pResource = m_gbufferBuffers[ GBB_EMISSIVE_SPEC ];
+	barriers[3].Transition.pResource = m_globalBufferBuffers[ GBB_EMISSIVE_SPEC ];
 	barriers[3].Transition.StateAfter = D3D12_RESOURCE_STATE_RENDER_TARGET;
 	barriers[3].Transition.StateBefore = D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE;
 	barriers[3].Transition.Subresource = D3D12_RESOURCE_BARRIER_ALL_SUBRESOURCES;
 
 	barriers[4].Type = D3D12_RESOURCE_BARRIER_TYPE_TRANSITION;
 	barriers[4].Flags = D3D12_RESOURCE_BARRIER_FLAG_NONE;
-	barriers[4].Transition.pResource = m_gbufferBuffers[ GBB_DEPTH ];
+	barriers[4].Transition.pResource = m_globalBufferBuffers[ GBB_DEPTH ];
 	barriers[4].Transition.StateAfter = D3D12_RESOURCE_STATE_DEPTH_WRITE;
 	barriers[4].Transition.StateBefore = D3D12_RESOURCE_STATE_DEPTH_READ | D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE;
 	barriers[4].Transition.Subresource = D3D12_RESOURCE_BARRIER_ALL_SUBRESOURCES;
@@ -606,7 +637,7 @@ void CRender::DrawFrame()
 	barriers[4].Transition.StateBefore = D3D12_RESOURCE_STATE_DEPTH_WRITE;
 	commandList->ResourceBarrier(4, &barriers[1]);
 
-	DrawLights( commandList, GViewObject.m_lightData );
+	DrawLights( commandList, m_lightRenderData );
 
 	barriers[4].Transition.StateAfter = D3D12_RESOURCE_STATE_DEPTH_READ | D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE;
 	barriers[4].Transition.StateBefore = D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE;
@@ -614,8 +645,8 @@ void CRender::DrawFrame()
 	D3D12_CPU_DESCRIPTOR_HANDLE depthBufferDH = m_depthBuffertDH.GetCPUDescriptor( 0 );
 	commandList->OMSetRenderTargets(1, &renderTargetDH, true,  &depthBufferDH);
 
-	DrawRenderData( commandList, GViewObject.m_renderData[RL_TRANSLUCENT] );
-	DrawRenderData( commandList, GViewObject.m_renderData[RL_OVERLAY] );
+	DrawRenderData( commandList, m_commonRenderData[RL_TRANSLUCENT] );
+	DrawRenderData( commandList, m_commonRenderData[RL_OVERLAY] );
 
 	barriers[0].Transition.StateAfter = D3D12_RESOURCE_STATE_PRESENT;
 	barriers[0].Transition.StateBefore = D3D12_RESOURCE_STATE_RENDER_TARGET;
@@ -632,6 +663,12 @@ void CRender::DrawFrame()
 
 	m_texturesIDs.Clear();
 	m_constBufferOffset = 0;
+
+	for (UINT layerID = 0; layerID < RL_MAX; ++layerID)
+	{
+		m_commonRenderData[layerID].Clear();
+	}
+	m_lightRenderData.Clear();
 }
 
 void CRender::Release()
@@ -677,7 +714,7 @@ void CRender::Release()
 
 	for ( UINT gbufferID = 0; gbufferID < GBB_MAX; ++gbufferID )
 	{
-		m_gbufferBuffers[ gbufferID ]->Release();
+		m_globalBufferBuffers[ gbufferID ]->Release();
 	}
 
 	m_depthBuffertDH.Release();
@@ -807,21 +844,25 @@ void CRender::BeginLoadResources(unsigned int const textureNum)
 	srvDesc.Texture2D.MipLevels = 1;
 	srvDesc.Texture2D.MostDetailedMip = 0;
 
-	m_gbufferDescriptorsOffsets[ GBB_DIFFUSE ].m_srvOffset = textureNum + GBB_DIFFUSE;
+	m_globalBufferDescriptorsOffsets[ GBB_DIFFUSE ].m_srvOffset = textureNum + GBB_DIFFUSE;
 	srvDesc.Format = DXGI_FORMAT_R8G8B8A8_UNORM;
-	m_device->CreateShaderResourceView(m_gbufferBuffers[ GBB_DIFFUSE ], &srvDesc, m_texturesDH.GetCPUDescriptor(m_gbufferDescriptorsOffsets[ GBB_DIFFUSE ].m_srvOffset) );
+	m_device->CreateShaderResourceView(m_globalBufferBuffers[ GBB_DIFFUSE ], &srvDesc, m_texturesDH.GetCPUDescriptor(m_globalBufferDescriptorsOffsets[ GBB_DIFFUSE ].m_srvOffset) );
 
-	m_gbufferDescriptorsOffsets[ GBB_NORMAL ].m_srvOffset = textureNum + GBB_NORMAL;
+	m_globalBufferDescriptorsOffsets[ GBB_NORMAL ].m_srvOffset = textureNum + GBB_NORMAL;
 	srvDesc.Format = DXGI_FORMAT_R10G10B10A2_UNORM;
-	m_device->CreateShaderResourceView(m_gbufferBuffers[ GBB_NORMAL ], &srvDesc, m_texturesDH.GetCPUDescriptor(m_gbufferDescriptorsOffsets[ GBB_NORMAL ].m_srvOffset) );
+	m_device->CreateShaderResourceView(m_globalBufferBuffers[ GBB_NORMAL ], &srvDesc, m_texturesDH.GetCPUDescriptor(m_globalBufferDescriptorsOffsets[ GBB_NORMAL ].m_srvOffset) );
 
-	m_gbufferDescriptorsOffsets[ GBB_EMISSIVE_SPEC ].m_srvOffset = textureNum + GBB_EMISSIVE_SPEC;
+	m_globalBufferDescriptorsOffsets[ GBB_EMISSIVE_SPEC ].m_srvOffset = textureNum + GBB_EMISSIVE_SPEC;
 	srvDesc.Format = DXGI_FORMAT_R8G8B8A8_UNORM;
-	m_device->CreateShaderResourceView(m_gbufferBuffers[ GBB_EMISSIVE_SPEC ], &srvDesc, m_texturesDH.GetCPUDescriptor(m_gbufferDescriptorsOffsets[ GBB_EMISSIVE_SPEC ].m_srvOffset) );
+	m_device->CreateShaderResourceView(m_globalBufferBuffers[ GBB_EMISSIVE_SPEC ], &srvDesc, m_texturesDH.GetCPUDescriptor(m_globalBufferDescriptorsOffsets[ GBB_EMISSIVE_SPEC ].m_srvOffset) );
 
-	m_gbufferDescriptorsOffsets[ GBB_DEPTH ].m_srvOffset = textureNum + GBB_DEPTH;
+	m_globalBufferDescriptorsOffsets[ GBB_DEPTH ].m_srvOffset = textureNum + GBB_DEPTH;
 	srvDesc.Format = DXGI_FORMAT_R24_UNORM_X8_TYPELESS;
-	m_device->CreateShaderResourceView(m_gbufferBuffers[ GBB_DEPTH ], &srvDesc, m_texturesDH.GetCPUDescriptor(m_gbufferDescriptorsOffsets[ GBB_DEPTH ].m_srvOffset) );
+	m_device->CreateShaderResourceView(m_globalBufferBuffers[ GBB_DEPTH ], &srvDesc, m_texturesDH.GetCPUDescriptor(m_globalBufferDescriptorsOffsets[ GBB_DEPTH ].m_srvOffset) );
+
+	m_globalBufferDescriptorsOffsets[ GBB_RAIN_DEPTH ].m_srvOffset = textureNum + GBB_RAIN_DEPTH;
+	srvDesc.Format = DXGI_FORMAT_R32_FLOAT;
+	m_device->CreateShaderResourceView(m_globalBufferBuffers[ GBB_RAIN_DEPTH ], &srvDesc, m_texturesDH.GetCPUDescriptor(m_globalBufferDescriptorsOffsets[ GBB_RAIN_DEPTH ].m_srvOffset) );
 
 	m_copyCA->Reset();
 	m_copyCL->Reset(m_copyCA, nullptr);

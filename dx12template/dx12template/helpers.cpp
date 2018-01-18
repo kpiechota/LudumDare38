@@ -25,7 +25,10 @@ void CheckResult(HRESULT result, ID3DBlob* errorBlob)
 	if (errorBlob && 0 < errorBlob->GetBufferSize())
 	{
 		::OutputDebugString((LPCWSTR)errorBlob->GetBufferPointer());
-		ASSERT( false );
+	}
+	if ( errorBlob )
+	{
+		errorBlob->Release();
 	}
 #endif
 }

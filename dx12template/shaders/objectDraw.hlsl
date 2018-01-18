@@ -3,12 +3,13 @@ cbuffer objectBuffer : register(b0)
 	float4x4 ObjectToScreen;
 	float4x3 ObjectToWorld;
 }
-
+#ifndef GEOMETRY_ONLY
 Texture2D DiffTex : register(t0);
 Texture2D NormTex : register(t1);
 Texture2D EmissiveTex : register(t2);
 Texture2D SpecularTex : register(t3);
 SamplerState Sampler : register(s0);
+#endif
 
 struct VSInput
 {
@@ -20,9 +21,13 @@ struct VSInput
 
 struct PSInput
 {
+#ifdef GEOMETRY_ONLY
+	float4 m_position	: SV_POSITION;
+#else
 	float3x3 m_tbn		: TANGENT;
 	float4 m_position	: SV_POSITION;
 	float2 m_uv			: TEXCOORD;
+#endif
 };
 
 struct PSOutput
@@ -34,18 +39,23 @@ struct PSOutput
 
 PSInput vsMain( VSInput input )
 {
+	PSInput output;
+#ifndef GEOMETRY_ONLY
 	float3 bitangent = cross( input.m_tangent, input.m_normal );
 
-	PSInput output;
 	output.m_tbn[ 0 ] = mul( float4( input.m_tangent, 0.f ), ObjectToWorld ).xyz;
 	output.m_tbn[ 1 ] = mul( float4( bitangent, 0.f ), ObjectToWorld ).xyz;
 	output.m_tbn[ 2 ] = mul( float4( input.m_normal, 0.f ), ObjectToWorld ).xyz;
 	output.m_position = mul( float4( input.m_position, 1.f ), ObjectToScreen );
 	output.m_uv = input.m_uv;
+#else
+	output.m_position = mul( float4( input.m_position, 1.f ), ObjectToScreen );
+#endif
 
 	return output;
 }
 
+#ifndef GEOMETRY_ONLY
 PSOutput psMain(PSInput input)
 {
 	PSOutput output;
@@ -60,4 +70,8 @@ PSOutput psMain(PSInput input)
 	output.m_emissiveSpec.a = SpecularTex.Sample( Sampler, float2(input.m_uv.x, 1.f - input.m_uv.y ) ).r;
 
 	return output;
+#else
+void psMain(PSInput input)
+{
+#endif
 }

@@ -12,6 +12,15 @@
 
 POD_TYPE(D3D12_RESOURCE_BARRIER)
 
+enum ERenderLayer
+{
+	RL_OPAQUE,
+	RL_TRANSLUCENT,
+	RL_OVERLAY,
+
+	RL_MAX
+};
+
 struct SRenderFrameData
 {
 	ID3D12CommandAllocator*		m_frameCA;
@@ -47,12 +56,13 @@ private:
 		MAX_OBJECTS = 2048
 	};
 
-	enum EGBufferBuffers
+	enum EGlobalBufferBuffers
 	{
 		GBB_DIFFUSE,
 		GBB_NORMAL,
 		GBB_EMISSIVE_SPEC,
 		GBB_DEPTH,
+		GBB_RAIN_DEPTH,
 
 		GBB_MAX,
 	};
@@ -85,7 +95,7 @@ private:
 	IDXGISwapChain3*				m_swapChain;
 
 	SDescriptorHeap					m_renderTargetDH;
-	ID3D12Resource*					m_gbufferBuffers[ GBB_MAX ];
+	ID3D12Resource*					m_globalBufferBuffers[ GBB_MAX ];
 	ID3D12Resource*					m_rederTarget[FRAME_NUM];
 	SDescriptorHeap					m_depthBuffertDH;
 
@@ -100,13 +110,16 @@ private:
 	ID3D12Resource*					m_fullscreenTriangleRes;
 	D3D12_VERTEX_BUFFER_VIEW		m_fullscreenTriangleView;
 
-	SDescriptorsOffsets				m_gbufferDescriptorsOffsets[ GBB_MAX ];
+	SDescriptorsOffsets				m_globalBufferDescriptorsOffsets[ GBB_MAX ];
 
 	TArray< SGeometry >						m_geometryResources;
 	TArray< ID3D12Resource* >				m_texturesResources;
 	TArray< ID3D12Resource* >				m_uploadResources;
 	TArray< D3D12_RESOURCE_BARRIER >		m_resourceBarrier;
 	TStaticArray< Byte, 4 * MAX_OBJECTS>	m_texturesIDs;
+
+	TArray< SCommonRenderData >		m_commonRenderData[ RL_MAX ];
+	TArray< SLightRenderData >		m_lightRenderData;
 
 	int								m_wndWidth;
 	int								m_wndHeight;
@@ -137,8 +150,8 @@ private:
 	void InitShaders();
 	void DrawFullscreenTriangle( ID3D12GraphicsCommandList* commandList );
 	FORCE_INLINE void DrawOpaque( ID3D12GraphicsCommandList* commandList );
-	FORCE_INLINE void DrawRenderData( ID3D12GraphicsCommandList* commandList, TArray< SRenderData > const& renderData );
-	FORCE_INLINE void DrawLights( ID3D12GraphicsCommandList* commandList, TArray< SLightData > const& lightData );
+	FORCE_INLINE void DrawRenderData( ID3D12GraphicsCommandList* commandList, TArray< SCommonRenderData > const& renderData );
+	FORCE_INLINE void DrawLights( ID3D12GraphicsCommandList* commandList, TArray< SLightRenderData > const& lightData );
 
 public:
 	void Init();
@@ -173,6 +186,12 @@ public:
 
 	UINT GetTexturesOffset() const { return m_texturesIDs.Size(); }
 	void AddTextureID( Byte const textureID ) { m_texturesIDs.Add(textureID); }
+
+	void CommandRenderDataReserveNext( UINT const size, Byte const renderLayer ) { m_commonRenderData[renderLayer].Reserve( m_commonRenderData[renderLayer].Size() + size ); }
+	void LightRenderDataReserveNext( UINT const size ) { m_lightRenderData.Reserve( m_lightRenderData.Size() + size ); }
+
+	void AddCommonRenderData( SCommonRenderData const& commonRenderData, Byte const renderLayer ) { m_commonRenderData[renderLayer].Add( commonRenderData ); }
+	void AddLightRenderData( SLightRenderData const& lightRenderData ) { m_lightRenderData.Add( lightRenderData ); }
 
 public: //Getters/setters
 	void SetWindowWidth(int const wndWidth) { m_wndWidth = wndWidth; }

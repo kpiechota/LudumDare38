@@ -14,7 +14,7 @@ private:
 	ID3D12RootSignature*		m_particleRS;
 
 	Matrix4x4 m_boxMatrix;
-	int m_boxesNum;
+	UINT m_boxesNum;
 	float m_boxesSize;
 	UINT m_particlesNum;
 
@@ -25,7 +25,7 @@ private:
 public:
 	CEnvironmentParticleManager();
 
-	void Init( UINT const initParticleNum, int const boxesNum, float const boxesSize );
+	void Init( UINT const initParticleNum, UINT const boxesNum, float const boxesSize );
 	void UpdateParticles();
 	void FillRenderData();
 

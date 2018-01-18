@@ -3,15 +3,15 @@
 
 void CComponentStaticMeshManager::FillRenderData() const
 {
-	SRenderData renderData;
+	SCommonRenderData renderData;
 	renderData.m_topology = D3D_PRIMITIVE_TOPOLOGY::D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST;
-	renderData.m_drawType = SRenderData::EDrawType::DrawIndexedInstanced;
+	renderData.m_drawType = EDrawType::DrawIndexedInstanced;
 	renderData.m_instancesNum = 1;
 
 	renderData.m_verticesStart = 0;
 	renderData.m_indicesStart = 0;
 
-	Matrix4x4 const worldToScreen = GViewObject.m_camera.m_worldToScreen;
+	Matrix4x4 const worldToScreen = GViewObject[EViews::SCENE].m_camera.m_worldToScreen;
 	UINT const renderComponentsNum = m_renderComponents.Size();
 	for ( UINT i = 0; i < renderComponentsNum; ++i )
 	{
@@ -38,6 +38,6 @@ void CComponentStaticMeshManager::FillRenderData() const
 		cbCtx.SetParam( reinterpret_cast<Byte const*>( &tObjectToScreen ), sizeof( tObjectToScreen ), EShaderParameters::ObjectToScreen );
 		cbCtx.SetParam( reinterpret_cast<Byte const*>( &tObjectToWorld ), 3 * sizeof( Vec4 ), EShaderParameters::ObjectToWorld );
 
-		GViewObject.m_renderData[staticMesh.m_layer].Add(renderData);
+		GRender.AddCommonRenderData( renderData, staticMesh.m_layer );
 	}
 }

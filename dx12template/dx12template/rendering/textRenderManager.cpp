@@ -160,8 +160,8 @@ void CTextRenderManager::Print( Vec4 const color, Vec2 position, float const siz
 {
 	position = 2.f * position - 1.f;
 
-	SRenderData renderData;
-	renderData.m_drawType = SRenderData::EDrawType::DrawIndexedInstanced;
+	SCommonRenderData renderData;
+	renderData.m_drawType = EDrawType::DrawIndexedInstanced;
 
 	SPosUvVertexFormat* vertices = nullptr;
 	UINT16* indices = nullptr;
@@ -222,7 +222,7 @@ void CTextRenderManager::Print( Vec4 const color, Vec2 position, float const siz
 	cbCtx.SetParam( reinterpret_cast<Byte const*>( &color ), sizeof( color ), EShaderParameters::Color );
 	cbCtx.SetParam( reinterpret_cast<Byte const*>( &cutOff ), sizeof( cutOff ), EShaderParameters::Cutoff );
 
-	GViewObject.m_renderData[ RL_OVERLAY ].Add( renderData );
+	GRender.AddCommonRenderData( renderData, RL_OVERLAY );
 }
 
 CTextRenderManager GTextRenderManager;

@@ -4,7 +4,7 @@ struct SComponentStaticMesh
 {
 	Byte m_geometryInfoID;
 	Byte m_shaderID;
-	Byte m_textureID[ SRenderData::MAX_TEXTURES_NUM ];
+	Byte m_textureID[ SCommonRenderData::MAX_TEXTURES_NUM ];
 
 	Byte m_layer;
 };

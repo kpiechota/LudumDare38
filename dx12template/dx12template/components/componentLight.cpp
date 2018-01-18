@@ -3,22 +3,22 @@
 
 void CComponentLightManager::FillRenderData() const
 {
-	SLightData lightData;
+	SLightRenderData lightRenderData;
 
-	Matrix4x4 const viewToWorld = GViewObject.m_camera.m_viewToWorld;
-	Matrix4x4 const viewToScreen = GViewObject.m_camera.m_viewToScreen;
+	Matrix4x4 const viewToWorld = GViewObject[EViews::SCENE].m_camera.m_viewToWorld;
+	Matrix4x4 const viewToScreen = GViewObject[EViews::SCENE].m_camera.m_viewToScreen;
 
 	UINT const renderComponentsNum = m_renderComponents.Size();
-	GViewObject.m_lightData.Reserve( GViewObject.m_lightData.Size() + renderComponentsNum );
+	GRender.LightRenderDataReserveNext( renderComponentsNum );
 
 	for ( UINT i = 0; i < renderComponentsNum; ++i )
 	{
 		SComponentTransform const transform = GComponentTransformManager.GetComponentNoCheck( m_renderComponents[ i ].m_transformID );
 		SComponentLight const light = GetComponentNoCheck( m_renderComponents[ i ].m_lightID );
 
-		lightData.m_lightShader = light.m_lighShader;
+		lightRenderData.m_lightShader = light.m_lighShader;
 
-		CConstBufferCtx const cbCtx = GRender.GetLightConstBufferCtx( lightData.m_cbOffset, light.m_lighShader );
+		CConstBufferCtx const cbCtx = GRender.GetLightConstBufferCtx( lightRenderData.m_cbOffset, light.m_lighShader );
 
 		Matrix4x4 tViewToWorld = viewToWorld;
 		tViewToWorld.Transpose();
@@ -30,6 +30,6 @@ void CComponentLightManager::FillRenderData() const
 		cbCtx.SetParam( reinterpret_cast<Byte const*>( &light.m_color ),			sizeof( light.m_color ),				EShaderParameters::Color );
 		cbCtx.SetParam( reinterpret_cast<Byte const*>( &attenuation ),				sizeof( attenuation ),					EShaderParameters::Attenuation );
 
-		GViewObject.m_lightData.Add( lightData );
+		GRender.AddLightRenderData( lightRenderData );
 	}
 }

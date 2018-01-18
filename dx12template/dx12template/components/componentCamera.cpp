@@ -56,7 +56,7 @@ void CComponentCameraManager::MainCameraTick()
 void CComponentCameraManager::PrepareView()
 {
 	SComponentCamera& mainCamera = m_components[ m_graphicsCAmeraID ];
-	SCameraMatrices& cameraMatrices = GViewObject.m_camera;
+	SCameraMatrices& cameraMatrices = GViewObject[EViews::SCENE].m_camera;
 
 	cameraMatrices.m_viewToScreen = mainCamera.m_projectionMatrix;
 	cameraMatrices.m_viewToScreen.Inverse( cameraMatrices.m_screenToView );

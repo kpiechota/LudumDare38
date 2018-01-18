@@ -3,6 +3,7 @@
 enum EShaderType
 {
 	ST_OBJECT_DRAW,
+	ST_OBJECT_DRAW_GEOMETRY_ONLY,
 	ST_SDF_DRAW,
 	ST_ENV_PARTICLE,
 
@@ -63,7 +64,7 @@ struct SGeometryInfo
 };
 POD_TYPE( SGeometryInfo )
 
-extern SViewObject GViewObject;
+extern SViewObject GViewObject[ EViews::MAX ];
 extern SGeometryInfo GGeometryInfo[ G_MAX ];
 
 enum EComponentType

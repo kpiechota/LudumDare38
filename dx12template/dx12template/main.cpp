@@ -13,7 +13,7 @@ CInputManager GInputManager;
 CSystemInput GSystemInput;
 CTimer GTimer;
 
-SViewObject GViewObject;
+SViewObject GViewObject[ EViews::MAX ];
 SGeometryInfo GGeometryInfo[ G_MAX ];
 CStaticSound GSounds[SET_MAX];
 
@@ -31,12 +31,6 @@ SComponentHandle testLightBHandle;
 
 void InitGame()
 {
-	for (UINT layerID = 0; layerID < RL_MAX; ++layerID)
-	{
-		GViewObject.m_renderData[layerID].Clear();
-		GViewObject.m_lightData.Clear();
-	}
-
 	GEntityManager.Clear();
 
 	UINT testEntityID = GEntityManager.CreateEntity();
@@ -295,12 +289,6 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, PSTR pCmdLine, 
 		DrawDebugInfo();
 
 		GRender.DrawFrame();
-
-		for (UINT layerID = 0; layerID < RL_MAX; ++layerID)
-		{
-			GViewObject.m_renderData[layerID].Clear();
-			GViewObject.m_lightData.Clear();
-		}
 
 		GEntityManager.Tick();
 	}
