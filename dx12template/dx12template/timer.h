@@ -4,9 +4,10 @@
 class CTimer
 {
 private:
-	long m_startTime;
-	long m_lastDelta;
-	long m_lastTime;
+	INT64 m_startTime;
+	INT64 m_lastDelta;
+	INT64 m_lastTime;
+	INT64 m_frequency;
 	float m_gameScale;
 
 public:
@@ -14,8 +15,10 @@ public:
 		: m_lastDelta(0)
 		, m_gameScale(1.f)
 	{
-		m_lastTime = clock();
-		m_startTime = clock();
+		QueryPerformanceFrequency( reinterpret_cast<LARGE_INTEGER*>(&m_frequency) );
+		QueryPerformanceCounter( reinterpret_cast<LARGE_INTEGER*>(&m_startTime) );
+		m_lastTime = m_startTime;
+		m_frequency *= 1000000;
 	}
 
 	void SetGameScale(float const scale)
@@ -25,33 +28,38 @@ public:
 
 	void Tick()
 	{
-		m_lastDelta = clock() - m_lastTime;
-		m_lastTime = clock();
+		INT64 const prevTime = m_lastTime;
+		QueryPerformanceCounter( reinterpret_cast<LARGE_INTEGER*>(&m_lastTime) );
+		m_lastDelta = m_lastTime - prevTime;
 	}
 
-	long TimeFromStart() const
+	INT64 TimeFromStart() const
 	{
-		return clock() - m_startTime;
+		INT64 currentTime = 0;
+		QueryPerformanceCounter( reinterpret_cast<LARGE_INTEGER*>(&currentTime) );
+		return currentTime - m_startTime;
 	}
 
-	long LastDelta() const
+	INT64 LastDelta() const
 	{
 		return m_lastDelta;
 	}
 
 	float Delta() const
 	{
-		return static_cast<float>(m_lastDelta) / static_cast<float>(CLOCKS_PER_SEC);
+		INT64 const lastDeltaUS = m_lastDelta * 1000000;
+		return static_cast<float>(lastDeltaUS) / static_cast<float>(m_frequency);
 	}
 
 	float GameDelta() const
 	{
-		return m_gameScale * static_cast<float>(m_lastDelta) / static_cast<float>(CLOCKS_PER_SEC);
+		return m_gameScale * Delta();
 	}
 
-	static float GetSeconds( long const time ) 
+	float GetSeconds( INT64 const time ) 
 	{ 
-		return static_cast<float>(time) / static_cast<float>(CLOCKS_PER_SEC);
+		INT64 const timeUS = time * 1000000;
+		return static_cast<float>(timeUS) / static_cast<float>(m_frequency);
 	}
 };
 

@@ -29,6 +29,15 @@ SComponentHandle testLightRHandle;
 SComponentHandle testLightGHandle;
 SComponentHandle testLightBHandle;
 
+//#define DUMMY_PROFILER
+
+#ifdef DUMMY_PROFILER
+#include <fstream>
+long constexpr GFrameProfNum = 2000;
+INT64 GFramesProf[ GFrameProfNum ];
+long GFrameProfID = 0;
+#endif
+
 void InitGame()
 {
 	GEntityManager.Clear();
@@ -247,6 +256,10 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, PSTR pCmdLine, 
 	while (run)
 	{
 		GTimer.Tick();
+#ifdef DUMMY_PROFILER
+		GFramesProf[ GFrameProfID % GFrameProfNum] = GTimer.LastDelta();
+		++GFrameProfID;
+#endif
 
 		while (PeekMessage(&msg, NULL, 0, 0, PM_REMOVE))
 		{
@@ -296,5 +309,30 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, PSTR pCmdLine, 
 	GRender.Release();
 	GSoundEngine.Release();
 	GGeometryLoader.Release();
+
+#ifdef DUMMY_PROFILER
+	time_t rawTime;
+	tm timeInfo;
+	char profileFileName[ 256 ];
+	time( &rawTime );
+	localtime_s( &timeInfo, &rawTime );
+	strftime( profileFileName, 256, "profiling/dummyProfiler %d-%m-%Y %Ih%Mm%Ss.csv", &timeInfo );
+
+	std::fstream profileFile;
+	profileFile.open( profileFileName, std::fstream::out | std::fstream::trunc );
+	if ( profileFile.is_open() )
+	{
+		profileFile << "frameID,time,fps\n";
+		char profText[ 256 ];
+		int const start = max( 0, GFrameProfID - GFrameProfNum );
+		for ( int i = start; i < GFrameProfID; ++i )
+		{
+			sprintf_s( profText, 256, "%i,%lli,%.4f\n", i - start, GFramesProf[ i % GFrameProfNum ], 1.f / GTimer.GetSeconds( GFramesProf[ i % GFrameProfNum ] ) );
+			profileFile << profText;
+		}
+		profileFile.close();
+	}
+#endif
+
 	return 0;
 }
