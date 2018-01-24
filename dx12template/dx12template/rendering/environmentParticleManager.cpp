@@ -11,13 +11,6 @@ CEnvironmentParticleManager::CEnvironmentParticleManager()
 
 void CEnvironmentParticleManager::Init( UINT const initParticleNum, UINT const boxesNum, float const boxesSize )
 {
-	m_boxesSize = boxesSize;
-	m_boxesNum = boxesNum;
-
-	m_boxMatrix.m_a00 = m_boxesSize;
-	m_boxMatrix.m_a11 = -m_boxesSize;
-	m_boxMatrix.m_a22 = m_boxesSize;
-
 	ID3D12Device* const device = GRender.GetDevice();
 
 	D3D12_ROOT_PARAMETER rootParameters[2];
@@ -51,8 +44,7 @@ void CEnvironmentParticleManager::Init( UINT const initParticleNum, UINT const b
 	m_particleShaderUpdate.InitComputeShader( L"../shaders/environmentParticleUpdate.hlsl", m_particleRS );
 	m_particleShaderInit.InitComputeShader( L"../shaders/environmentParticleInit.hlsl", m_particleRS );
 
-	m_particlesNum = initParticleNum;
-	AllocateBuffers();
+	InitParticles( initParticleNum, boxesNum, boxesSize );
 }
 
 void CEnvironmentParticleManager::AllocateBuffers()
@@ -76,12 +68,21 @@ void CEnvironmentParticleManager::AllocateBuffers()
 	particleResDesc.Flags = D3D12_RESOURCE_FLAG_ALLOW_UNORDERED_ACCESS;
 
 	CheckResult( device->CreateCommittedResource( &GHeapPropertiesGPUOnly, D3D12_HEAP_FLAG_NONE, &particleResDesc, D3D12_RESOURCE_STATE_UNORDERED_ACCESS, nullptr, IID_PPV_ARGS( &m_particlesGPU ) ) );
-
-	InitParticles();
 }
 
-void CEnvironmentParticleManager::InitParticles()
+void CEnvironmentParticleManager::InitParticles(UINT const initParticleNum, UINT const boxesNum, float const boxesSize)
 {
+	m_particlesNum = initParticleNum;
+
+	m_boxesSize = boxesSize;
+	m_boxesNum = boxesNum;
+
+	m_boxMatrix.m_a00 = m_boxesSize;
+	m_boxMatrix.m_a11 = -m_boxesSize;
+	m_boxMatrix.m_a22 = m_boxesSize;
+
+	AllocateBuffers();
+
 	struct CBuffer
 	{
 		float m_velocity[3];
@@ -122,6 +123,9 @@ void CEnvironmentParticleManager::InitParticles()
 	cbuffer.m_seed = rand();
 	cbuffer.m_particleNum = m_particlesNum;
 	( ( Vec3* )( &cbuffer.m_velocity[ 0 ] ) )->Normalize();
+	Vec3 const forward = *( ( Vec3* )( &cbuffer.m_velocity[ 0 ] ) );
+	
+	InitProjectionMatrix( forward );
 
 	D3D12_GPU_VIRTUAL_ADDRESS constBufferAddress;
 	GRender.SetConstBuffer( constBufferAddress, (Byte*)&cbuffer, sizeof( cbuffer ) );
@@ -140,6 +144,44 @@ void CEnvironmentParticleManager::InitParticles()
 
 	GRender.ExecuteComputeQueue( 1, (ID3D12CommandList* const*)(&m_particleCL) );
 	GRender.WaitForComputeQueue();
+}
+
+void CEnvironmentParticleManager::InitProjectionMatrix( Vec3 const forward )
+{
+	Vec3 right = Vec3::Cross( forward, Vec3::UP );
+	Vec3 up = Vec3::Cross( right, forward );
+
+	right.Normalize();
+	up.Normalize();
+
+	m_projectionMatrix.m_x.Set( right.x, right.y, right.z, 0.f );
+	m_projectionMatrix.m_y.Set( up.x, up.y, up.z, 0.f );
+	m_projectionMatrix.m_z.Set( forward.x, forward.y, forward.z, 0.f );
+
+	float const vertexPositionOffset = ( float( m_boxesNum ) + 0.5f ) * m_boxesSize;
+
+	Vec4 vertices[]
+	{
+		Vec4( +vertexPositionOffset, +vertexPositionOffset, +vertexPositionOffset, 1.f ), Vec4( -vertexPositionOffset, +vertexPositionOffset, +vertexPositionOffset, 1.f ),
+		Vec4( -vertexPositionOffset, -vertexPositionOffset, +vertexPositionOffset, 1.f ), Vec4( +vertexPositionOffset, -vertexPositionOffset, +vertexPositionOffset, 1.f ),
+		Vec4( +vertexPositionOffset, +vertexPositionOffset, -vertexPositionOffset, 1.f ), Vec4( -vertexPositionOffset, +vertexPositionOffset, -vertexPositionOffset, 1.f ),
+		Vec4( -vertexPositionOffset, -vertexPositionOffset, -vertexPositionOffset, 1.f ), Vec4( +vertexPositionOffset, -vertexPositionOffset, -vertexPositionOffset, 1.f )
+	};
+
+	float maxAxis[] = { 0.f, 0.f, 0.f };
+
+	for ( UINT i = 0; i < ARRAYSIZE( vertices ); ++i )
+	{
+		Math::Mul( vertices[ i ], m_projectionMatrix );
+
+		maxAxis[ 0 ] = max( maxAxis[ 0 ], abs( vertices[ i ].data[ 0 ] ) );
+		maxAxis[ 1 ] = max( maxAxis[ 1 ], abs( vertices[ i ].data[ 1 ] ) );
+		maxAxis[ 2 ] = max( maxAxis[ 2 ], abs( vertices[ i ].data[ 2 ] ) );
+	}
+
+	m_projectionMatrix.m_x /= maxAxis[ 0 ];
+	m_projectionMatrix.m_y /= maxAxis[ 1 ];
+	m_projectionMatrix.m_z /= maxAxis[ 2 ];
 }
 
 void CEnvironmentParticleManager::UpdateParticles()

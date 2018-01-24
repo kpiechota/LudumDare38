@@ -12,7 +12,7 @@ StructuredBuffer< SEnvironmentParticle > Particles : register( t0 );
 
 Texture2D ColorTex : register( t0 );
 Texture2D DepthTex : register( t3 );
-SamplerState Sampler : register(s0);
+SamplerState Sampler : register(s1);
 
 struct VStoPS
 {

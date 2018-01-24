@@ -37,6 +37,7 @@ void CComponentStaticMeshManager::FillRenderData() const
 		CConstBufferCtx const cbCtx = GRender.GetConstBufferCtx( renderData.m_cbOffset, staticMesh.m_shaderID );
 		cbCtx.SetParam( reinterpret_cast<Byte const*>( &tObjectToScreen ), sizeof( tObjectToScreen ), EShaderParameters::ObjectToScreen );
 		cbCtx.SetParam( reinterpret_cast<Byte const*>( &tObjectToWorld ), 3 * sizeof( Vec4 ), EShaderParameters::ObjectToWorld );
+		cbCtx.SetParam( reinterpret_cast<Byte const*>( &staticMesh.m_tiling ), sizeof( Vec2 ), EShaderParameters::Tiling );
 
 		GRender.AddCommonRenderData( renderData, staticMesh.m_layer );
 	}

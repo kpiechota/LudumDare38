@@ -2,13 +2,14 @@ cbuffer objectBuffer : register(b0)
 {
 	float4x4 ObjectToScreen;
 	float4x3 ObjectToWorld;
+	float2 Tiling;
 }
 #ifndef GEOMETRY_ONLY
 Texture2D DiffTex : register(t0);
 Texture2D NormTex : register(t1);
 Texture2D EmissiveTex : register(t2);
 Texture2D SpecularTex : register(t3);
-SamplerState Sampler : register(s0);
+SamplerState Sampler : register(s1);
 #endif
 
 struct VSInput
@@ -47,7 +48,7 @@ PSInput vsMain( VSInput input )
 	output.m_tbn[ 1 ] = mul( float4( bitangent, 0.f ), ObjectToWorld ).xyz;
 	output.m_tbn[ 2 ] = mul( float4( input.m_normal, 0.f ), ObjectToWorld ).xyz;
 	output.m_position = mul( float4( input.m_position, 1.f ), ObjectToScreen );
-	output.m_uv = input.m_uv;
+	output.m_uv = input.m_uv * Tiling;
 #else
 	output.m_position = mul( float4( input.m_position, 1.f ), ObjectToScreen );
 #endif

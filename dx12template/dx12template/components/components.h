@@ -20,6 +20,8 @@ enum ELightType
 enum EGeometry
 {
 	G_SPACESHIP,
+	G_BOX,
+	G_SCENE_TEST,
 
 	G_MAX
 };
@@ -27,10 +29,14 @@ enum EGeometry
 enum ETextures
 {
 	T_SDF_FONT_512,
+	T_BLACK,
 	T_SPACESHIP,
 	T_SPACESHIP_N,
 	T_SPACESHIP_E,
 	T_SPACESHIP_S,
+	T_METAL_D,
+	T_METAL_N,
+	T_METAL_S,
 	T_RAIN_DROP,
 	T_SNOW,
 

@@ -5,7 +5,7 @@
 #include "utility\fbxsdk.h"
 #include <fstream>
 
-UINT64 const GStaticMeshesVersion = 0;
+UINT64 const GStaticMeshesVersion = 1;
 
 void CGeometryLoader::CreateMeshFromFbx( char const * file )
 {
@@ -21,6 +21,9 @@ void CGeometryLoader::CreateMeshFromFbx( char const * file )
 
 		FbxNode* fbxNodeChild = fbxNodeRoot->GetChild( 0 );
 		ASSERT( fbxNodeChild->GetNodeAttribute()->GetAttributeType() == FbxNodeAttribute::eMesh );
+
+		FbxDouble3 const& fbxScale = fbxNodeChild->LclScaling;
+		Vec3 const fScale( fbxScale[ 0 ], fbxScale[ 1 ], fbxScale[ 2 ] );
 
 		FbxMesh* fbxMesh = reinterpret_cast< FbxMesh* >( fbxNodeChild->GetNodeAttribute() );
 		fbxMesh->GenerateTangentsData( 0 );
@@ -105,6 +108,7 @@ void CGeometryLoader::CreateMeshFromFbx( char const * file )
 
 				if ( newVertexID == verticesNum )
 				{
+					vertex.m_position *= fScale;
 					vertices.Add( vertex );
 				}
 

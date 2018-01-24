@@ -14,13 +14,15 @@ private:
 	ID3D12RootSignature*		m_particleRS;
 
 	Matrix4x4 m_boxMatrix;
+	Matrix4x4 m_projectionMatrix;
 	UINT m_boxesNum;
 	float m_boxesSize;
 	UINT m_particlesNum;
 
 private:
 	void AllocateBuffers();
-	void InitParticles();
+	void InitParticles(UINT const initParticleNum, UINT const boxesNum, float const boxesSize);
+	FORCE_INLINE void InitProjectionMatrix( Vec3 const forward );
 
 public:
 	CEnvironmentParticleManager();

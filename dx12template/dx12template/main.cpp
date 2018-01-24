@@ -104,17 +104,18 @@ void InitGame()
 	testObjectTransform = &GComponentTransformManager.GetComponent( testObjectTransformHandle );
 	SComponentStaticMesh& testObjectStaticMesh = GComponentStaticMeshManager.GetComponent( testObjectStaticMeshHandle );
 
-	testObjectTransform->m_position.Set( 0.f, -2.f, 10.f );
-	testObjectTransform->m_scale.Set( .25f, .25f, .25f );
-	testObjectTransform->m_rotation = q1 * q2;
+	testObjectTransform->m_position.Set( 0.f, -5.f, 10.f );
+	testObjectTransform->m_scale.Set( 1.f, 1.f, 1.f );
+	testObjectTransform->m_rotation = Quaternion::IDENTITY;
 
-	testObjectStaticMesh.m_geometryInfoID = G_SPACESHIP;
+	testObjectStaticMesh.m_tiling.Set( 20.f, 20.f );
+	testObjectStaticMesh.m_geometryInfoID = G_SCENE_TEST;
 	testObjectStaticMesh.m_layer = RL_OPAQUE;
 	testObjectStaticMesh.m_shaderID = 0;
-	testObjectStaticMesh.m_textureID[ 0 ] = T_SPACESHIP;
-	testObjectStaticMesh.m_textureID[ 1 ] = T_SPACESHIP_N;
-	testObjectStaticMesh.m_textureID[ 2 ] = T_SPACESHIP_E;
-	testObjectStaticMesh.m_textureID[ 3 ] = T_SPACESHIP_S;
+	testObjectStaticMesh.m_textureID[ 0 ] = T_METAL_D;
+	testObjectStaticMesh.m_textureID[ 1 ] = T_METAL_N;
+	testObjectStaticMesh.m_textureID[ 2 ] = T_BLACK;
+	testObjectStaticMesh.m_textureID[ 3 ] = T_METAL_S;
 
 	GComponentStaticMeshManager.RegisterRenderComponents( testObjectTransformHandle.m_index, testObjectStaticMeshHandle.m_index );
 	GComponentLightManager.RegisterRenderComponents( testLightRTransformHandle.m_index, testLightRHandle.m_index );
@@ -178,16 +179,22 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, PSTR pCmdLine, 
 	char const* meshes[] =
 	{
 		"../content/spaceship",
+		"../content/box",
+		"../content/scene_test",
 	};
 	CT_ASSERT( ARRAYSIZE( meshes ) == G_MAX );
 
 	wchar_t const* textures[] =
 	{
 		L"../content/sdf_font_512.png",
+		L"../content/black.png",
 		L"../content/spaceship_d.png",
 		L"../content/spaceship_n.png",
 		L"../content/spaceship_e.png",
 		L"../content/spaceship_s.png",
+		L"../content/Metal_Crystals_d.dds",
+		L"../content/Metal_Crystals_n.dds",
+		L"../content/Metal_Crystals_s.dds",
 		L"../content/rainDrop.png",
 		L"../content/snow.png",
 	};
@@ -213,7 +220,10 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, PSTR pCmdLine, 
 		STexture texture;
 		DirectX::TexMetadata texMeta;
 		DirectX::ScratchImage image;
-		CheckResult( DirectX::LoadFromWICFile( textures[ texutreID ], DirectX::WIC_FLAGS_NONE, &texMeta, image ) );
+		if ( DirectX::LoadFromWICFile( textures[ texutreID ], DirectX::WIC_FLAGS_NONE, &texMeta, image ) != S_OK )
+		{
+			CheckResult( DirectX::LoadFromDDSFile( textures[ texutreID ], DirectX::DDS_FLAGS_NONE, &texMeta, image ) );
+		}
 
 		texture.m_data = image.GetPixels();
 		texture.m_width = UINT(texMeta.width);

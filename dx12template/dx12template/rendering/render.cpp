@@ -906,11 +906,13 @@ void CRender::LoadResource(STexture const& texture)
 	void* pGPU;
 	textureUploadRes->Map(0, nullptr, &pGPU);
 
+	Byte const* srcRow = texture.m_data;
 	for ( UINT mipLevel = 0; mipLevel < texture.m_mipLevels; ++mipLevel )
 	{
 		for ( UINT rowID = 0; rowID < pNumRows[ mipLevel ]; ++rowID )
 		{
-			memcpy( ( BYTE* )pGPU + pFootprints[ mipLevel ].Offset + rowID * pFootprints[ mipLevel ].Footprint.RowPitch, texture.m_data + rowID * pRowPitches[ mipLevel ], pRowPitches[ mipLevel ] );
+			memcpy( ( BYTE* )pGPU + pFootprints[ mipLevel ].Offset + rowID * pFootprints[ mipLevel ].Footprint.RowPitch, srcRow, pRowPitches[ mipLevel ] );
+			srcRow += pRowPitches[ mipLevel ];
 		}
 
 		D3D12_TEXTURE_COPY_LOCATION dst;

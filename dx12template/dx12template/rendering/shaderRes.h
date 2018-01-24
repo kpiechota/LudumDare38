@@ -15,6 +15,7 @@ enum class EShaderParameters : Byte
 	LightDirWS,
 	CameraPositionWS,
 	Fade,
+	Tiling,
 
 	SP_MAX
 };
