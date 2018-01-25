@@ -5,8 +5,8 @@ void CComponentLightManager::FillRenderData() const
 {
 	SLightRenderData lightRenderData;
 
-	Matrix4x4 const viewToWorld = GViewObject[EViews::SCENE].m_camera.m_viewToWorld;
-	Matrix4x4 const viewToScreen = GViewObject[EViews::SCENE].m_camera.m_viewToScreen;
+	Matrix4x4 const viewToWorld = GViewObject.m_camera.m_viewToWorld;
+	Matrix4x4 const viewToScreen = GViewObject.m_camera.m_viewToScreen;
 
 	UINT const renderComponentsNum = m_renderComponents.Size();
 	GRender.LightRenderDataReserveNext( renderComponentsNum );

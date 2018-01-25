@@ -11,15 +11,9 @@ struct SCameraMatrices
 	Matrix4x4 m_screenToWorld;
 };
 
-enum EViews
-{
-	SCENE,
-	RAIN_SHADOW,
-
-	MAX
-};
-
 struct SViewObject
 {
 	SCameraMatrices m_camera;
+
+	Matrix4x4 m_enviroParticleWorldToScreen;
 };

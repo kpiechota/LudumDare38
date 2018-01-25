@@ -20,6 +20,7 @@ float RandFloat();
 Vec2 operator*( float const a, Vec2 const v );
 Vec3 operator*( float const a, Vec3 const v );
 Vec3 operator*( Vec3 const v0, Vec3 const v1 );
+Vec3 operator-( Vec3 const v );
 
 #include "math\geometricUtilities.h"
 

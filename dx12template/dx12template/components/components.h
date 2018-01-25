@@ -70,7 +70,7 @@ struct SGeometryInfo
 };
 POD_TYPE( SGeometryInfo )
 
-extern SViewObject GViewObject[ EViews::MAX ];
+extern SViewObject GViewObject;
 extern SGeometryInfo GGeometryInfo[ G_MAX ];
 
 enum EComponentType

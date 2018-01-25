@@ -11,7 +11,7 @@ void CComponentStaticMeshManager::FillRenderData() const
 	renderData.m_verticesStart = 0;
 	renderData.m_indicesStart = 0;
 
-	Matrix4x4 const worldToScreen = GViewObject[EViews::SCENE].m_camera.m_worldToScreen;
+	Matrix4x4 const worldToScreen = GViewObject.m_camera.m_worldToScreen;
 	UINT const renderComponentsNum = m_renderComponents.Size();
 	for ( UINT i = 0; i < renderComponentsNum; ++i )
 	{

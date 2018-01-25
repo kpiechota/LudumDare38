@@ -98,6 +98,10 @@ Vec3 operator*( Vec3 const v0, Vec3 const v1 )
 {
 	return Vec3( v0.x * v1.x, v0.y * v1.y, v0.z * v1.z );
 }
+Vec3 operator-( Vec3 const v )
+{
+	return Vec3( -v.x, -v.y, -v.z );
+}
 
 float RandFloat()
 {

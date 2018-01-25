@@ -13,7 +13,7 @@ CInputManager GInputManager;
 CSystemInput GSystemInput;
 CTimer GTimer;
 
-SViewObject GViewObject[ EViews::MAX ];
+SViewObject GViewObject;
 SGeometryInfo GGeometryInfo[ G_MAX ];
 CStaticSound GSounds[SET_MAX];
 

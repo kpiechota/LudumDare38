@@ -11,17 +11,17 @@ POD_TYPE( SComponentCamera )
 class CComponentCameraManager : public TComponentContainer< SComponentCamera, EComponentType::CT_Camera>
 {
 private:
-	UINT m_graphicsCAmeraID;
+	UINT m_graphicsCameraID;
 
 public:
 	void SetMainCamera( UINT const cameraID )
 	{
-		m_graphicsCAmeraID = cameraID;
+		m_graphicsCameraID = cameraID;
 	}
 
 	Vec3 GetMainCameraPosition() const;
 	Vec3 GetMainCameraForward() const;
+	SComponentCamera GetMainCamera() const { return m_components[ m_graphicsCameraID ]; }
 	void MainCameraTick();
-	void PrepareView();
 	void SetMainProjection( Matrix4x4 const& projection );
 };

@@ -5,7 +5,7 @@
 void CComponentCameraManager::MainCameraTick()
 {
 	static Vec2i const midPos(GWidth / 2, GHeight / 2);
-	SComponentCamera& mainCamera = m_components[ m_graphicsCAmeraID ];
+	SComponentCamera& mainCamera = m_components[ m_graphicsCameraID ];
 
 	if ( GInputManager.IsKeyDown( EKeys::K_RIGHT_MOUSE_BUTTON ) )
 	{
@@ -53,35 +53,20 @@ void CComponentCameraManager::MainCameraTick()
 	}
 }
 
-void CComponentCameraManager::PrepareView()
-{
-	SComponentCamera& mainCamera = m_components[ m_graphicsCAmeraID ];
-	SCameraMatrices& cameraMatrices = GViewObject[EViews::SCENE].m_camera;
-
-	cameraMatrices.m_viewToScreen = mainCamera.m_projectionMatrix;
-	cameraMatrices.m_viewToScreen.Inverse( cameraMatrices.m_screenToView );
-	
-	cameraMatrices.m_viewToWorld = Matrix4x4::GetTranslateRotationSize( mainCamera.m_position, mainCamera.m_rotation, Vec3::ONE );
-	cameraMatrices.m_viewToWorld.Inverse( cameraMatrices.m_worldToView );
-
-	cameraMatrices.m_screenToWorld = Math::Mul( cameraMatrices.m_screenToView, cameraMatrices.m_viewToWorld );
-	cameraMatrices.m_worldToScreen = Math::Mul( cameraMatrices.m_worldToView, cameraMatrices.m_viewToScreen );
-}
-
 void CComponentCameraManager::SetMainProjection( Matrix4x4 const& projection )
 {
-	SComponentCamera& mainCamera = m_components[ m_graphicsCAmeraID ];
+	SComponentCamera& mainCamera = m_components[ m_graphicsCameraID ];
 	mainCamera.m_projectionMatrix = projection;
 }
 
 Vec3 CComponentCameraManager::GetMainCameraPosition() const
 {
-	SComponentCamera const& mainCamera = m_components[ m_graphicsCAmeraID ];
+	SComponentCamera const& mainCamera = m_components[ m_graphicsCameraID ];
 	return mainCamera.m_position;
 }
 
 Vec3 CComponentCameraManager::GetMainCameraForward() const
 {
-	SComponentCamera const& mainCamera = m_components[ m_graphicsCAmeraID ];
+	SComponentCamera const& mainCamera = m_components[ m_graphicsCameraID ];
 	return mainCamera.m_rotation * Vec3::FORWARD;
 }

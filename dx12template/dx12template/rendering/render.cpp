@@ -1,7 +1,7 @@
 #include "render.h"
 #include <math.h>
 
-extern SViewObject GViewObject[ EViews::MAX ];
+extern SViewObject GViewObject;
 CRender GRender;
 
 void CRender::InitCommands()
@@ -517,7 +517,7 @@ void CRender::DrawLights( ID3D12GraphicsCommandList * commandList, TArray<SLight
 	CConstBufferCtx const cbCtx = GetLightConstBufferCtx( dirCbOffset, dirLightFlags );
 	if ( dirLightFlags & Byte( LF_DIRECT ) )
 	{
-		SCameraMatrices const& cameraMatrices = GViewObject[EViews::SCENE].m_camera;
+		SCameraMatrices const& cameraMatrices = GViewObject.m_camera;
 		Matrix4x4 tViewToWorld = cameraMatrices.m_viewToWorld;
 		tViewToWorld.Transpose();
 		Vec4 const perspectiveValues(1.f / cameraMatrices.m_viewToScreen.m_a00, 1.f / cameraMatrices.m_viewToScreen.m_a11, cameraMatrices.m_viewToScreen.m_a32, -cameraMatrices.m_viewToScreen.m_a22 );
@@ -549,9 +549,27 @@ void CRender::DrawLights( ID3D12GraphicsCommandList * commandList, TArray<SLight
 	}
 }
 
+void CRender::PrepareView()
+{
+	SComponentCamera mainCamera = GComponentCameraManager.GetMainCamera();
+	SCameraMatrices& cameraMatrices = GViewObject.m_camera;
+
+	cameraMatrices.m_viewToScreen = mainCamera.m_projectionMatrix;
+	cameraMatrices.m_viewToScreen.Inverse( cameraMatrices.m_screenToView );
+
+	cameraMatrices.m_viewToWorld = Matrix4x4::GetTranslateRotationSize( mainCamera.m_position, mainCamera.m_rotation, Vec3::ONE );
+	cameraMatrices.m_viewToWorld.Inverse( cameraMatrices.m_worldToView );
+
+	cameraMatrices.m_screenToWorld = Math::Mul( cameraMatrices.m_screenToView, cameraMatrices.m_viewToWorld );
+	cameraMatrices.m_worldToScreen = Math::Mul( cameraMatrices.m_worldToView, cameraMatrices.m_viewToScreen );
+
+	GViewObject.m_enviroParticleWorldToScreen = GEnvironmentParticleManager.GetProjectionMatrix();
+	GViewObject.m_enviroParticleWorldToScreen.m_w = mainCamera.m_position + GEnvironmentParticleManager.GetPositionOffset();
+}
+
 void CRender::PreDrawFrame()
 {
-	GComponentCameraManager.PrepareView();
+	PrepareView();
 
 	GEnvironmentParticleManager.UpdateParticles();
 

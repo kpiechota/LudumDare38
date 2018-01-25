@@ -181,7 +181,9 @@ void CEnvironmentParticleManager::InitProjectionMatrix( Vec3 const forward )
 
 	m_projectionMatrix.m_x /= maxAxis[ 0 ];
 	m_projectionMatrix.m_y /= maxAxis[ 1 ];
-	m_projectionMatrix.m_z /= maxAxis[ 2 ];
+	m_projectionMatrix.m_z /= ( maxAxis[ 2 ] * 5.f );
+
+	m_positionOffset = -forward * 5.f;
 }
 
 void CEnvironmentParticleManager::UpdateParticles()
@@ -232,7 +234,7 @@ void CEnvironmentParticleManager::FillRenderData()
 	renderData.m_shaderID = EShaderType::ST_ENV_PARTICLE;
 	renderData.m_drawType = EDrawType::DrawInstanced;
 
-	Matrix4x4 const worldToScreen = GViewObject[EViews::SCENE].m_camera.m_worldToScreen;
+	Matrix4x4 const worldToScreen = GViewObject.m_camera.m_worldToScreen;
 	Matrix4x4 objectToWorld = m_boxMatrix;
 
 	Vec4 const color( 0.1f, 0.1f, 0.1f, 1.f );

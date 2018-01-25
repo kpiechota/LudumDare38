@@ -152,6 +152,7 @@ private:
 	FORCE_INLINE void DrawOpaque( ID3D12GraphicsCommandList* commandList );
 	FORCE_INLINE void DrawRenderData( ID3D12GraphicsCommandList* commandList, TArray< SCommonRenderData > const& renderData );
 	FORCE_INLINE void DrawLights( ID3D12GraphicsCommandList* commandList, TArray< SLightRenderData > const& lightData );
+	FORCE_INLINE void PrepareView();
 
 public:
 	void Init();
