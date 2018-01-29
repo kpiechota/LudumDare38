@@ -29,4 +29,5 @@ public:
 	}
 
 	void FillRenderData() const;
+	void FillEnviroParticleRenderData() const;
 };

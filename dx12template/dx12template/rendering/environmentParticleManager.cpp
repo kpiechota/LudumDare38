@@ -78,7 +78,7 @@ void CEnvironmentParticleManager::InitParticles(UINT const initParticleNum, UINT
 	m_boxesNum = boxesNum;
 
 	m_boxMatrix.m_a00 = m_boxesSize;
-	m_boxMatrix.m_a11 = -m_boxesSize;
+	m_boxMatrix.m_a11 = m_boxesSize;
 	m_boxMatrix.m_a22 = m_boxesSize;
 
 	AllocateBuffers();
@@ -97,7 +97,7 @@ void CEnvironmentParticleManager::InitParticles(UINT const initParticleNum, UINT
 
 	//RAIN
 	//cbuffer.m_velocity[ 0 ] = 4.f;
-	//cbuffer.m_velocity[ 1 ] = 3.f;
+	//cbuffer.m_velocity[ 1 ] = -3.f;
 	//cbuffer.m_velocity[ 2 ] = 1.f;
 	//cbuffer.m_initSize[ 0 ] = .5f;
 	//cbuffer.m_initSize[ 1 ] = 8.f;
@@ -109,7 +109,7 @@ void CEnvironmentParticleManager::InitParticles(UINT const initParticleNum, UINT
 	//cbuffer.m_speedRand[ 1 ] = 3.f;
 	//SNOW
 	cbuffer.m_velocity[ 0 ] = 2.f;
-	cbuffer.m_velocity[ 1 ] = 3.f;
+	cbuffer.m_velocity[ 1 ] = -3.f;
 	cbuffer.m_velocity[ 2 ] = 1.f;
 	cbuffer.m_initSize[ 0 ] = 1.f;
 	cbuffer.m_initSize[ 1 ] = 1.f;
@@ -148,16 +148,18 @@ void CEnvironmentParticleManager::InitParticles(UINT const initParticleNum, UINT
 
 void CEnvironmentParticleManager::InitProjectionMatrix( Vec3 const forward )
 {
-	Vec3 right = Vec3::Cross( forward, Vec3::UP );
-	Vec3 up = Vec3::Cross( right, forward );
+	Vec3 right = Vec3::Cross( Vec3::UP, forward );
+	Vec3 up = Vec3::Cross( forward, right );
 
 	right.Normalize();
 	up.Normalize();
 
-	m_projectionMatrix.m_x.Set( right.x, right.y, right.z, 0.f );
-	m_projectionMatrix.m_y.Set( up.x, up.y, up.z, 0.f );
-	m_projectionMatrix.m_z.Set( forward.x, forward.y, forward.z, 0.f );
+	m_viewToWorld.m_x.Set( right.x, right.y, right.z, 0.f );
+	m_viewToWorld.m_y.Set( up.x, up.y, up.z, 0.f );
+	m_viewToWorld.m_z.Set( forward.x, forward.y, forward.z, 0.f );
 
+	Matrix4x4 worldToView;
+	m_viewToWorld.Inverse( worldToView );
 	float const vertexPositionOffset = ( float( m_boxesNum ) + 0.5f ) * m_boxesSize;
 
 	Vec4 vertices[]
@@ -172,18 +174,18 @@ void CEnvironmentParticleManager::InitProjectionMatrix( Vec3 const forward )
 
 	for ( UINT i = 0; i < ARRAYSIZE( vertices ); ++i )
 	{
-		Math::Mul( vertices[ i ], m_projectionMatrix );
+		Vec4 const vertex = Math::Mul( vertices[ i ], worldToView );
 
-		maxAxis[ 0 ] = max( maxAxis[ 0 ], abs( vertices[ i ].data[ 0 ] ) );
-		maxAxis[ 1 ] = max( maxAxis[ 1 ], abs( vertices[ i ].data[ 1 ] ) );
-		maxAxis[ 2 ] = max( maxAxis[ 2 ], abs( vertices[ i ].data[ 2 ] ) );
+		maxAxis[ 0 ] = max( maxAxis[ 0 ], abs( vertex.data[ 0 ] ) );
+		maxAxis[ 1 ] = max( maxAxis[ 1 ], abs( vertex.data[ 1 ] ) );
+		maxAxis[ 2 ] = max( maxAxis[ 2 ], abs( vertex.data[ 2 ] ) );
 	}
 
-	m_projectionMatrix.m_x /= maxAxis[ 0 ];
-	m_projectionMatrix.m_y /= maxAxis[ 1 ];
-	m_projectionMatrix.m_z /= ( maxAxis[ 2 ] * 5.f );
+	m_viewToScreen.m_x.x = 1.f/ maxAxis[ 0 ];
+	m_viewToScreen.m_y.y = 1.f/ maxAxis[ 1 ];
+	m_viewToScreen.m_z.z = 1.f/ ( 7.f * 2.f * maxAxis[ 2 ] );
 
-	m_positionOffset = -forward * 5.f;
+	m_positionOffset = forward * ( 1.f - 7.f * 2.f );
 }
 
 void CEnvironmentParticleManager::UpdateParticles()
@@ -234,7 +236,19 @@ void CEnvironmentParticleManager::FillRenderData()
 	renderData.m_shaderID = EShaderType::ST_ENV_PARTICLE;
 	renderData.m_drawType = EDrawType::DrawInstanced;
 
+	Matrix4x4 const scaleMatrix
+	( 
+		0.5f, 0.f, 0.f, 0.f,
+		0.f, -0.5f, 0.f, 0.f,
+		0.f, 0.f, 1.f, 0.f,
+		0.5f, 0.5f, 0.f, 1.f 
+	);
+
 	Matrix4x4 const worldToScreen = GViewObject.m_camera.m_worldToScreen;
+	Matrix4x4 const projectionMatrix = GViewObject.m_enviroParticleWorldToScreen;
+	Matrix4x4 tProjectionMatrix = Math::Mul( projectionMatrix, scaleMatrix );
+	tProjectionMatrix.Transpose();
+
 	Matrix4x4 objectToWorld = m_boxMatrix;
 
 	Vec4 const color( 0.1f, 0.1f, 0.1f, 1.f );
@@ -259,8 +273,9 @@ void CEnvironmentParticleManager::FillRenderData()
 
 				tObjectToWorld.Transpose();
 				tWorldToScreen.Transpose();
-
+			
 				CConstBufferCtx const cbCtx = GRender.GetConstBufferCtx( renderData.m_cbOffset, renderData.m_shaderID );
+				cbCtx.SetParam( reinterpret_cast< Byte const* >( &tProjectionMatrix ), sizeof( tProjectionMatrix ), EShaderParameters::EnviroProjection );
 				cbCtx.SetParam( reinterpret_cast< Byte const* >( &tWorldToScreen ), sizeof( tWorldToScreen ), EShaderParameters::WorldToScreen );
 				cbCtx.SetParam( reinterpret_cast< Byte const* >( &tObjectToWorld ), 3 * sizeof( Vec4 ), EShaderParameters::ObjectToWorld );
 				cbCtx.SetParam( reinterpret_cast< Byte const* >( &color ), sizeof( color ), EShaderParameters::Color );

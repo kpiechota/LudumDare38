@@ -128,6 +128,7 @@ void CRender::InitRenderTargets()
 	m_globalBufferDescriptorsOffsets[ GBB_DIFFUSE ].m_rtvOffset = rtvID;
 	CheckResult( m_device->CreateCommittedResource( &GHeapPropertiesGPUOnly, D3D12_HEAP_FLAG_NONE, &gbufferDesc, D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE, &gbufferClearValue, IID_PPV_ARGS( &m_globalBufferBuffers[ GBB_DIFFUSE ] ) ) );
 	m_device->CreateRenderTargetView( m_globalBufferBuffers[ GBB_DIFFUSE ], &gbufferViewDesc, m_renderTargetDH.GetCPUDescriptor(rtvID) );
+	m_globalBufferBuffers[ GBB_DIFFUSE ]->SetName( L"GBufferDiffuse" );
 	++rtvID;
 
 	gbufferClearValue.Format = DXGI_FORMAT_R10G10B10A2_UNORM;
@@ -136,6 +137,7 @@ void CRender::InitRenderTargets()
 	m_globalBufferDescriptorsOffsets[ GBB_NORMAL ].m_rtvOffset = rtvID;
 	CheckResult( m_device->CreateCommittedResource( &GHeapPropertiesGPUOnly, D3D12_HEAP_FLAG_NONE, &gbufferDesc, D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE, &gbufferClearValue, IID_PPV_ARGS( &m_globalBufferBuffers[ GBB_NORMAL ] ) ) );
 	m_device->CreateRenderTargetView( m_globalBufferBuffers[ GBB_NORMAL ], &gbufferViewDesc, m_renderTargetDH.GetCPUDescriptor(rtvID) );
+	m_globalBufferBuffers[ GBB_NORMAL ]->SetName( L"GBufferNormal" );
 	++rtvID;
 
 	gbufferClearValue.Format = DXGI_FORMAT_R8G8B8A8_UNORM;
@@ -144,6 +146,7 @@ void CRender::InitRenderTargets()
 	m_globalBufferDescriptorsOffsets[ GBB_EMISSIVE_SPEC ].m_rtvOffset = rtvID;
 	CheckResult( m_device->CreateCommittedResource( &GHeapPropertiesGPUOnly, D3D12_HEAP_FLAG_NONE, &gbufferDesc, D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE, &gbufferClearValue, IID_PPV_ARGS( &m_globalBufferBuffers[ GBB_EMISSIVE_SPEC ] ) ) );
 	m_device->CreateRenderTargetView( m_globalBufferBuffers[ GBB_EMISSIVE_SPEC ], &gbufferViewDesc, m_renderTargetDH.GetCPUDescriptor(rtvID) );
+	m_globalBufferBuffers[ GBB_EMISSIVE_SPEC ]->SetName( L"GBufferEmissive" );
 	++rtvID;
 
 	ResizeDescriptorHeap( m_depthBuffertDH, 2 );
@@ -165,6 +168,7 @@ void CRender::InitRenderTargets()
 	depthClearValue.DepthStencil.Stencil = 0;
 	m_globalBufferDescriptorsOffsets[ GBB_DEPTH ].m_rtvOffset = 0;
 	CheckResult( m_device->CreateCommittedResource( &GHeapPropertiesGPUOnly, D3D12_HEAP_FLAG_NONE, &depthDesc, D3D12_RESOURCE_STATE_DEPTH_READ | D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE, &depthClearValue, IID_PPV_ARGS( &m_globalBufferBuffers[ GBB_DEPTH ] ) ) );
+	m_globalBufferBuffers[ GBB_DEPTH ]->SetName( L"MainDepth" );
 
 	D3D12_DEPTH_STENCIL_VIEW_DESC depthViewDesc = {};
 	depthViewDesc.Format = DXGI_FORMAT_D24_UNORM_S8_UINT;
@@ -181,8 +185,8 @@ void CRender::InitRenderTargets()
 	rainDepthDesc.Dimension = D3D12_RESOURCE_DIMENSION_TEXTURE2D;
 	rainDepthDesc.Layout = D3D12_TEXTURE_LAYOUT_UNKNOWN;
 	rainDepthDesc.MipLevels = 1;
-	rainDepthDesc.Width = 512;
-	rainDepthDesc.Height = 512;
+	rainDepthDesc.Width = 1024;
+	rainDepthDesc.Height = 1024;
 	rainDepthDesc.Format = DXGI_FORMAT_D32_FLOAT;
 
 	D3D12_CLEAR_VALUE rainDepthClearValue;
@@ -191,6 +195,7 @@ void CRender::InitRenderTargets()
 	rainDepthClearValue.DepthStencil.Stencil = 0;
 	m_globalBufferDescriptorsOffsets[ GBB_RAIN_DEPTH ].m_rtvOffset = 1;
 	CheckResult( m_device->CreateCommittedResource( &GHeapPropertiesGPUOnly, D3D12_HEAP_FLAG_NONE, &rainDepthDesc, D3D12_RESOURCE_STATE_DEPTH_READ | D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE, &rainDepthClearValue, IID_PPV_ARGS( &m_globalBufferBuffers[ GBB_RAIN_DEPTH ] ) ) );
+	m_globalBufferBuffers[ GBB_RAIN_DEPTH ]->SetName( L"RainDepth" );
 
 	D3D12_DEPTH_STENCIL_VIEW_DESC rainDepthViewDesc = {};
 	rainDepthViewDesc.Format = DXGI_FORMAT_D32_FLOAT;
@@ -232,8 +237,9 @@ void CRender::InitRootSignatures()
 		{ D3D12_DESCRIPTOR_RANGE_TYPE_SRV, 1, 1, 0, D3D12_DESCRIPTOR_RANGE_OFFSET_APPEND },
 		{ D3D12_DESCRIPTOR_RANGE_TYPE_SRV, 1, 2, 0, D3D12_DESCRIPTOR_RANGE_OFFSET_APPEND },
 		{ D3D12_DESCRIPTOR_RANGE_TYPE_SRV, 1, 3, 0, D3D12_DESCRIPTOR_RANGE_OFFSET_APPEND },
+		{ D3D12_DESCRIPTOR_RANGE_TYPE_SRV, 1, 4, 0, D3D12_DESCRIPTOR_RANGE_OFFSET_APPEND },
 	};
-	D3D12_ROOT_PARAMETER rootParameters[6];
+	D3D12_ROOT_PARAMETER rootParameters[7];
 
 	rootParameters[0].ParameterType = D3D12_ROOT_PARAMETER_TYPE_CBV;
 	rootParameters[0].Descriptor = {0, 0};
@@ -258,6 +264,10 @@ void CRender::InitRootSignatures()
 	rootParameters[5].ParameterType = D3D12_ROOT_PARAMETER_TYPE_DESCRIPTOR_TABLE;
 	rootParameters[5].DescriptorTable = { 1, &descriptorRange[ 3 ] };
 	rootParameters[5].ShaderVisibility = D3D12_SHADER_VISIBILITY_PIXEL;
+
+	rootParameters[6].ParameterType = D3D12_ROOT_PARAMETER_TYPE_DESCRIPTOR_TABLE;
+	rootParameters[6].DescriptorTable = { 1, &descriptorRange[ 4 ] };
+	rootParameters[6].ShaderVisibility = D3D12_SHADER_VISIBILITY_PIXEL;
 
 	D3D12_STATIC_SAMPLER_DESC const samplers[] =
 	{
@@ -290,6 +300,21 @@ void CRender::InitRootSignatures()
 		/*ShaderRegister*/		,1
 		/*RegisterSpace*/		,0
 		/*ShaderVisibility*/	,D3D12_SHADER_VISIBILITY_PIXEL
+		},
+		{
+		/*Filter*/				D3D12_FILTER_MIN_MAG_MIP_LINEAR
+		/*AddressU*/			,D3D12_TEXTURE_ADDRESS_MODE_CLAMP
+		/*AddressV*/			,D3D12_TEXTURE_ADDRESS_MODE_CLAMP
+		/*AddressW*/			,D3D12_TEXTURE_ADDRESS_MODE_CLAMP
+		/*MipLODBias*/			,0
+		/*MaxAnisotropy*/		,0
+		/*ComparisonFunc*/		,D3D12_COMPARISON_FUNC_NEVER
+		/*BorderColor*/			,D3D12_STATIC_BORDER_COLOR_TRANSPARENT_BLACK
+		/*MinLOD*/				,0.f
+		/*MaxLOD*/				,D3D12_FLOAT32_MAX
+		/*ShaderRegister*/		,2
+		/*RegisterSpace*/		,0
+		/*ShaderVisibility*/	,D3D12_SHADER_VISIBILITY_PIXEL
 		}
 	};
 
@@ -311,12 +336,12 @@ void CRender::InitShaders()
 {
 	DXGI_FORMAT const objectDrawRenderTargets[] = { DXGI_FORMAT_R8G8B8A8_UNORM, DXGI_FORMAT_R10G10B10A2_UNORM, DXGI_FORMAT_R8G8B8A8_UNORM };
 	ERenderTargetBlendStates const objectDrawRenderTargetsBlend[] = { ERTBS_Disabled, ERTBS_Disabled, ERTBS_Disabled };
-	m_shaders[ ST_OBJECT_DRAW ].InitShader( L"../shaders/objectDraw.hlsl", SSimpleObjectVertexFormat::desc, SSimpleObjectVertexFormat::descNum, 3, objectDrawRenderTargets, objectDrawRenderTargetsBlend, EDSS_DepthEnable );
+	m_shaders[ ST_OBJECT_DRAW ].InitShader( L"../shaders/objectDraw.hlsl", SSimpleObjectVertexFormat::desc, SSimpleObjectVertexFormat::descNum, 3, objectDrawRenderTargets, objectDrawRenderTargetsBlend, DXGI_FORMAT_D24_UNORM_S8_UINT, EDSS_DepthEnable );
 
 	D3D_SHADER_MACRO geometryOnlyMacro[2];
 	memset( geometryOnlyMacro, 0, sizeof( geometryOnlyMacro ) );
 	geometryOnlyMacro[0].Name = "GEOMETRY_ONLY";
-	m_shaders[ ST_OBJECT_DRAW_GEOMETRY_ONLY ].InitShader( L"../shaders/objectDraw.hlsl", SSimpleObjectVertexFormat::desc, SSimpleObjectVertexFormat::descNum, 0, nullptr, nullptr, EDSS_DepthEnable, ERS_Default, geometryOnlyMacro );
+	m_shaders[ ST_OBJECT_DRAW_GEOMETRY_ONLY ].InitShader( L"../shaders/objectDraw.hlsl", SSimpleObjectVertexFormat::desc, SSimpleObjectVertexFormat::descNum, 0, nullptr, nullptr, DXGI_FORMAT_D32_FLOAT, EDSS_DepthEnable, ERS_Default, geometryOnlyMacro );
 
 	DXGI_FORMAT const sdfDrawRenderTargets[] = { DXGI_FORMAT_R8G8B8A8_UNORM };
 	ERenderTargetBlendStates const sdfDrawRenderTargetsBlend[] = { ERTBS_AlphaBlend };
@@ -324,7 +349,11 @@ void CRender::InitShaders()
 
 	DXGI_FORMAT const envParticleDrawRenderTargets[] = { DXGI_FORMAT_R8G8B8A8_UNORM };
 	ERenderTargetBlendStates const envParticleDrawRenderTargetsBlend[] = { ERTBS_RGBAdd };
-	m_shaders[ ST_ENV_PARTICLE ].InitShader( L"../shaders/environmentParticleDraw.hlsl", nullptr, 0, 1, envParticleDrawRenderTargets, envParticleDrawRenderTargetsBlend, EDSS_DepthTest );
+	m_shaders[ ST_ENV_PARTICLE ].InitShader( L"../shaders/environmentParticleDraw.hlsl", nullptr, 0, 1, envParticleDrawRenderTargets, envParticleDrawRenderTargetsBlend, DXGI_FORMAT_D24_UNORM_S8_UINT, EDSS_DepthTest );
+
+	DXGI_FORMAT const rectDrawRenderTargets[] = { DXGI_FORMAT_R8G8B8A8_UNORM };
+	ERenderTargetBlendStates const rectDrawRenderTargetsBlend = ERTBS_Disabled;
+	m_shaders[ ST_RECT_DRAW ].InitShader( L"../shaders/rectDraw.hlsl", nullptr, 0, 1, rectDrawRenderTargets, &rectDrawRenderTargetsBlend, DXGI_FORMAT_D24_UNORM_S8_UINT );
 
 	DXGI_FORMAT const lightRenderTargets[] = { DXGI_FORMAT_R8G8B8A8_UNORM };
 	ERenderTargetBlendStates const lightRenderTargetsBlend[] = { ERTBS_RGBAdd };
@@ -356,7 +385,7 @@ void CRender::InitShaders()
 
 		lightDefinitions[ definitionID ].Name = nullptr;
 
-		m_shaderLight[i].InitShader( L"../shaders/deferredLight.hlsl", SPosVertexFormat::desc, SPosVertexFormat::descNum, 1, lightRenderTargets, lightRenderTargetsBlend, EDSS_Disabled, ERS_Default, lightDefinitions );
+		m_shaderLight[i].InitShader( L"../shaders/deferredLight.hlsl", SPosVertexFormat::desc, SPosVertexFormat::descNum, 1, lightRenderTargets, lightRenderTargetsBlend, DXGI_FORMAT_D24_UNORM_S8_UINT, EDSS_Disabled, ERS_Default, lightDefinitions );
 	}
 }
 
@@ -498,7 +527,7 @@ void CRender::DrawRenderData( ID3D12GraphicsCommandList* commandList, TArray< SC
 	}
 }
 
-void CRender::DrawLights( ID3D12GraphicsCommandList * commandList, TArray<SLightRenderData> const & lightData )
+void CRender::DrawLights( ID3D12GraphicsCommandList * commandList )
 {
 	commandList->SetGraphicsRootDescriptorTable( 2, m_texturesDH.GetGPUDescriptor( m_globalBufferDescriptorsOffsets[ GBB_DIFFUSE ].m_srvOffset ) );
 	commandList->SetGraphicsRootDescriptorTable( 3, m_texturesDH.GetGPUDescriptor( m_globalBufferDescriptorsOffsets[ GBB_NORMAL ].m_srvOffset ) );
@@ -533,11 +562,11 @@ void CRender::DrawLights( ID3D12GraphicsCommandList * commandList, TArray<SLight
 	commandList->SetGraphicsRootConstantBufferView(0, constBufferStart + dirCbOffset );
 	DrawFullscreenTriangle( commandList );
 
-	UINT const lightNum = lightData.Size();
+	UINT const lightNum = m_lightRenderData.Size();
 	UINT lightShader = LF_MAX;
 	for ( UINT lightID = 0; lightID < lightNum; ++lightID )
 	{
-		SLightRenderData const& light = lightData[ lightID ];
+		SLightRenderData const& light = m_lightRenderData[ lightID ];
 		if ( lightShader != light.m_lightShader )
 		{
 			lightShader = light.m_lightShader;
@@ -548,6 +577,103 @@ void CRender::DrawLights( ID3D12GraphicsCommandList * commandList, TArray<SLight
 		DrawFullscreenTriangle( commandList );
 	}
 }
+
+void CRender::DrawEnviroParticleRenderData( ID3D12GraphicsCommandList* commandList )
+{
+	D3D12_VIEWPORT viewport;
+	D3D12_RECT scissorRect;
+	viewport.MaxDepth = 1.f;
+	viewport.MinDepth = 0.f;
+	viewport.Width = 1024.f;
+	viewport.Height = 1024.f;
+	viewport.TopLeftX = 0.f;
+	viewport.TopLeftY = 0.f;
+
+	scissorRect.right = 1024;
+	scissorRect.bottom = 1024;
+	scissorRect.left = 0;
+	scissorRect.top = 0;
+
+	commandList->RSSetScissorRects(1, &scissorRect);
+	commandList->RSSetViewports(1, &viewport);
+
+	D3D12_CPU_DESCRIPTOR_HANDLE depthBufferDH = m_depthBuffertDH.GetCPUDescriptor( 1 );
+	commandList->OMSetRenderTargets(0, nullptr, true, &depthBufferDH);
+	commandList->ClearDepthStencilView( depthBufferDH, D3D12_CLEAR_FLAG_DEPTH, 1.f, 0, 0, nullptr );
+
+	D3D_PRIMITIVE_TOPOLOGY currentTopology = D3D_PRIMITIVE_TOPOLOGY_UNDEFINED;
+	Byte currentShader = ST_MAX;
+	Byte currentGeometry = UINT8_MAX;
+
+	D3D12_GPU_VIRTUAL_ADDRESS const constBufferStart = m_constBufferResource->GetGPUVirtualAddress();
+	SShadowRenderData const* pRenderData = m_enviroParticleRenderData.begin();
+	SShadowRenderData const* const pRenderDataEnd = m_enviroParticleRenderData.end();
+	for (;pRenderData != pRenderDataEnd; ++pRenderData)
+	{
+		commandList->SetGraphicsRootConstantBufferView(0, constBufferStart + pRenderData->m_cbOffset );
+
+		if ( currentTopology != pRenderData->m_topology )
+		{
+			commandList->IASetPrimitiveTopology( pRenderData->m_topology );
+			currentTopology = pRenderData->m_topology;
+		}
+
+		if (currentShader != pRenderData->m_shaderID)
+		{
+			commandList->SetPipelineState( m_shaders[ pRenderData->m_shaderID ].GetPSO());
+			currentShader = pRenderData->m_shaderID;
+		}
+
+		if ( currentGeometry != pRenderData->m_geometryID )
+		{
+			currentGeometry = pRenderData->m_geometryID;
+			SGeometry const& geometry = m_geometryResources[ currentGeometry ];
+
+			if ( geometry.m_indicesRes )
+			{
+				commandList->IASetIndexBuffer( &geometry.m_indexBufferView );
+			}
+			else
+			{
+				commandList->IASetIndexBuffer( nullptr );
+			}
+
+			if ( geometry.m_vertexRes )
+			{
+				commandList->IASetVertexBuffers( 0, 1, &geometry.m_vertexBufferView );
+			}
+			else
+			{
+				commandList->IASetVertexBuffers( 0, 0, nullptr );
+			}
+		}
+
+		switch ( pRenderData->m_drawType )
+		{
+			case EDrawType::DrawIndexedInstanced:
+				commandList->DrawIndexedInstanced( pRenderData->m_indicesNum, pRenderData->m_instancesNum, pRenderData->m_indicesStart, pRenderData->m_verticesStart, 0 );
+				break;
+			case EDrawType::DrawInstanced:
+				commandList->DrawInstanced(pRenderData->m_indicesNum, pRenderData->m_instancesNum, pRenderData->m_verticesStart, 0);
+				break;
+			case EDrawType::DrawInvalid:
+				ASSERT_STR( false, "Invalid draw type" );
+				break;
+		}
+	}
+
+	commandList->RSSetScissorRects(1, &m_scissorRect);
+	commandList->RSSetViewports(1, &m_viewport);
+}
+void CRender::DrawDebug( ID3D12GraphicsCommandList* commandList )
+{
+#ifdef _DEBUG
+	commandList->SetGraphicsRootDescriptorTable( 2, m_texturesDH.GetGPUDescriptor( m_globalBufferDescriptorsOffsets[ GBB_RAIN_DEPTH ].m_srvOffset ) );
+	commandList->SetPipelineState( m_shaders[ EShaderType::ST_RECT_DRAW ].GetPSO() );
+	DrawRect( commandList, Vec4( -0.75f, -.75f, 0.25f, 0.25f ) );
+#endif
+}
+
 
 void CRender::PrepareView()
 {
@@ -563,8 +689,11 @@ void CRender::PrepareView()
 	cameraMatrices.m_screenToWorld = Math::Mul( cameraMatrices.m_screenToView, cameraMatrices.m_viewToWorld );
 	cameraMatrices.m_worldToScreen = Math::Mul( cameraMatrices.m_worldToView, cameraMatrices.m_viewToScreen );
 
-	GViewObject.m_enviroParticleWorldToScreen = GEnvironmentParticleManager.GetProjectionMatrix();
-	GViewObject.m_enviroParticleWorldToScreen.m_w = mainCamera.m_position + GEnvironmentParticleManager.GetPositionOffset();
+	Matrix4x4 enviroParticleTranslate;
+	enviroParticleTranslate.m_w = mainCamera.m_position + GEnvironmentParticleManager.GetPositionOffset();
+	GViewObject.m_enviroParticleWorldToScreen = Math::Mul( GEnvironmentParticleManager.GetViewToWorld(), enviroParticleTranslate );
+	GViewObject.m_enviroParticleWorldToScreen.Inverse();
+	GViewObject.m_enviroParticleWorldToScreen = Math::Mul( GViewObject.m_enviroParticleWorldToScreen, GEnvironmentParticleManager.GetViewToScreen() );
 }
 
 void CRender::PreDrawFrame()
@@ -581,6 +710,7 @@ void CRender::PreDrawFrame()
 	m_computeCommandLists.Clear();
 
 	GComponentStaticMeshManager.FillRenderData();
+	GComponentStaticMeshManager.FillEnviroParticleRenderData();
 	GComponentLightManager.FillRenderData();
 	GEnvironmentParticleManager.FillRenderData();
 }
@@ -599,7 +729,7 @@ void CRender::DrawFrame()
 	commandList->SetGraphicsRootSignature(m_graphicsRS);
 	commandList->SetGraphicsRootShaderResourceView( 1, GEnvironmentParticleManager.GetParticlesBufferAddress() );
 
-	D3D12_RESOURCE_BARRIER barriers[ 5 ];
+	D3D12_RESOURCE_BARRIER barriers[ 6 ];
 	barriers[0].Type = D3D12_RESOURCE_BARRIER_TYPE_TRANSITION;
 	barriers[0].Flags = D3D12_RESOURCE_BARRIER_FLAG_NONE;
 	barriers[0].Transition.pResource = m_rederTarget[m_frameID];
@@ -651,21 +781,33 @@ void CRender::DrawFrame()
 	barriers[3].Transition.StateAfter = D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE;
 	barriers[3].Transition.StateBefore = D3D12_RESOURCE_STATE_RENDER_TARGET;
 
-	barriers[4].Transition.StateAfter = D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE;
-	barriers[4].Transition.StateBefore = D3D12_RESOURCE_STATE_DEPTH_WRITE;
-	commandList->ResourceBarrier(4, &barriers[1]);
-
-	DrawLights( commandList, m_lightRenderData );
-
 	barriers[4].Transition.StateAfter = D3D12_RESOURCE_STATE_DEPTH_READ | D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE;
-	barriers[4].Transition.StateBefore = D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE;
-	commandList->ResourceBarrier(1, &barriers[4]);
+	barriers[4].Transition.StateBefore = D3D12_RESOURCE_STATE_DEPTH_WRITE;
+
+	barriers[5].Type = D3D12_RESOURCE_BARRIER_TYPE_TRANSITION;
+	barriers[5].Flags = D3D12_RESOURCE_BARRIER_FLAG_NONE;
+	barriers[5].Transition.pResource = m_globalBufferBuffers[ GBB_RAIN_DEPTH ];
+	barriers[5].Transition.StateAfter = D3D12_RESOURCE_STATE_DEPTH_WRITE;
+	barriers[5].Transition.StateBefore = D3D12_RESOURCE_STATE_DEPTH_READ | D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE;
+	barriers[5].Transition.Subresource = D3D12_RESOURCE_BARRIER_ALL_SUBRESOURCES;
+	commandList->ResourceBarrier(5, &barriers[1]);
+
+	DrawLights( commandList );
+	DrawEnviroParticleRenderData( commandList );
+
+	barriers[5].Transition.StateAfter = D3D12_RESOURCE_STATE_DEPTH_READ | D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE;
+	barriers[5].Transition.StateBefore = D3D12_RESOURCE_STATE_DEPTH_WRITE;
+	commandList->ResourceBarrier(1, &barriers[5]);
 	D3D12_CPU_DESCRIPTOR_HANDLE depthBufferDH = m_depthBuffertDH.GetCPUDescriptor( 0 );
 	commandList->OMSetRenderTargets(1, &renderTargetDH, true,  &depthBufferDH);
+
+	commandList->SetGraphicsRootDescriptorTable( 6, m_texturesDH.GetGPUDescriptor( m_globalBufferDescriptorsOffsets[ GBB_RAIN_DEPTH ].m_srvOffset ) );
 
 	DrawRenderData( commandList, m_commonRenderData[RL_TRANSLUCENT] );
 	DrawRenderData( commandList, m_commonRenderData[RL_OVERLAY] );
 
+	//DrawDebug( commandList );
+	
 	barriers[0].Transition.StateAfter = D3D12_RESOURCE_STATE_PRESENT;
 	barriers[0].Transition.StateBefore = D3D12_RESOURCE_STATE_RENDER_TARGET;
 
@@ -687,6 +829,7 @@ void CRender::DrawFrame()
 		m_commonRenderData[layerID].Clear();
 	}
 	m_lightRenderData.Clear();
+	m_enviroParticleRenderData.Clear();
 }
 
 void CRender::Release()
@@ -783,6 +926,19 @@ void CRender::DrawFullscreenTriangle( ID3D12GraphicsCommandList* commandList )
 	commandList->IASetPrimitiveTopology( D3D_PRIMITIVE_TOPOLOGY::D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST );
 	commandList->IASetVertexBuffers( 0, 1, &m_fullscreenTriangleView );
 	commandList->DrawInstanced( 3, 1, 0, 0 );
+}
+
+void CRender::DrawRect( ID3D12GraphicsCommandList* commandList, Vec4 screenPositionSize )
+{
+	screenPositionSize.z * 0.5f;
+	screenPositionSize.w * 0.5f;
+
+	D3D12_GPU_VIRTUAL_ADDRESS constBufferAddress;
+	GRender.SetConstBuffer( constBufferAddress, (Byte*)&screenPositionSize, sizeof( screenPositionSize ) );
+
+	commandList->SetGraphicsRootConstantBufferView( 0, constBufferAddress );
+	commandList->IASetPrimitiveTopology( D3D_PRIMITIVE_TOPOLOGY::D3D_PRIMITIVE_TOPOLOGY_TRIANGLESTRIP );
+	commandList->DrawInstanced( 4, 1, 0, 0 );
 }
 
 void CRender::ResizeDescriptorHeap( SDescriptorHeap& descriptorHeap, UINT const size )

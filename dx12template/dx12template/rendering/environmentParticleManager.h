@@ -14,7 +14,8 @@ private:
 	ID3D12RootSignature*		m_particleRS;
 
 	Matrix4x4 m_boxMatrix;
-	Matrix4x4 m_projectionMatrix;
+	Matrix4x4 m_viewToWorld;
+	Matrix4x4 m_viewToScreen;
 	Vec3 m_positionOffset;
 	UINT m_boxesNum;
 	float m_boxesSize;
@@ -32,7 +33,8 @@ public:
 	void UpdateParticles();
 	void FillRenderData();
 
-	Matrix4x4 GetProjectionMatrix() const { return m_projectionMatrix; }
+	Matrix4x4 GetViewToWorld() const { return m_viewToWorld; }
+	Matrix4x4 GetViewToScreen() const { return m_viewToScreen; }
 	Vec3 GetPositionOffset() const { return m_positionOffset; }
 
 	void Release();

@@ -18,6 +18,7 @@ LPCSTR ShaderParamsNames[] =
 	"CameraPositionWS",
 	"Fade",
 	"Tiling",
+	"EnviroProjection",
 };
 CT_ASSERT( (ARRAYSIZE( ShaderParamsNames ) == ( UINT(EShaderParameters::SP_MAX) )) );
 
@@ -27,7 +28,7 @@ inline void CShaderRes::LoadShader(LPCWSTR pFileName, D3D_SHADER_MACRO const* pD
 	CheckResult( D3DCompileFromFile(pFileName, pDefines, D3D_COMPILE_STANDARD_FILE_INCLUDE, pEmtryPoint, pTarget, D3DCOMPILE_OPTIMIZATION_LEVEL3, 0, ppCode, &error), error );
 }
 
-void CShaderRes::InitShader( LPCWSTR pFileName, D3D12_INPUT_ELEMENT_DESC const* vertexElements, UINT const vertexElementsNum, UINT const renderTargetNum, DXGI_FORMAT const* renderTargetFormats, ERenderTargetBlendStates const* renderTargetBlendStates, EDepthStencilStates const depthStencilState, ERasterizerStates const rasterizationState, D3D_SHADER_MACRO const* pDefines )
+void CShaderRes::InitShader( LPCWSTR pFileName, D3D12_INPUT_ELEMENT_DESC const* vertexElements, UINT const vertexElementsNum, UINT const renderTargetNum, DXGI_FORMAT const* renderTargetFormats, ERenderTargetBlendStates const* renderTargetBlendStates, DXGI_FORMAT const depthFormat, EDepthStencilStates const depthStencilState, ERasterizerStates const rasterizationState, D3D_SHADER_MACRO const* pDefines )
 {
 	m_bufferSize = 0;
 	memset( m_paramOffsets, 0xFF, sizeof( m_paramOffsets ) );
@@ -42,7 +43,7 @@ void CShaderRes::InitShader( LPCWSTR pFileName, D3D12_INPUT_ELEMENT_DESC const* 
 	descPSO.SampleMask = UINT_MAX;
 	descPSO.PrimitiveTopologyType = D3D12_PRIMITIVE_TOPOLOGY_TYPE_TRIANGLE;
 	descPSO.NumRenderTargets = renderTargetNum;
-	descPSO.DSVFormat = DXGI_FORMAT_D24_UNORM_S8_UINT;
+	descPSO.DSVFormat = depthFormat;
 	descPSO.pRootSignature = GRender.GetMainRS();
 
 	for ( UINT renderTargetID = 0; renderTargetID < renderTargetNum; ++renderTargetID )

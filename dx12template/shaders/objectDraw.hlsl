@@ -1,8 +1,10 @@
 cbuffer objectBuffer : register(b0)
 {
 	float4x4 ObjectToScreen;
+#ifndef GEOMETRY_ONLY
 	float4x3 ObjectToWorld;
 	float2 Tiling;
+#endif
 }
 #ifndef GEOMETRY_ONLY
 Texture2D DiffTex : register(t0);

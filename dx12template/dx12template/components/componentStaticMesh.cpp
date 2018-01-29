@@ -42,3 +42,39 @@ void CComponentStaticMeshManager::FillRenderData() const
 		GRender.AddCommonRenderData( renderData, staticMesh.m_layer );
 	}
 }
+
+void CComponentStaticMeshManager::FillEnviroParticleRenderData() const
+{
+	SShadowRenderData renderData;
+	renderData.m_topology = D3D_PRIMITIVE_TOPOLOGY::D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST;
+	renderData.m_drawType = EDrawType::DrawIndexedInstanced;
+	renderData.m_instancesNum = 1;
+
+	renderData.m_verticesStart = 0;
+	renderData.m_indicesStart = 0;
+
+	renderData.m_shaderID = EShaderType::ST_OBJECT_DRAW_GEOMETRY_ONLY;
+
+	Matrix4x4 const worldToScreen = GViewObject.m_enviroParticleWorldToScreen;
+	UINT const renderComponentsNum = m_renderComponents.Size();
+	for ( UINT i = 0; i < renderComponentsNum; ++i )
+	{
+		SComponentStaticMesh const staticMesh = GetComponentNoCheck( m_renderComponents[ i ].m_staticMeshID );
+		if ( staticMesh.m_layer == RL_OPAQUE )
+		{
+			SComponentTransform const transform = GComponentTransformManager.GetComponentNoCheck( m_renderComponents[ i ].m_transformID );
+
+			Matrix4x4 objectToWorld = Matrix4x4::GetTranslateRotationSize( transform.m_position, transform.m_rotation, transform.m_scale );
+			Matrix4x4 tObjectToScreen = Math::Mul( objectToWorld, worldToScreen );
+			tObjectToScreen.Transpose();
+
+			renderData.m_indicesNum = GGeometryInfo[ staticMesh.m_geometryInfoID ].m_indicesNum;
+			renderData.m_geometryID = GGeometryInfo[ staticMesh.m_geometryInfoID ].m_geometryID;
+
+			CConstBufferCtx const cbCtx = GRender.GetConstBufferCtx( renderData.m_cbOffset, staticMesh.m_shaderID );
+			cbCtx.SetParam( reinterpret_cast< Byte const* >( &tObjectToScreen ), sizeof( tObjectToScreen ), EShaderParameters::ObjectToScreen );
+
+			GRender.AddEnviroParticleRenderData( renderData );
+		}
+	}
+}

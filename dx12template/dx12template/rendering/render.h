@@ -120,6 +120,7 @@ private:
 
 	TArray< SCommonRenderData >		m_commonRenderData[ RL_MAX ];
 	TArray< SLightRenderData >		m_lightRenderData;
+	TArray< SShadowRenderData >		m_enviroParticleRenderData;
 
 	int								m_wndWidth;
 	int								m_wndHeight;
@@ -149,9 +150,12 @@ private:
 
 	void InitShaders();
 	void DrawFullscreenTriangle( ID3D12GraphicsCommandList* commandList );
+	void DrawRect( ID3D12GraphicsCommandList* commandList, Vec4 screenPositionSize );
+	FORCE_INLINE void DrawDebug( ID3D12GraphicsCommandList* commandList );
 	FORCE_INLINE void DrawOpaque( ID3D12GraphicsCommandList* commandList );
 	FORCE_INLINE void DrawRenderData( ID3D12GraphicsCommandList* commandList, TArray< SCommonRenderData > const& renderData );
-	FORCE_INLINE void DrawLights( ID3D12GraphicsCommandList* commandList, TArray< SLightRenderData > const& lightData );
+	FORCE_INLINE void DrawLights( ID3D12GraphicsCommandList* commandList );
+	FORCE_INLINE void DrawEnviroParticleRenderData( ID3D12GraphicsCommandList* commandList );
 	FORCE_INLINE void PrepareView();
 
 public:
@@ -190,9 +194,11 @@ public:
 
 	void CommandRenderDataReserveNext( UINT const size, Byte const renderLayer ) { m_commonRenderData[renderLayer].Reserve( m_commonRenderData[renderLayer].Size() + size ); }
 	void LightRenderDataReserveNext( UINT const size ) { m_lightRenderData.Reserve( m_lightRenderData.Size() + size ); }
+	void EnviroParticleRenderDataReserveNext( UINT const size ) { m_enviroParticleRenderData.Reserve( m_enviroParticleRenderData.Size() + size ); }
 
 	void AddCommonRenderData( SCommonRenderData const& commonRenderData, Byte const renderLayer ) { m_commonRenderData[renderLayer].Add( commonRenderData ); }
 	void AddLightRenderData( SLightRenderData const& lightRenderData ) { m_lightRenderData.Add( lightRenderData ); }
+	void AddEnviroParticleRenderData( SShadowRenderData const& shadowRenderData ) { m_enviroParticleRenderData.Add( shadowRenderData ); }
 
 public: //Getters/setters
 	void SetWindowWidth(int const wndWidth) { m_wndWidth = wndWidth; }
