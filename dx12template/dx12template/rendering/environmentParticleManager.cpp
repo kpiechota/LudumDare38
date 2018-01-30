@@ -230,7 +230,7 @@ void CEnvironmentParticleManager::FillRenderData()
 	Vec3 const cameraPosition = GComponentCameraManager.GetMainCameraPosition();
 	Vec3 const boxCenterOffset = ( Vec3( 0.5f, -0.5f, 0.5f ) * m_boxesSize );
 	Vec3 const startPosition = Math::Snap( cameraPosition, m_boxesSize ) - boxCenterOffset;
-	Vec2 const fade( m_boxesSize * float( m_boxesNum - 1 ), m_boxesSize * float( m_boxesNum ) );
+	Vec2 const fade( m_boxesSize * float( m_boxesNum ), m_boxesSize * float( m_boxesNum - 1 ) );
 
 	SCommonRenderData renderData;
 	renderData.m_verticesStart = 0;
@@ -255,6 +255,7 @@ void CEnvironmentParticleManager::FillRenderData()
 		0.5f, 0.5f, 0.f, 1.f 
 	);
 
+	Matrix4x4 const viewToScreen = GViewObject.m_camera.m_viewToScreen;
 	Matrix4x4 const worldToScreen = GViewObject.m_camera.m_worldToScreen;
 	Matrix4x4 const projectionMatrix = GViewObject.m_enviroParticleWorldToScreen;
 	Matrix4x4 tProjectionMatrix = Math::Mul( projectionMatrix, scaleMatrix );
@@ -268,6 +269,9 @@ void CEnvironmentParticleManager::FillRenderData()
 	Vec3 const boxesMax = startPosition + boxCenterOffset + size;
 	//Vec2 const uvScale( 1.f, 1.f );
 	Vec2 const uvScale( 1.f / 4.f, 1.f / 4.f );
+
+	Vec2 const perspectiveValues( viewToScreen.m_a32, -viewToScreen.m_a22 );
+	float const softFactor = 0.5f;
 
 	UINT const boxesOnAxis = m_boxesNum * 2 + 1;
 	GRender.CommandRenderDataReserveNext( boxesOnAxis * boxesOnAxis * boxesOnAxis, ERenderLayer::RL_TRANSLUCENT );
@@ -288,13 +292,15 @@ void CEnvironmentParticleManager::FillRenderData()
 				tWorldToScreen.Transpose();
 			
 				CConstBufferCtx const cbCtx = GRender.GetConstBufferCtx( renderData.m_cbOffset, renderData.m_shaderID );
-				cbCtx.SetParam( reinterpret_cast< Byte const* >( &tProjectionMatrix ), sizeof( tProjectionMatrix ), EShaderParameters::EnviroProjection );
-				cbCtx.SetParam( reinterpret_cast< Byte const* >( &tWorldToScreen ), sizeof( tWorldToScreen ), EShaderParameters::WorldToScreen );
-				cbCtx.SetParam( reinterpret_cast< Byte const* >( &tObjectToWorld ), 3 * sizeof( Vec4 ), EShaderParameters::ObjectToWorld );
-				cbCtx.SetParam( reinterpret_cast< Byte const* >( &color ), sizeof( color ), EShaderParameters::Color );
-				cbCtx.SetParam( reinterpret_cast< Byte const* >( &cameraPosition ), sizeof( cameraPosition ), EShaderParameters::CameraPositionWS );
-				cbCtx.SetParam( reinterpret_cast< Byte const* >( &uvScale ), sizeof( uvScale ), EShaderParameters::UVScale );
-				cbCtx.SetParam( reinterpret_cast< Byte const* >( &fade ), sizeof( fade ), EShaderParameters::Fade );
+				cbCtx.SetParam( &tProjectionMatrix,		sizeof( tProjectionMatrix ),	EShaderParameters::EnviroProjection );
+				cbCtx.SetParam( &tWorldToScreen,		sizeof( tWorldToScreen ),		EShaderParameters::WorldToScreen );
+				cbCtx.SetParam( &tObjectToWorld,		3 * sizeof( Vec4 ),				EShaderParameters::ObjectToWorld );
+				cbCtx.SetParam( &color,					sizeof( color ),				EShaderParameters::Color );
+				cbCtx.SetParam( &cameraPosition,		sizeof( cameraPosition ),		EShaderParameters::CameraPositionWS );
+				cbCtx.SetParam( &uvScale,				sizeof( uvScale ),				EShaderParameters::UVScale );
+				cbCtx.SetParam( &perspectiveValues,		sizeof( perspectiveValues ),	EShaderParameters::PerspectiveValues );
+				cbCtx.SetParam( &fade,					sizeof( fade ),					EShaderParameters::Fade );
+				cbCtx.SetParam( &softFactor,			sizeof( softFactor ),			EShaderParameters::Soft );
 
 				GRender.AddCommonRenderData( renderData, ERenderLayer::RL_TRANSLUCENT );
 			}

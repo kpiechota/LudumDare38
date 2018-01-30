@@ -47,7 +47,7 @@ void InitGame()
 	SComponentHandle testCameraHandle = testEntity->AddComponentCamera();
 	SComponentCamera* testCamera = &GComponentCameraManager.GetComponent( testCameraHandle );
 	GComponentCameraManager.SetMainCamera( testCameraHandle.m_index );
-	GComponentCameraManager.SetMainProjection( Matrix4x4::Projection( 40.f, 1.f, 0.0001f, 100000.f ) );
+	GComponentCameraManager.SetMainProjection( Matrix4x4::Projection( 40.f, 1.f, 0.01f, 100000.f ) );
 	testCamera->m_position = Vec3::ZERO;
 	testCamera->m_rotation = Quaternion::IDENTITY;
 

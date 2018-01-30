@@ -219,8 +219,8 @@ void CTextRenderManager::Print( Vec4 const color, Vec2 position, float const siz
 
 	CConstBufferCtx const cbCtx = GRender.GetConstBufferCtx( renderData.m_cbOffset, EShaderType::ST_SDF_DRAW );
 	Vec2 const cutOff( 0.7f - 0.035f, 0.7f + 0.035f );
-	cbCtx.SetParam( reinterpret_cast<Byte const*>( &color ), sizeof( color ), EShaderParameters::Color );
-	cbCtx.SetParam( reinterpret_cast<Byte const*>( &cutOff ), sizeof( cutOff ), EShaderParameters::Cutoff );
+	cbCtx.SetParam( &color,		sizeof( color ),	EShaderParameters::Color );
+	cbCtx.SetParam( &cutOff,	sizeof( cutOff ),	EShaderParameters::Cutoff );
 
 	GRender.AddCommonRenderData( renderData, RL_OVERLAY );
 }

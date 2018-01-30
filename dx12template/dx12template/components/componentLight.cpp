@@ -11,6 +11,10 @@ void CComponentLightManager::FillRenderData() const
 	UINT const renderComponentsNum = m_renderComponents.Size();
 	GRender.LightRenderDataReserveNext( renderComponentsNum );
 
+	Matrix4x4 tViewToWorld = viewToWorld;
+	tViewToWorld.Transpose();
+	Vec4 const perspectiveValues(1.f / viewToScreen.m_a00, 1.f / viewToScreen.m_a11, viewToScreen.m_a32, -viewToScreen.m_a22 );
+
 	for ( UINT i = 0; i < renderComponentsNum; ++i )
 	{
 		SComponentTransform const transform = GComponentTransformManager.GetComponentNoCheck( m_renderComponents[ i ].m_transformID );
@@ -20,15 +24,12 @@ void CComponentLightManager::FillRenderData() const
 
 		CConstBufferCtx const cbCtx = GRender.GetLightConstBufferCtx( lightRenderData.m_cbOffset, light.m_lighShader );
 
-		Matrix4x4 tViewToWorld = viewToWorld;
-		tViewToWorld.Transpose();
-		Vec4 const perspectiveValues(1.f / viewToScreen.m_a00, 1.f / viewToScreen.m_a11, viewToScreen.m_a32, -viewToScreen.m_a22 );
 		Vec2 const attenuation( 1.f / light.m_radius, light.m_fade );
-		cbCtx.SetParam( reinterpret_cast<Byte const*>( &tViewToWorld ),				3 * sizeof( Vec4 ),						EShaderParameters::ViewToWorld );
-		cbCtx.SetParam( reinterpret_cast<Byte const*>( &perspectiveValues ),		sizeof( perspectiveValues ),			EShaderParameters::PerspectiveValues );
-		cbCtx.SetParam( reinterpret_cast<Byte const*>( &transform.m_position ),		sizeof( transform.m_position ),			EShaderParameters::LightPos );
-		cbCtx.SetParam( reinterpret_cast<Byte const*>( &light.m_color ),			sizeof( light.m_color ),				EShaderParameters::Color );
-		cbCtx.SetParam( reinterpret_cast<Byte const*>( &attenuation ),				sizeof( attenuation ),					EShaderParameters::Attenuation );
+		cbCtx.SetParam( &tViewToWorld,				3 * sizeof( Vec4 ),						EShaderParameters::ViewToWorld );
+		cbCtx.SetParam( &perspectiveValues,			sizeof( perspectiveValues ),			EShaderParameters::PerspectiveValues );
+		cbCtx.SetParam( &transform.m_position,		sizeof( transform.m_position ),			EShaderParameters::LightPos );
+		cbCtx.SetParam( &light.m_color,				sizeof( light.m_color ),				EShaderParameters::Color );
+		cbCtx.SetParam( &attenuation,				sizeof( attenuation ),					EShaderParameters::Attenuation );
 
 		GRender.AddLightRenderData( lightRenderData );
 	}

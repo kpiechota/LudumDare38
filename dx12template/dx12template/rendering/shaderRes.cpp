@@ -18,6 +18,7 @@ LPCSTR ShaderParamsNames[] =
 	"CameraPositionWS",
 	"UVScale",
 	"Fade",
+	"Soft",
 	"Tiling",
 	"EnviroProjection",
 };

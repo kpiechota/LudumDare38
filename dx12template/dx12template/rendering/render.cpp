@@ -551,12 +551,12 @@ void CRender::DrawLights( ID3D12GraphicsCommandList * commandList )
 		tViewToWorld.Transpose();
 		Vec4 const perspectiveValues(1.f / cameraMatrices.m_viewToScreen.m_a00, 1.f / cameraMatrices.m_viewToScreen.m_a11, cameraMatrices.m_viewToScreen.m_a32, -cameraMatrices.m_viewToScreen.m_a22 );
 
-		cbCtx.SetParam( reinterpret_cast<Byte const*>( &tViewToWorld ),			3 * sizeof( Vec4 ),			EShaderParameters::ViewToWorld );
-		cbCtx.SetParam( reinterpret_cast<Byte const*>( &perspectiveValues ),	sizeof( perspectiveValues ),	EShaderParameters::PerspectiveValues );
-		cbCtx.SetParam( reinterpret_cast< Byte const* >( &m_directLightDir ),	sizeof( m_directLightDir ),		EShaderParameters::LightDirWS );
-		cbCtx.SetParam( reinterpret_cast< Byte const* >( &m_directLightColor ), sizeof( m_directLightColor ),	EShaderParameters::Color );
+		cbCtx.SetParam( &tViewToWorld,			3 * sizeof( Vec4 ),				EShaderParameters::ViewToWorld );
+		cbCtx.SetParam( &perspectiveValues,		sizeof( perspectiveValues ),	EShaderParameters::PerspectiveValues );
+		cbCtx.SetParam( &m_directLightDir,		sizeof( m_directLightDir ),		EShaderParameters::LightDirWS );
+		cbCtx.SetParam( &m_directLightColor,	sizeof( m_directLightColor ),	EShaderParameters::Color );
 	}
-	cbCtx.SetParam( reinterpret_cast<Byte const*>( &m_ambientLightColor ),	sizeof( m_ambientLightColor ),	EShaderParameters::AmbientColor );
+	cbCtx.SetParam( &m_ambientLightColor,		sizeof( m_ambientLightColor ),	EShaderParameters::AmbientColor );
 
 	commandList->SetPipelineState( m_shaderLight[ dirLightFlags ].GetPSO() );
 	commandList->SetGraphicsRootConstantBufferView(0, constBufferStart + dirCbOffset );
@@ -670,7 +670,7 @@ void CRender::DrawDebug( ID3D12GraphicsCommandList* commandList )
 #ifdef _DEBUG
 	commandList->SetGraphicsRootDescriptorTable( 2, m_texturesDH.GetGPUDescriptor( m_globalBufferDescriptorsOffsets[ GBB_RAIN_DEPTH ].m_srvOffset ) );
 	commandList->SetPipelineState( m_shaders[ EShaderType::ST_RECT_DRAW ].GetPSO() );
-	DrawRect( commandList, Vec4( -0.75f, -.75f, 0.25f, 0.25f ) );
+	DrawRect( commandList, Vec4( -0.75f, -.75f, 0.5f, 0.5f ) );
 #endif
 }
 
@@ -930,8 +930,8 @@ void CRender::DrawFullscreenTriangle( ID3D12GraphicsCommandList* commandList )
 
 void CRender::DrawRect( ID3D12GraphicsCommandList* commandList, Vec4 screenPositionSize )
 {
-	screenPositionSize.z * 0.5f;
-	screenPositionSize.w * 0.5f;
+	screenPositionSize.z *= 0.5f;
+	screenPositionSize.w *= 0.5f;
 
 	D3D12_GPU_VIRTUAL_ADDRESS constBufferAddress;
 	GRender.SetConstBuffer( constBufferAddress, (Byte*)&screenPositionSize, sizeof( screenPositionSize ) );
@@ -1301,7 +1301,7 @@ void CRender::AddComputeCommandList( ID3D12CommandList* pCommandList )
 	m_computeCommandLists.Add( pCommandList );
 }
 
-void CConstBufferCtx::SetParam( Byte const* pData, UINT16 const size, EShaderParameters const param ) const
+void CConstBufferCtx::SetParam( void const* pData, UINT16 const size, EShaderParameters const param ) const
 {
 	memcpy( m_pConstBuffer + m_shader->GetOffset( param ), pData, size );
 }

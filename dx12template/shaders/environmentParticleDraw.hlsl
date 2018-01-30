@@ -8,14 +8,23 @@ cbuffer objectBuffer : register(b0)
 	float4 Color;
 	float3 CameraPositionWS;
 	float2 UVScale;
+	float2 PerspectiveValues;
 	float2 Fade;
+	float Soft;
 }
 StructuredBuffer< SEnvironmentParticle > Particles : register( t0 );
 
 Texture2D ColorTex : register( t0 );
+Texture2D DepthTex : register( t3 );
 Texture2D EnviroProjectionTex : register( t4 );
 SamplerState Sampler : register(s1);
 SamplerState SamplerDepth : register(s2);
+
+float GetLinearDepth( float2 uv )
+{
+	float depthHW = DepthTex.Load( int3( uv.xy, 0 ) ).r;
+	return PerspectiveValues.x / ( depthHW + PerspectiveValues.y );
+}
 
 struct VStoPS
 {
@@ -23,6 +32,7 @@ struct VStoPS
 	float3 m_projectionSpace : TEXCOORD0;
 	float2 m_uv : TEXCOORD1;
 	float m_distance : TEXCOORD2;
+	float m_depth : TEXCOORD3;
 };
 
 VStoPS vsMain(uint vertexID : SV_VertexID ) 
@@ -61,10 +71,11 @@ VStoPS vsMain(uint vertexID : SV_VertexID )
 
 	VStoPS output;
 	output.m_position = mul( float4( vertexPosition, 1.f ), WorldToScreen );
-	output.m_projectionSpace = mul( float4( positionWS, 1.f ), EnviroProjection );
+	output.m_projectionSpace = mul( float4( vertexPosition, 1.f ), EnviroProjection );
 	output.m_uv = UVScale * verticesUV[ vertexID % 6 ] + particle.m_uvPosition;
 	float3 axisDistance = abs( positionToCameraWS );
 	output.m_distance = max( max( axisDistance.x, axisDistance.y ), axisDistance.z );
+	output.m_depth = output.m_position.z;
 	return output;
 }
 
@@ -74,7 +85,10 @@ float4 psMain(VStoPS input) : SV_TARGET0
 	float depth = EnviroProjectionTex.Sample( SamplerDepth, uvPosition ).r;
 	clip( depth - input.m_projectionSpace.z);
 
-	float fade = 1.f - smoothstep( Fade.x, Fade.y, input.m_distance );
+	float linearDepth = GetLinearDepth( input.m_position.xy );
+	float soft = smoothstep( 0.f, Soft, linearDepth - input.m_depth );
+	float fade = soft * smoothstep( Fade.x, Fade.y, input.m_distance );
 	clip( fade - 0.002f );
+
 	return fade * ColorTex.Sample( Sampler, input.m_uv );
 }

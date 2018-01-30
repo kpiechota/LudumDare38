@@ -16,6 +16,7 @@ enum class EShaderParameters : Byte
 	CameraPositionWS,
 	UVScale,
 	Fade,
+	Soft,
 	Tiling,
 	EnviroProjection,
 
