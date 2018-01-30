@@ -113,12 +113,12 @@ void CEnvironmentParticleManager::InitParticles(UINT const initParticleNum, UINT
 	cbuffer.m_velocity[ 2 ] = 1.f;
 	cbuffer.m_initSize[ 0 ] = 1.f;
 	cbuffer.m_initSize[ 1 ] = 1.f;
-	cbuffer.m_sizeRand[ 0 ] = 0.005f;
-	cbuffer.m_sizeRand[ 1 ] = 0.01f;
+	cbuffer.m_sizeRand[ 0 ] = 0.01f;
+	cbuffer.m_sizeRand[ 1 ] = 0.02f;
 	cbuffer.m_velocityOffsetRand[ 0 ] = -.4f;
 	cbuffer.m_velocityOffsetRand[ 1 ] = .4f;
-	cbuffer.m_speedRand[ 0 ] = .4f;
-	cbuffer.m_speedRand[ 1 ] = .8f;
+	cbuffer.m_speedRand[ 0 ] = .2f;
+	cbuffer.m_speedRand[ 1 ] = .4f;
 
 	cbuffer.m_seed = rand();
 	cbuffer.m_particleNum = m_particlesNum;
@@ -148,8 +148,9 @@ void CEnvironmentParticleManager::InitParticles(UINT const initParticleNum, UINT
 
 void CEnvironmentParticleManager::InitProjectionMatrix( Vec3 const forward )
 {
-	Vec3 right = Vec3::Cross( Vec3::UP, forward );
-	Vec3 up = Vec3::Cross( forward, right );
+	Vec3 up = abs( Vec3::Dot( Vec3::UP, forward ) ) == 1.f ? Vec3::FORWARD : Vec3::UP;
+	Vec3 right = Vec3::Cross( up, forward );
+	up = Vec3::Cross( forward, right );
 
 	right.Normalize();
 	up.Normalize();
