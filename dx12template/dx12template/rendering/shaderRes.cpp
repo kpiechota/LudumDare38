@@ -16,6 +16,7 @@ LPCSTR ShaderParamsNames[] =
 	"AmbientColor",
 	"LightDirWS",
 	"CameraPositionWS",
+	"UVScale",
 	"Fade",
 	"Tiling",
 	"EnviroProjection",

@@ -7,6 +7,8 @@ cbuffer objectBuffer : register(b0)
 	float2 SizeRand;
 	float2 VelocityOffsetRand;
 	float2 SpeedRand;
+	float2 TileSize;
+	uint2 TileNum;
 	uint Seed;
 	uint ParticleNum;
 }
@@ -19,6 +21,11 @@ float FloatRandStatic( uint seed, float minVal, float maxVal )
 	return  (maxVal * ( v + 1.f ) + minVal * ( 1.f - v ) ) * 0.5f;
 }
 
+uint UIntRandStatic( uint seed, uint minVal, uint maxVal )
+{
+	return minVal + ( maxVal - minVal ) * FloatRandStatic( seed, 0.f, 1.f );
+}
+
 float3 Float3RandStatic(uint seed, float minVal, float maxVal)
 {
 	return float3( FloatRandStatic( seed, minVal, maxVal ), FloatRandStatic( seed + 1, minVal, maxVal ), FloatRandStatic( seed + 2, minVal, maxVal ) );
@@ -29,7 +36,7 @@ void csMain( uint3 dispatchID : SV_DispatchThreadID )
 {
 	if ( dispatchID.x < ParticleNum )
 	{
-		uint seedOffset = Seed + 8 * dispatchID.x;
+		uint seedOffset = Seed + 10 * dispatchID.x;
 		uint2 coord = uint2( dispatchID.x % 5, dispatchID.x / 5 );
 		Particles[ dispatchID.x ].m_position = Float3RandStatic( seedOffset, 0.f, 1.f );
 		seedOffset += 3;
@@ -43,6 +50,8 @@ void csMain( uint3 dispatchID : SV_DispatchThreadID )
 		Particles[ dispatchID.x ].m_velocity = Velocity;
 		Particles[ dispatchID.x ].m_velocity.xz += velocityRand;
 		Particles[ dispatchID.x ].m_velocity = normalize( Particles[ dispatchID.x ].m_velocity );
+		Particles[ dispatchID.x ].m_uvPosition = TileSize * float2( UIntRandStatic( seedOffset, 0, TileNum.x ), UIntRandStatic( seedOffset + 1, 0, TileNum.y ) );
+		seedOffset += 2;
 
 		Particles[ dispatchID.x ].m_speed = FloatRandStatic( seedOffset, SpeedRand.x, SpeedRand.y );
 	}

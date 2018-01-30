@@ -85,12 +85,14 @@ void CEnvironmentParticleManager::InitParticles(UINT const initParticleNum, UINT
 
 	struct CBuffer
 	{
-		float m_velocity[3];
+		float m_velocity[ 3 ];
 		float m_padding;
-		float m_initSize[2];
-		float m_sizeRand[2];
-		float m_velocityOffsetRand[2];
-		float m_speedRand[2];
+		float m_initSize[ 2 ];
+		float m_sizeRand[ 2 ];
+		float m_velocityOffsetRand[ 2 ];
+		float m_speedRand[ 2 ];
+		float m_tileSize[ 2 ];
+		UINT m_tileNum[ 2 ];
 		UINT m_seed;
 		UINT m_particleNum;
 	} cbuffer;
@@ -107,18 +109,26 @@ void CEnvironmentParticleManager::InitParticles(UINT const initParticleNum, UINT
 	//cbuffer.m_velocityOffsetRand[ 1 ] = .2f;
 	//cbuffer.m_speedRand[ 0 ] = 2.f;
 	//cbuffer.m_speedRand[ 1 ] = 3.f;
+	//cbuffer.m_tileSize[ 0 ] = 1.f;
+	//cbuffer.m_tileSize[ 1 ] = 1.f;
+	//cbuffer.m_tileNum[ 0 ] = 1;
+	//cbuffer.m_tileNum[ 1 ] = 1;
 	//SNOW
 	cbuffer.m_velocity[ 0 ] = 2.f;
 	cbuffer.m_velocity[ 1 ] = -3.f;
 	cbuffer.m_velocity[ 2 ] = 1.f;
 	cbuffer.m_initSize[ 0 ] = 1.f;
 	cbuffer.m_initSize[ 1 ] = 1.f;
-	cbuffer.m_sizeRand[ 0 ] = 0.01f;
-	cbuffer.m_sizeRand[ 1 ] = 0.02f;
+	cbuffer.m_sizeRand[ 0 ] = 0.02f;
+	cbuffer.m_sizeRand[ 1 ] = 0.04f;
 	cbuffer.m_velocityOffsetRand[ 0 ] = -.4f;
 	cbuffer.m_velocityOffsetRand[ 1 ] = .4f;
-	cbuffer.m_speedRand[ 0 ] = .2f;
-	cbuffer.m_speedRand[ 1 ] = .4f;
+	cbuffer.m_speedRand[ 0 ] = .1f;
+	cbuffer.m_speedRand[ 1 ] = .2f;
+	cbuffer.m_tileSize[ 0 ] = 1.f / 4.f;
+	cbuffer.m_tileSize[ 1 ] = 1.f / 4.f;
+	cbuffer.m_tileNum[ 0 ] = 4;
+	cbuffer.m_tileNum[ 1 ] = 4;
 
 	cbuffer.m_seed = rand();
 	cbuffer.m_particleNum = m_particlesNum;
@@ -256,6 +266,8 @@ void CEnvironmentParticleManager::FillRenderData()
 	float const size = float( m_boxesNum ) * m_boxesSize;
 	Vec3 const boxesMin = startPosition + boxCenterOffset - size;
 	Vec3 const boxesMax = startPosition + boxCenterOffset + size;
+	//Vec2 const uvScale( 1.f, 1.f );
+	Vec2 const uvScale( 1.f / 4.f, 1.f / 4.f );
 
 	UINT const boxesOnAxis = m_boxesNum * 2 + 1;
 	GRender.CommandRenderDataReserveNext( boxesOnAxis * boxesOnAxis * boxesOnAxis, ERenderLayer::RL_TRANSLUCENT );
@@ -281,6 +293,7 @@ void CEnvironmentParticleManager::FillRenderData()
 				cbCtx.SetParam( reinterpret_cast< Byte const* >( &tObjectToWorld ), 3 * sizeof( Vec4 ), EShaderParameters::ObjectToWorld );
 				cbCtx.SetParam( reinterpret_cast< Byte const* >( &color ), sizeof( color ), EShaderParameters::Color );
 				cbCtx.SetParam( reinterpret_cast< Byte const* >( &cameraPosition ), sizeof( cameraPosition ), EShaderParameters::CameraPositionWS );
+				cbCtx.SetParam( reinterpret_cast< Byte const* >( &uvScale ), sizeof( uvScale ), EShaderParameters::UVScale );
 				cbCtx.SetParam( reinterpret_cast< Byte const* >( &fade ), sizeof( fade ), EShaderParameters::Fade );
 
 				GRender.AddCommonRenderData( renderData, ERenderLayer::RL_TRANSLUCENT );

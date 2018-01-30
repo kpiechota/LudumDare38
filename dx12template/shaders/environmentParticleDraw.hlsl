@@ -7,6 +7,7 @@ cbuffer objectBuffer : register(b0)
 	float4x3 ObjectToWorld;
 	float4 Color;
 	float3 CameraPositionWS;
+	float2 UVScale;
 	float2 Fade;
 }
 StructuredBuffer< SEnvironmentParticle > Particles : register( t0 );
@@ -61,7 +62,7 @@ VStoPS vsMain(uint vertexID : SV_VertexID )
 	VStoPS output;
 	output.m_position = mul( float4( vertexPosition, 1.f ), WorldToScreen );
 	output.m_projectionSpace = mul( float4( positionWS, 1.f ), EnviroProjection );
-	output.m_uv = verticesUV[ vertexID % 6 ];
+	output.m_uv = UVScale * verticesUV[ vertexID % 6 ] + particle.m_uvPosition;
 	float3 axisDistance = abs( positionToCameraWS );
 	output.m_distance = max( max( axisDistance.x, axisDistance.y ), axisDistance.z );
 	return output;
