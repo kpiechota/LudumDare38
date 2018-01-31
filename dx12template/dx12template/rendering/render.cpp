@@ -126,7 +126,7 @@ void CRender::InitRenderTargets()
 	gbufferViewDesc.Format = DXGI_FORMAT_R8G8B8A8_UNORM;
 	gbufferDesc.Format = DXGI_FORMAT_R8G8B8A8_UNORM;
 	m_globalBufferDescriptorsOffsets[ GBB_DIFFUSE ].m_rtvOffset = rtvID;
-	CheckResult( m_device->CreateCommittedResource( &GHeapPropertiesGPUOnly, D3D12_HEAP_FLAG_NONE, &gbufferDesc, D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE, &gbufferClearValue, IID_PPV_ARGS( &m_globalBufferBuffers[ GBB_DIFFUSE ] ) ) );
+	CheckResult( m_device->CreateCommittedResource( &GHeapPropertiesGPUOnly, D3D12_HEAP_FLAG_NONE, &gbufferDesc, D3D12_RESOURCE_STATE_RENDER_TARGET, &gbufferClearValue, IID_PPV_ARGS( &m_globalBufferBuffers[ GBB_DIFFUSE ] ) ) );
 	m_device->CreateRenderTargetView( m_globalBufferBuffers[ GBB_DIFFUSE ], &gbufferViewDesc, m_renderTargetDH.GetCPUDescriptor(rtvID) );
 	m_globalBufferBuffers[ GBB_DIFFUSE ]->SetName( L"GBufferDiffuse" );
 	++rtvID;
@@ -135,7 +135,7 @@ void CRender::InitRenderTargets()
 	gbufferViewDesc.Format = DXGI_FORMAT_R10G10B10A2_UNORM;
 	gbufferDesc.Format = DXGI_FORMAT_R10G10B10A2_UNORM;
 	m_globalBufferDescriptorsOffsets[ GBB_NORMAL ].m_rtvOffset = rtvID;
-	CheckResult( m_device->CreateCommittedResource( &GHeapPropertiesGPUOnly, D3D12_HEAP_FLAG_NONE, &gbufferDesc, D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE, &gbufferClearValue, IID_PPV_ARGS( &m_globalBufferBuffers[ GBB_NORMAL ] ) ) );
+	CheckResult( m_device->CreateCommittedResource( &GHeapPropertiesGPUOnly, D3D12_HEAP_FLAG_NONE, &gbufferDesc, D3D12_RESOURCE_STATE_RENDER_TARGET, &gbufferClearValue, IID_PPV_ARGS( &m_globalBufferBuffers[ GBB_NORMAL ] ) ) );
 	m_device->CreateRenderTargetView( m_globalBufferBuffers[ GBB_NORMAL ], &gbufferViewDesc, m_renderTargetDH.GetCPUDescriptor(rtvID) );
 	m_globalBufferBuffers[ GBB_NORMAL ]->SetName( L"GBufferNormal" );
 	++rtvID;
@@ -144,7 +144,7 @@ void CRender::InitRenderTargets()
 	gbufferViewDesc.Format = DXGI_FORMAT_R8G8B8A8_UNORM;
 	gbufferDesc.Format = DXGI_FORMAT_R8G8B8A8_UNORM;
 	m_globalBufferDescriptorsOffsets[ GBB_EMISSIVE_SPEC ].m_rtvOffset = rtvID;
-	CheckResult( m_device->CreateCommittedResource( &GHeapPropertiesGPUOnly, D3D12_HEAP_FLAG_NONE, &gbufferDesc, D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE, &gbufferClearValue, IID_PPV_ARGS( &m_globalBufferBuffers[ GBB_EMISSIVE_SPEC ] ) ) );
+	CheckResult( m_device->CreateCommittedResource( &GHeapPropertiesGPUOnly, D3D12_HEAP_FLAG_NONE, &gbufferDesc, D3D12_RESOURCE_STATE_RENDER_TARGET, &gbufferClearValue, IID_PPV_ARGS( &m_globalBufferBuffers[ GBB_EMISSIVE_SPEC ] ) ) );
 	m_device->CreateRenderTargetView( m_globalBufferBuffers[ GBB_EMISSIVE_SPEC ], &gbufferViewDesc, m_renderTargetDH.GetCPUDescriptor(rtvID) );
 	m_globalBufferBuffers[ GBB_EMISSIVE_SPEC ]->SetName( L"GBufferEmissive" );
 	++rtvID;
@@ -167,7 +167,7 @@ void CRender::InitRenderTargets()
 	depthClearValue.DepthStencil.Depth = 1.f;
 	depthClearValue.DepthStencil.Stencil = 0;
 	m_globalBufferDescriptorsOffsets[ GBB_DEPTH ].m_rtvOffset = 0;
-	CheckResult( m_device->CreateCommittedResource( &GHeapPropertiesGPUOnly, D3D12_HEAP_FLAG_NONE, &depthDesc, D3D12_RESOURCE_STATE_DEPTH_READ | D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE, &depthClearValue, IID_PPV_ARGS( &m_globalBufferBuffers[ GBB_DEPTH ] ) ) );
+	CheckResult( m_device->CreateCommittedResource( &GHeapPropertiesGPUOnly, D3D12_HEAP_FLAG_NONE, &depthDesc, D3D12_RESOURCE_STATE_DEPTH_WRITE, &depthClearValue, IID_PPV_ARGS( &m_globalBufferBuffers[ GBB_DEPTH ] ) ) );
 	m_globalBufferBuffers[ GBB_DEPTH ]->SetName( L"MainDepth" );
 
 	D3D12_DEPTH_STENCIL_VIEW_DESC depthViewDesc = {};
@@ -194,7 +194,7 @@ void CRender::InitRenderTargets()
 	rainDepthClearValue.DepthStencil.Depth = 1.f;
 	rainDepthClearValue.DepthStencil.Stencil = 0;
 	m_globalBufferDescriptorsOffsets[ GBB_RAIN_DEPTH ].m_rtvOffset = 1;
-	CheckResult( m_device->CreateCommittedResource( &GHeapPropertiesGPUOnly, D3D12_HEAP_FLAG_NONE, &rainDepthDesc, D3D12_RESOURCE_STATE_DEPTH_READ | D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE, &rainDepthClearValue, IID_PPV_ARGS( &m_globalBufferBuffers[ GBB_RAIN_DEPTH ] ) ) );
+	CheckResult( m_device->CreateCommittedResource( &GHeapPropertiesGPUOnly, D3D12_HEAP_FLAG_NONE, &rainDepthDesc, D3D12_RESOURCE_STATE_DEPTH_WRITE, &rainDepthClearValue, IID_PPV_ARGS( &m_globalBufferBuffers[ GBB_RAIN_DEPTH ] ) ) );
 	m_globalBufferBuffers[ GBB_RAIN_DEPTH ]->SetName( L"RainDepth" );
 
 	D3D12_DEPTH_STENCIL_VIEW_DESC rainDepthViewDesc = {};
@@ -724,39 +724,37 @@ void CRender::DrawFrame()
 	barriers[1].Type = D3D12_RESOURCE_BARRIER_TYPE_TRANSITION;
 	barriers[1].Flags = D3D12_RESOURCE_BARRIER_FLAG_NONE;
 	barriers[1].Transition.pResource = m_globalBufferBuffers[ GBB_DIFFUSE ];
-	barriers[1].Transition.StateAfter = D3D12_RESOURCE_STATE_RENDER_TARGET;
-	barriers[1].Transition.StateBefore = D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE;
+	barriers[1].Transition.StateAfter = D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE;
+	barriers[1].Transition.StateBefore = D3D12_RESOURCE_STATE_RENDER_TARGET;
 	barriers[1].Transition.Subresource = D3D12_RESOURCE_BARRIER_ALL_SUBRESOURCES;
 
 	barriers[2].Type = D3D12_RESOURCE_BARRIER_TYPE_TRANSITION;
 	barriers[2].Flags = D3D12_RESOURCE_BARRIER_FLAG_NONE;
 	barriers[2].Transition.pResource = m_globalBufferBuffers[ GBB_NORMAL ];
-	barriers[2].Transition.StateAfter = D3D12_RESOURCE_STATE_RENDER_TARGET;
-	barriers[2].Transition.StateBefore = D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE;
+	barriers[2].Transition.StateAfter = D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE;
+	barriers[2].Transition.StateBefore = D3D12_RESOURCE_STATE_RENDER_TARGET;
 	barriers[2].Transition.Subresource = D3D12_RESOURCE_BARRIER_ALL_SUBRESOURCES;
 
 	barriers[3].Type = D3D12_RESOURCE_BARRIER_TYPE_TRANSITION;
 	barriers[3].Flags = D3D12_RESOURCE_BARRIER_FLAG_NONE;
 	barriers[3].Transition.pResource = m_globalBufferBuffers[ GBB_EMISSIVE_SPEC ];
-	barriers[3].Transition.StateAfter = D3D12_RESOURCE_STATE_RENDER_TARGET;
-	barriers[3].Transition.StateBefore = D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE;
+	barriers[3].Transition.StateAfter = D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE;
+	barriers[3].Transition.StateBefore = D3D12_RESOURCE_STATE_RENDER_TARGET;
 	barriers[3].Transition.Subresource = D3D12_RESOURCE_BARRIER_ALL_SUBRESOURCES;
 
 	barriers[4].Type = D3D12_RESOURCE_BARRIER_TYPE_TRANSITION;
 	barriers[4].Flags = D3D12_RESOURCE_BARRIER_FLAG_NONE;
 	barriers[4].Transition.pResource = m_globalBufferBuffers[ GBB_DEPTH ];
-	barriers[4].Transition.StateAfter = D3D12_RESOURCE_STATE_DEPTH_WRITE;
-	barriers[4].Transition.StateBefore = D3D12_RESOURCE_STATE_DEPTH_READ | D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE;
+	barriers[4].Transition.StateAfter = D3D12_RESOURCE_STATE_DEPTH_READ | D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE;
+	barriers[4].Transition.StateBefore = D3D12_RESOURCE_STATE_DEPTH_WRITE;
 	barriers[4].Transition.Subresource = D3D12_RESOURCE_BARRIER_ALL_SUBRESOURCES;
 
 	barriers[5].Type = D3D12_RESOURCE_BARRIER_TYPE_TRANSITION;
 	barriers[5].Flags = D3D12_RESOURCE_BARRIER_FLAG_NONE;
 	barriers[5].Transition.pResource = m_globalBufferBuffers[ GBB_RAIN_DEPTH ];
-	barriers[5].Transition.StateAfter = D3D12_RESOURCE_STATE_DEPTH_WRITE;
-	barriers[5].Transition.StateBefore = D3D12_RESOURCE_STATE_DEPTH_READ | D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE;
+	barriers[5].Transition.StateAfter = D3D12_RESOURCE_STATE_DEPTH_READ | D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE;
+	barriers[5].Transition.StateBefore = D3D12_RESOURCE_STATE_DEPTH_WRITE;
 	barriers[5].Transition.Subresource = D3D12_RESOURCE_BARRIER_ALL_SUBRESOURCES;
-
-	commandList->ResourceBarrier(6, barriers);
 
 	DrawEnviroParticleRenderData( commandList );
 
@@ -771,28 +769,12 @@ void CRender::DrawFrame()
 	commandList->ClearRenderTargetView( renderTargetDH, Vec4::ZERO.data, 0, nullptr );
 	commandList->ClearRenderTargetView( m_renderTargetDH.GetCPUDescriptor( m_globalBufferDescriptorsOffsets[ GBB_NORMAL ].m_rtvOffset), Vec4::ZERO.data, 0, nullptr );
 	commandList->ClearRenderTargetView( m_renderTargetDH.GetCPUDescriptor( m_globalBufferDescriptorsOffsets[ GBB_EMISSIVE_SPEC ].m_rtvOffset), Vec4::ZERO.data, 0, nullptr );
-	commandList->ClearRenderTargetView( frameRT, Vec4::ZERO.data, 0, nullptr );
 
 	DrawRenderData( commandList, m_commonRenderData[RL_OPAQUE] );
+	commandList->ResourceBarrier(6, barriers);
 
+	commandList->ClearRenderTargetView( frameRT, Vec4::ZERO.data, 0, nullptr );
 	commandList->OMSetRenderTargets(1, &frameRT, true, &depthBufferDH);
-
-	barriers[1].Transition.StateAfter = D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE;
-	barriers[1].Transition.StateBefore = D3D12_RESOURCE_STATE_RENDER_TARGET;
-
-	barriers[2].Transition.StateAfter = D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE;
-	barriers[2].Transition.StateBefore = D3D12_RESOURCE_STATE_RENDER_TARGET;
-
-	barriers[3].Transition.StateAfter = D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE;
-	barriers[3].Transition.StateBefore = D3D12_RESOURCE_STATE_RENDER_TARGET;
-
-	barriers[4].Transition.StateAfter = D3D12_RESOURCE_STATE_DEPTH_READ | D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE;
-	barriers[4].Transition.StateBefore = D3D12_RESOURCE_STATE_DEPTH_WRITE;
-
-	barriers[5].Transition.StateAfter = D3D12_RESOURCE_STATE_DEPTH_READ | D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE;
-	barriers[5].Transition.StateBefore = D3D12_RESOURCE_STATE_DEPTH_WRITE;
-
-	commandList->ResourceBarrier(5, &barriers[1]);
 
 	DrawLights( commandList );
 
@@ -806,7 +788,22 @@ void CRender::DrawFrame()
 	barriers[0].Transition.StateAfter = D3D12_RESOURCE_STATE_PRESENT;
 	barriers[0].Transition.StateBefore = D3D12_RESOURCE_STATE_RENDER_TARGET;
 
-	commandList->ResourceBarrier(1, barriers);
+	barriers[1].Transition.StateAfter = D3D12_RESOURCE_STATE_RENDER_TARGET;
+	barriers[1].Transition.StateBefore = D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE;
+
+	barriers[2].Transition.StateAfter = D3D12_RESOURCE_STATE_RENDER_TARGET;
+	barriers[2].Transition.StateBefore = D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE;
+
+	barriers[3].Transition.StateAfter = D3D12_RESOURCE_STATE_RENDER_TARGET;
+	barriers[3].Transition.StateBefore = D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE;
+
+	barriers[4].Transition.StateAfter = D3D12_RESOURCE_STATE_DEPTH_WRITE;
+	barriers[4].Transition.StateBefore = D3D12_RESOURCE_STATE_DEPTH_READ | D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE;
+
+	barriers[5].Transition.StateAfter = D3D12_RESOURCE_STATE_DEPTH_WRITE;
+	barriers[5].Transition.StateBefore = D3D12_RESOURCE_STATE_DEPTH_READ | D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE;
+
+	commandList->ResourceBarrier(6, barriers);
 
 	CheckResult(commandList->Close());
 	m_graphicsCQ->Wait( m_fence, m_fenceValue );
