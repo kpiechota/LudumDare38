@@ -662,8 +662,8 @@ void CRender::DrawEnviroParticleRenderData( ID3D12GraphicsCommandList* commandLi
 		}
 	}
 
-	commandList->RSSetScissorRects(1, &m_scissorRect);
-	commandList->RSSetViewports(1, &m_viewport);
+	//commandList->RSSetScissorRects(1, &m_scissorRect);
+	//commandList->RSSetViewports(1, &m_viewport);
 }
 void CRender::DrawDebug( ID3D12GraphicsCommandList* commandList )
 {
@@ -722,9 +722,6 @@ void CRender::DrawFrame()
 
 	m_frameData[m_frameID].m_frameCA->Reset();
 	commandList->Reset( m_frameData[ m_frameID ].m_frameCA, nullptr );
-
-	commandList->RSSetScissorRects(1, &m_scissorRect);
-	commandList->RSSetViewports(1, &m_viewport);
 	commandList->SetDescriptorHeaps(1, &m_texturesDH.m_pDescriptorHeap);
 	commandList->SetGraphicsRootSignature(m_graphicsRS);
 	commandList->SetGraphicsRootShaderResourceView( 1, GEnvironmentParticleManager.GetParticlesBufferAddress() );
@@ -764,7 +761,20 @@ void CRender::DrawFrame()
 	barriers[4].Transition.StateAfter = D3D12_RESOURCE_STATE_DEPTH_WRITE;
 	barriers[4].Transition.StateBefore = D3D12_RESOURCE_STATE_DEPTH_READ | D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE;
 	barriers[4].Transition.Subresource = D3D12_RESOURCE_BARRIER_ALL_SUBRESOURCES;
-	commandList->ResourceBarrier(5, barriers);
+
+	barriers[5].Type = D3D12_RESOURCE_BARRIER_TYPE_TRANSITION;
+	barriers[5].Flags = D3D12_RESOURCE_BARRIER_FLAG_NONE;
+	barriers[5].Transition.pResource = m_globalBufferBuffers[ GBB_RAIN_DEPTH ];
+	barriers[5].Transition.StateAfter = D3D12_RESOURCE_STATE_DEPTH_WRITE;
+	barriers[5].Transition.StateBefore = D3D12_RESOURCE_STATE_DEPTH_READ | D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE;
+	barriers[5].Transition.Subresource = D3D12_RESOURCE_BARRIER_ALL_SUBRESOURCES;
+
+	commandList->ResourceBarrier(6, barriers);
+
+	DrawEnviroParticleRenderData( commandList );
+
+	commandList->RSSetScissorRects(1, &m_scissorRect);
+	commandList->RSSetViewports(1, &m_viewport);
 
 	DrawOpaque( commandList );
 
@@ -784,20 +794,13 @@ void CRender::DrawFrame()
 	barriers[4].Transition.StateAfter = D3D12_RESOURCE_STATE_DEPTH_READ | D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE;
 	barriers[4].Transition.StateBefore = D3D12_RESOURCE_STATE_DEPTH_WRITE;
 
-	barriers[5].Type = D3D12_RESOURCE_BARRIER_TYPE_TRANSITION;
-	barriers[5].Flags = D3D12_RESOURCE_BARRIER_FLAG_NONE;
-	barriers[5].Transition.pResource = m_globalBufferBuffers[ GBB_RAIN_DEPTH ];
-	barriers[5].Transition.StateAfter = D3D12_RESOURCE_STATE_DEPTH_WRITE;
-	barriers[5].Transition.StateBefore = D3D12_RESOURCE_STATE_DEPTH_READ | D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE;
-	barriers[5].Transition.Subresource = D3D12_RESOURCE_BARRIER_ALL_SUBRESOURCES;
+	barriers[5].Transition.StateAfter = D3D12_RESOURCE_STATE_DEPTH_READ | D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE;
+	barriers[5].Transition.StateBefore = D3D12_RESOURCE_STATE_DEPTH_WRITE;
+
 	commandList->ResourceBarrier(5, &barriers[1]);
 
 	DrawLights( commandList );
-	DrawEnviroParticleRenderData( commandList );
 
-	barriers[5].Transition.StateAfter = D3D12_RESOURCE_STATE_DEPTH_READ | D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE;
-	barriers[5].Transition.StateBefore = D3D12_RESOURCE_STATE_DEPTH_WRITE;
-	commandList->ResourceBarrier(1, &barriers[5]);
 	D3D12_CPU_DESCRIPTOR_HANDLE depthBufferDH = m_depthBuffertDH.GetCPUDescriptor( 0 );
 	commandList->OMSetRenderTargets(1, &renderTargetDH, true,  &depthBufferDH);
 

@@ -1,5 +1,4 @@
 #include "environmentParticleCommon.hlsl"
-
 cbuffer objectBuffer : register(b0)
 {
 	float4x4 EnviroProjection;
@@ -79,6 +78,7 @@ VStoPS vsMain(uint vertexID : SV_VertexID )
 	return output;
 }
 
+[earlydepthstencil]
 float4 psMain(VStoPS input) : SV_TARGET0
 {
 	float2 uvPosition = input.m_projectionSpace.xy;
