@@ -152,7 +152,6 @@ private:
 	void DrawFullscreenTriangle( ID3D12GraphicsCommandList* commandList );
 	void DrawRect( ID3D12GraphicsCommandList* commandList, Vec4 screenPositionSize );
 	FORCE_INLINE void DrawDebug( ID3D12GraphicsCommandList* commandList );
-	FORCE_INLINE void DrawOpaque( ID3D12GraphicsCommandList* commandList );
 	FORCE_INLINE void DrawRenderData( ID3D12GraphicsCommandList* commandList, TArray< SCommonRenderData > const& renderData );
 	FORCE_INLINE void DrawLights( ID3D12GraphicsCommandList* commandList );
 	FORCE_INLINE void DrawEnviroParticleRenderData( ID3D12GraphicsCommandList* commandList );

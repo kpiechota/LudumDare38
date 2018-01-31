@@ -434,19 +434,6 @@ void CRender::Init()
 	GEnvironmentParticleManager.Init( 128, 3, 10.f );
 }
 
-void CRender::DrawOpaque(ID3D12GraphicsCommandList* commandList)
-{
-	D3D12_CPU_DESCRIPTOR_HANDLE renderTargetDH = m_renderTargetDH.GetCPUDescriptor( m_globalBufferDescriptorsOffsets[ GBB_DIFFUSE ].m_rtvOffset );
-	D3D12_CPU_DESCRIPTOR_HANDLE depthBufferDH = m_depthBuffertDH.GetCPUDescriptor( 0 );
-	commandList->OMSetRenderTargets(3, &renderTargetDH, true, &depthBufferDH);
-
-	commandList->ClearDepthStencilView( depthBufferDH, D3D12_CLEAR_FLAG_DEPTH, 1.f, 0, 0, nullptr );
-	commandList->ClearRenderTargetView( renderTargetDH, Vec4::ZERO.data, 0, nullptr );
-	commandList->ClearRenderTargetView( m_renderTargetDH.GetCPUDescriptor( m_globalBufferDescriptorsOffsets[ GBB_NORMAL ].m_rtvOffset), Vec4::ZERO.data, 0, nullptr );
-	commandList->ClearRenderTargetView( m_renderTargetDH.GetCPUDescriptor( m_globalBufferDescriptorsOffsets[ GBB_EMISSIVE_SPEC ].m_rtvOffset), Vec4::ZERO.data, 0, nullptr );
-	DrawRenderData( commandList, m_commonRenderData[RL_OPAQUE] );
-}
-
 void CRender::DrawRenderData( ID3D12GraphicsCommandList* commandList, TArray< SCommonRenderData > const& renderData )
 {
 	D3D_PRIMITIVE_TOPOLOGY currentTopology = D3D_PRIMITIVE_TOPOLOGY_UNDEFINED;
@@ -719,7 +706,7 @@ void CRender::DrawFrame()
 {
 	GDynamicGeometryManager.PreDraw();
 	ID3D12GraphicsCommandList* commandList = m_frameData[m_frameID].m_frameCL;
-
+	D3D12_CPU_DESCRIPTOR_HANDLE const frameRT = m_renderTargetDH.GetCPUDescriptor( m_frameID );
 	m_frameData[m_frameID].m_frameCA->Reset();
 	commandList->Reset( m_frameData[ m_frameID ].m_frameCA, nullptr );
 	commandList->SetDescriptorHeaps(1, &m_texturesDH.m_pDescriptorHeap);
@@ -776,11 +763,19 @@ void CRender::DrawFrame()
 	commandList->RSSetScissorRects(1, &m_scissorRect);
 	commandList->RSSetViewports(1, &m_viewport);
 
-	DrawOpaque( commandList );
+	D3D12_CPU_DESCRIPTOR_HANDLE renderTargetDH = m_renderTargetDH.GetCPUDescriptor( m_globalBufferDescriptorsOffsets[ GBB_DIFFUSE ].m_rtvOffset );
+	D3D12_CPU_DESCRIPTOR_HANDLE depthBufferDH = m_depthBuffertDH.GetCPUDescriptor( 0 );
+	commandList->OMSetRenderTargets(3, &renderTargetDH, true, &depthBufferDH);
 
-	D3D12_CPU_DESCRIPTOR_HANDLE renderTargetDH = m_renderTargetDH.GetCPUDescriptor( m_frameID );
-	commandList->OMSetRenderTargets(1, &renderTargetDH, true, nullptr);
+	commandList->ClearDepthStencilView( depthBufferDH, D3D12_CLEAR_FLAG_DEPTH, 1.f, 0, 0, nullptr );
 	commandList->ClearRenderTargetView( renderTargetDH, Vec4::ZERO.data, 0, nullptr );
+	commandList->ClearRenderTargetView( m_renderTargetDH.GetCPUDescriptor( m_globalBufferDescriptorsOffsets[ GBB_NORMAL ].m_rtvOffset), Vec4::ZERO.data, 0, nullptr );
+	commandList->ClearRenderTargetView( m_renderTargetDH.GetCPUDescriptor( m_globalBufferDescriptorsOffsets[ GBB_EMISSIVE_SPEC ].m_rtvOffset), Vec4::ZERO.data, 0, nullptr );
+	commandList->ClearRenderTargetView( frameRT, Vec4::ZERO.data, 0, nullptr );
+
+	DrawRenderData( commandList, m_commonRenderData[RL_OPAQUE] );
+
+	commandList->OMSetRenderTargets(1, &frameRT, true, &depthBufferDH);
 
 	barriers[1].Transition.StateAfter = D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE;
 	barriers[1].Transition.StateBefore = D3D12_RESOURCE_STATE_RENDER_TARGET;
@@ -800,9 +795,6 @@ void CRender::DrawFrame()
 	commandList->ResourceBarrier(5, &barriers[1]);
 
 	DrawLights( commandList );
-
-	D3D12_CPU_DESCRIPTOR_HANDLE depthBufferDH = m_depthBuffertDH.GetCPUDescriptor( 0 );
-	commandList->OMSetRenderTargets(1, &renderTargetDH, true,  &depthBufferDH);
 
 	commandList->SetGraphicsRootDescriptorTable( 6, m_texturesDH.GetGPUDescriptor( m_globalBufferDescriptorsOffsets[ GBB_RAIN_DEPTH ].m_srvOffset ) );
 
