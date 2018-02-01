@@ -1,6 +1,7 @@
+#include "common.hlsl"
 #include "environmentParticleCommon.hlsl"
 
-cbuffer objectBuffer : register(b0)
+cbuffer objectBuffer : register(b1)
 {
 	float3 Velocity;
 	float2 InitSize;

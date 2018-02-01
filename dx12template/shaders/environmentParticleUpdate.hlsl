@@ -1,8 +1,8 @@
+#include "common.hlsl"
 #include "environmentParticleCommon.hlsl"
 
-cbuffer objectBuffer : register(b0)
+cbuffer objectBuffer : register(b1)
 {
-	float DeltaTime;
 	uint ParticleNum;
 }
 RWStructuredBuffer< SEnvironmentParticle > Particles : register( u0 );

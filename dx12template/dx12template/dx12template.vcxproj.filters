@@ -191,5 +191,8 @@
     <ClInclude Include="rendering\renderData.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="rendering\constBuffers.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
 </Project>

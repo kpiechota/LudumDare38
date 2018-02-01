@@ -1,5 +1,4 @@
 #include "render.h"
-#include "../timer.h"
 
 CEnvironmentParticleManager::CEnvironmentParticleManager()
 	: m_particlesGPU( nullptr )
@@ -13,13 +12,18 @@ void CEnvironmentParticleManager::Init( UINT const initParticleNum, UINT const b
 {
 	ID3D12Device* const device = GRender.GetDevice();
 
-	D3D12_ROOT_PARAMETER rootParameters[2];
+	D3D12_ROOT_PARAMETER rootParameters[3];
 	rootParameters[0].ParameterType = D3D12_ROOT_PARAMETER_TYPE_CBV;
 	rootParameters[0].Descriptor = {0, 0};
 	rootParameters[0].ShaderVisibility = D3D12_SHADER_VISIBILITY_ALL;
-	rootParameters[1].ParameterType = D3D12_ROOT_PARAMETER_TYPE_UAV;
-	rootParameters[1].Descriptor = { 0, 0 };
+
+	rootParameters[1].ParameterType = D3D12_ROOT_PARAMETER_TYPE_CBV;
+	rootParameters[1].Descriptor = {1, 0};
 	rootParameters[1].ShaderVisibility = D3D12_SHADER_VISIBILITY_ALL;
+
+	rootParameters[2].ParameterType = D3D12_ROOT_PARAMETER_TYPE_UAV;
+	rootParameters[2].Descriptor = { 0, 0 };
+	rootParameters[2].ShaderVisibility = D3D12_SHADER_VISIBILITY_ALL;
 
 	D3D12_ROOT_SIGNATURE_DESC descRootSignature;
 	descRootSignature.NumParameters = ARRAYSIZE(rootParameters);
@@ -144,9 +148,8 @@ void CEnvironmentParticleManager::InitParticles(UINT const initParticleNum, UINT
 	m_particleCL->Reset( m_particleCA, m_particleShaderInit.GetPSO() );
 
 	m_particleCL->SetComputeRootSignature( m_particleRS );
-	m_particleCL->SetComputeRootConstantBufferView( 0, constBufferAddress );
-	m_particleCL->SetComputeRootSignature( m_particleRS );
-	m_particleCL->SetComputeRootUnorderedAccessView( 1, m_particlesGPU->GetGPUVirtualAddress() );
+	m_particleCL->SetComputeRootConstantBufferView( 1, constBufferAddress );
+	m_particleCL->SetComputeRootUnorderedAccessView( 2, m_particlesGPU->GetGPUVirtualAddress() );
 
 	m_particleCL->Dispatch( ( m_particlesNum + 63 ) & ~63, 1, 1 );
 
@@ -203,10 +206,8 @@ void CEnvironmentParticleManager::UpdateParticles()
 {
 	struct CBuffer
 	{
-		float m_deltaTime;
 		UINT m_particleNum;
 	} cbuffer;
-	cbuffer.m_deltaTime = GTimer.GameDelta();
 	cbuffer.m_particleNum = m_particlesNum;
 	D3D12_GPU_VIRTUAL_ADDRESS constBufferAddress;
 	GRender.SetConstBuffer( constBufferAddress, (Byte*)&cbuffer, sizeof( cbuffer ) );
@@ -215,8 +216,9 @@ void CEnvironmentParticleManager::UpdateParticles()
 	m_particleCL->Reset( m_particleCA, m_particleShaderUpdate.GetPSO() );
 
 	m_particleCL->SetComputeRootSignature( m_particleRS );
-	m_particleCL->SetComputeRootConstantBufferView( 0, constBufferAddress );
-	m_particleCL->SetComputeRootUnorderedAccessView( 1, m_particlesGPU->GetGPUVirtualAddress() );
+	m_particleCL->SetComputeRootConstantBufferView( 0, GRender.GetGlobalConstBufferAddress() );
+	m_particleCL->SetComputeRootConstantBufferView( 1, constBufferAddress );
+	m_particleCL->SetComputeRootUnorderedAccessView( 2, m_particlesGPU->GetGPUVirtualAddress() );
 
 	m_particleCL->Dispatch( ( m_particlesNum + 63 ) & ~63, 1, 1 );
 
@@ -246,21 +248,7 @@ void CEnvironmentParticleManager::FillRenderData()
 	GRender.AddTextureID( T_SNOW );
 	renderData.m_shaderID = EShaderType::ST_ENV_PARTICLE;
 	renderData.m_drawType = EDrawType::DrawInstanced;
-
-	Matrix4x4 const scaleMatrix
-	( 
-		0.5f, 0.f, 0.f, 0.f,
-		0.f, -0.5f, 0.f, 0.f,
-		0.f, 0.f, 1.f, 0.f,
-		0.5f, 0.5f, 0.f, 1.f 
-	);
-
-	Matrix4x4 const viewToScreen = GViewObject.m_camera.m_viewToScreen;
-	Matrix4x4 const worldToScreen = GViewObject.m_camera.m_worldToScreen;
-	Matrix4x4 const projectionMatrix = GViewObject.m_enviroParticleWorldToScreen;
-	Matrix4x4 tProjectionMatrix = Math::Mul( projectionMatrix, scaleMatrix );
-	tProjectionMatrix.Transpose();
-
+	
 	Matrix4x4 objectToWorld = m_boxMatrix;
 
 	Vec4 const color( 0.1f, 0.1f, 0.1f, 1.f );
@@ -270,7 +258,6 @@ void CEnvironmentParticleManager::FillRenderData()
 	//Vec2 const uvScale( 1.f, 1.f );
 	Vec2 const uvScale( 1.f / 4.f, 1.f / 4.f );
 
-	Vec2 const perspectiveValues( viewToScreen.m_a32, -viewToScreen.m_a22 );
 	float const softFactor = 0.5f;
 
 	UINT const boxesOnAxis = m_boxesNum * 2 + 1;
@@ -286,19 +273,12 @@ void CEnvironmentParticleManager::FillRenderData()
 				objectToWorld.m_a32 = z;
 
 				Matrix4x4 tObjectToWorld = objectToWorld;
-				Matrix4x4 tWorldToScreen = worldToScreen;
-
 				tObjectToWorld.Transpose();
-				tWorldToScreen.Transpose();
 			
 				CConstBufferCtx const cbCtx = GRender.GetConstBufferCtx( renderData.m_cbOffset, renderData.m_shaderID );
-				cbCtx.SetParam( &tProjectionMatrix,		sizeof( tProjectionMatrix ),	EShaderParameters::EnviroProjection );
-				cbCtx.SetParam( &tWorldToScreen,		sizeof( tWorldToScreen ),		EShaderParameters::WorldToScreen );
 				cbCtx.SetParam( &tObjectToWorld,		3 * sizeof( Vec4 ),				EShaderParameters::ObjectToWorld );
 				cbCtx.SetParam( &color,					sizeof( color ),				EShaderParameters::Color );
-				cbCtx.SetParam( &cameraPosition,		sizeof( cameraPosition ),		EShaderParameters::CameraPositionWS );
 				cbCtx.SetParam( &uvScale,				sizeof( uvScale ),				EShaderParameters::UVScale );
-				cbCtx.SetParam( &perspectiveValues,		sizeof( perspectiveValues ),	EShaderParameters::PerspectiveValues );
 				cbCtx.SetParam( &fade,					sizeof( fade ),					EShaderParameters::Fade );
 				cbCtx.SetParam( &softFactor,			sizeof( softFactor ),			EShaderParameters::Soft );
 

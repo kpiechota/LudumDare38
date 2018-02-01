@@ -1,8 +1,7 @@
-cbuffer objectBuffer : register(b0)
-{
-	float4x3 ViewToWorld;
-	float4 PerspectiveValues;
+#include "common.hlsl"
 
+cbuffer objectBuffer : register(b1)
+{
 #ifdef POINT
 	float3 LightPos; 
 	float2 Attenuation; //x - invRadius, y - fade

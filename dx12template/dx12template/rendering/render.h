@@ -135,6 +135,8 @@ private:
 	Vec3							m_directLightColor;
 	Vec3							m_ambientLightColor;
 
+	D3D12_GPU_VIRTUAL_ADDRESS		m_globalConstBufferAddress;
+
 private:
 	void InitCommands();
 	void InitFrameData();
@@ -156,6 +158,7 @@ private:
 	FORCE_INLINE void DrawLights( ID3D12GraphicsCommandList* commandList );
 	FORCE_INLINE void DrawEnviroParticleRenderData( ID3D12GraphicsCommandList* commandList );
 	FORCE_INLINE void PrepareView();
+	FORCE_INLINE void PrepareGlobalConstBuffer();
 
 public:
 	void Init();
@@ -212,6 +215,8 @@ public: //Getters/setters
 	void SetDirectLightDir( Vec3 const dir ) { m_directLightDir = dir; }
 	void SetDirectLightColor( Vec3 const color ) { m_directLightColor = color; }
 	void SetAmbientLightColor( Vec3 const color ) { m_ambientLightColor = color; }
+
+	D3D12_GPU_VIRTUAL_ADDRESS GetGlobalConstBufferAddress() const { return m_globalConstBufferAddress; }
 };
 
 extern CRender GRender;

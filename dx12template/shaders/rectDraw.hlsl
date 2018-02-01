@@ -1,4 +1,5 @@
-cbuffer objectBuffer : register(b0)
+#include "common.hlsl"
+cbuffer objectBuffer : register(b1)
 {
 	float2 ScreenPosition;
 	float2 Size;

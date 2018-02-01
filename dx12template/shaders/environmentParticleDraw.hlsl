@@ -1,13 +1,10 @@
+#include "common.hlsl"
 #include "environmentParticleCommon.hlsl"
-cbuffer objectBuffer : register(b0)
+cbuffer objectBuffer : register(b1)
 {
-	float4x4 EnviroProjection;
-	float4x4 WorldToScreen;
 	float4x3 ObjectToWorld;
 	float4 Color;
-	float3 CameraPositionWS;
 	float2 UVScale;
-	float2 PerspectiveValues;
 	float2 Fade;
 	float Soft;
 }
@@ -22,7 +19,7 @@ SamplerState SamplerDepth : register(s2);
 float GetLinearDepth( float2 uv )
 {
 	float depthHW = DepthTex.Load( int3( uv.xy, 0 ) ).r;
-	return PerspectiveValues.x / ( depthHW + PerspectiveValues.y );
+	return PerspectiveValues.z / ( depthHW + PerspectiveValues.w );
 }
 
 struct VStoPS

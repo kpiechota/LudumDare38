@@ -1,4 +1,6 @@
 #include "render.h"
+#include "constBuffers.h"
+#include "../timer.h"
 #include <math.h>
 
 extern SViewObject GViewObject;
@@ -239,35 +241,39 @@ void CRender::InitRootSignatures()
 		{ D3D12_DESCRIPTOR_RANGE_TYPE_SRV, 1, 3, 0, D3D12_DESCRIPTOR_RANGE_OFFSET_APPEND },
 		{ D3D12_DESCRIPTOR_RANGE_TYPE_SRV, 1, 4, 0, D3D12_DESCRIPTOR_RANGE_OFFSET_APPEND },
 	};
-	D3D12_ROOT_PARAMETER rootParameters[7];
+	D3D12_ROOT_PARAMETER rootParameters[8];
 
 	rootParameters[0].ParameterType = D3D12_ROOT_PARAMETER_TYPE_CBV;
 	rootParameters[0].Descriptor = {0, 0};
 	rootParameters[0].ShaderVisibility = D3D12_SHADER_VISIBILITY_ALL;
 
-	rootParameters[1].ParameterType = D3D12_ROOT_PARAMETER_TYPE_SRV;
-	rootParameters[1].Descriptor = {0, 0};
-	rootParameters[1].ShaderVisibility = D3D12_SHADER_VISIBILITY_VERTEX;
+	rootParameters[1].ParameterType = D3D12_ROOT_PARAMETER_TYPE_CBV;
+	rootParameters[1].Descriptor = {1, 0};
+	rootParameters[1].ShaderVisibility = D3D12_SHADER_VISIBILITY_ALL;
 
-	rootParameters[2].ParameterType = D3D12_ROOT_PARAMETER_TYPE_DESCRIPTOR_TABLE;
-	rootParameters[2].DescriptorTable = { 1, &descriptorRange[ 0 ] };
-	rootParameters[2].ShaderVisibility = D3D12_SHADER_VISIBILITY_PIXEL;
+	rootParameters[2].ParameterType = D3D12_ROOT_PARAMETER_TYPE_SRV;
+	rootParameters[2].Descriptor = {0, 0};
+	rootParameters[2].ShaderVisibility = D3D12_SHADER_VISIBILITY_VERTEX;
 
 	rootParameters[3].ParameterType = D3D12_ROOT_PARAMETER_TYPE_DESCRIPTOR_TABLE;
-	rootParameters[3].DescriptorTable = { 1, &descriptorRange[ 1 ] };
+	rootParameters[3].DescriptorTable = { 1, &descriptorRange[ 0 ] };
 	rootParameters[3].ShaderVisibility = D3D12_SHADER_VISIBILITY_PIXEL;
 
 	rootParameters[4].ParameterType = D3D12_ROOT_PARAMETER_TYPE_DESCRIPTOR_TABLE;
-	rootParameters[4].DescriptorTable = { 1, &descriptorRange[ 2 ] };
+	rootParameters[4].DescriptorTable = { 1, &descriptorRange[ 1 ] };
 	rootParameters[4].ShaderVisibility = D3D12_SHADER_VISIBILITY_PIXEL;
 
 	rootParameters[5].ParameterType = D3D12_ROOT_PARAMETER_TYPE_DESCRIPTOR_TABLE;
-	rootParameters[5].DescriptorTable = { 1, &descriptorRange[ 3 ] };
+	rootParameters[5].DescriptorTable = { 1, &descriptorRange[ 2 ] };
 	rootParameters[5].ShaderVisibility = D3D12_SHADER_VISIBILITY_PIXEL;
 
 	rootParameters[6].ParameterType = D3D12_ROOT_PARAMETER_TYPE_DESCRIPTOR_TABLE;
-	rootParameters[6].DescriptorTable = { 1, &descriptorRange[ 4 ] };
+	rootParameters[6].DescriptorTable = { 1, &descriptorRange[ 3 ] };
 	rootParameters[6].ShaderVisibility = D3D12_SHADER_VISIBILITY_PIXEL;
+
+	rootParameters[7].ParameterType = D3D12_ROOT_PARAMETER_TYPE_DESCRIPTOR_TABLE;
+	rootParameters[7].DescriptorTable = { 1, &descriptorRange[ 4 ] };
+	rootParameters[7].ShaderVisibility = D3D12_SHADER_VISIBILITY_PIXEL;
 
 	D3D12_STATIC_SAMPLER_DESC const samplers[] =
 	{
@@ -447,7 +453,7 @@ void CRender::DrawRenderData( ID3D12GraphicsCommandList* commandList, TArray< SC
 	SCommonRenderData const* const pRenderDataEnd = renderData.end();
 	for (;pRenderData != pRenderDataEnd; ++pRenderData)
 	{
-		commandList->SetGraphicsRootConstantBufferView(0, constBufferStart + pRenderData->m_cbOffset );
+		commandList->SetGraphicsRootConstantBufferView(1, constBufferStart + pRenderData->m_cbOffset );
 
 		UINT const textureNum = pRenderData->m_texturesNum;
 		for ( UINT textureID = 0; textureID < textureNum; ++textureID )
@@ -457,7 +463,7 @@ void CRender::DrawRenderData( ID3D12GraphicsCommandList* commandList, TArray< SC
 			{
 				if ( texture != UINT8_MAX )
 				{
-					commandList->SetGraphicsRootDescriptorTable( textureID + 2, m_texturesDH.GetGPUDescriptor( texture ) );
+					commandList->SetGraphicsRootDescriptorTable( textureID + 3, m_texturesDH.GetGPUDescriptor( texture ) );
 					currentTexture[ textureID ] = texture;
 				}
 			}
@@ -516,10 +522,10 @@ void CRender::DrawRenderData( ID3D12GraphicsCommandList* commandList, TArray< SC
 
 void CRender::DrawLights( ID3D12GraphicsCommandList * commandList )
 {
-	commandList->SetGraphicsRootDescriptorTable( 2, m_texturesDH.GetGPUDescriptor( m_globalBufferDescriptorsOffsets[ GBB_DIFFUSE ].m_srvOffset ) );
-	commandList->SetGraphicsRootDescriptorTable( 3, m_texturesDH.GetGPUDescriptor( m_globalBufferDescriptorsOffsets[ GBB_NORMAL ].m_srvOffset ) );
-	commandList->SetGraphicsRootDescriptorTable( 4, m_texturesDH.GetGPUDescriptor( m_globalBufferDescriptorsOffsets[ GBB_EMISSIVE_SPEC ].m_srvOffset ) );
-	commandList->SetGraphicsRootDescriptorTable( 5, m_texturesDH.GetGPUDescriptor( m_globalBufferDescriptorsOffsets[ GBB_DEPTH ].m_srvOffset ) );
+	commandList->SetGraphicsRootDescriptorTable( 3, m_texturesDH.GetGPUDescriptor( m_globalBufferDescriptorsOffsets[ GBB_DIFFUSE ].m_srvOffset ) );
+	commandList->SetGraphicsRootDescriptorTable( 4, m_texturesDH.GetGPUDescriptor( m_globalBufferDescriptorsOffsets[ GBB_NORMAL ].m_srvOffset ) );
+	commandList->SetGraphicsRootDescriptorTable( 5, m_texturesDH.GetGPUDescriptor( m_globalBufferDescriptorsOffsets[ GBB_EMISSIVE_SPEC ].m_srvOffset ) );
+	commandList->SetGraphicsRootDescriptorTable( 6, m_texturesDH.GetGPUDescriptor( m_globalBufferDescriptorsOffsets[ GBB_DEPTH ].m_srvOffset ) );
 
 	D3D12_GPU_VIRTUAL_ADDRESS const constBufferStart = m_constBufferResource->GetGPUVirtualAddress();
 
@@ -533,20 +539,13 @@ void CRender::DrawLights( ID3D12GraphicsCommandList * commandList )
 	CConstBufferCtx const cbCtx = GetLightConstBufferCtx( dirCbOffset, dirLightFlags );
 	if ( dirLightFlags & Byte( LF_DIRECT ) )
 	{
-		SCameraMatrices const& cameraMatrices = GViewObject.m_camera;
-		Matrix4x4 tViewToWorld = cameraMatrices.m_viewToWorld;
-		tViewToWorld.Transpose();
-		Vec4 const perspectiveValues(1.f / cameraMatrices.m_viewToScreen.m_a00, 1.f / cameraMatrices.m_viewToScreen.m_a11, cameraMatrices.m_viewToScreen.m_a32, -cameraMatrices.m_viewToScreen.m_a22 );
-
-		cbCtx.SetParam( &tViewToWorld,			3 * sizeof( Vec4 ),				EShaderParameters::ViewToWorld );
-		cbCtx.SetParam( &perspectiveValues,		sizeof( perspectiveValues ),	EShaderParameters::PerspectiveValues );
 		cbCtx.SetParam( &m_directLightDir,		sizeof( m_directLightDir ),		EShaderParameters::LightDirWS );
 		cbCtx.SetParam( &m_directLightColor,	sizeof( m_directLightColor ),	EShaderParameters::Color );
 	}
 	cbCtx.SetParam( &m_ambientLightColor,		sizeof( m_ambientLightColor ),	EShaderParameters::AmbientColor );
 
 	commandList->SetPipelineState( m_shaderLight[ dirLightFlags ].GetPSO() );
-	commandList->SetGraphicsRootConstantBufferView(0, constBufferStart + dirCbOffset );
+	commandList->SetGraphicsRootConstantBufferView(1, constBufferStart + dirCbOffset );
 	DrawFullscreenTriangle( commandList );
 
 	UINT const lightNum = m_lightRenderData.Size();
@@ -560,7 +559,7 @@ void CRender::DrawLights( ID3D12GraphicsCommandList * commandList )
 			commandList->SetPipelineState( m_shaderLight[ lightShader ].GetPSO() );
 		}
 
-		commandList->SetGraphicsRootConstantBufferView(0, constBufferStart + light.m_cbOffset );
+		commandList->SetGraphicsRootConstantBufferView(1, constBufferStart + light.m_cbOffset );
 		DrawFullscreenTriangle( commandList );
 	}
 }
@@ -597,7 +596,7 @@ void CRender::DrawEnviroParticleRenderData( ID3D12GraphicsCommandList* commandLi
 	SShadowRenderData const* const pRenderDataEnd = m_enviroParticleRenderData.end();
 	for (;pRenderData != pRenderDataEnd; ++pRenderData)
 	{
-		commandList->SetGraphicsRootConstantBufferView(0, constBufferStart + pRenderData->m_cbOffset );
+		commandList->SetGraphicsRootConstantBufferView(1, constBufferStart + pRenderData->m_cbOffset );
 
 		if ( currentTopology != pRenderData->m_topology )
 		{
@@ -655,7 +654,7 @@ void CRender::DrawEnviroParticleRenderData( ID3D12GraphicsCommandList* commandLi
 void CRender::DrawDebug( ID3D12GraphicsCommandList* commandList )
 {
 #ifdef _DEBUG
-	commandList->SetGraphicsRootDescriptorTable( 2, m_texturesDH.GetGPUDescriptor( m_globalBufferDescriptorsOffsets[ GBB_RAIN_DEPTH ].m_srvOffset ) );
+	commandList->SetGraphicsRootDescriptorTable( 3, m_texturesDH.GetGPUDescriptor( m_globalBufferDescriptorsOffsets[ GBB_RAIN_DEPTH ].m_srvOffset ) );
 	commandList->SetPipelineState( m_shaders[ EShaderType::ST_RECT_DRAW ].GetPSO() );
 	DrawRect( commandList, Vec4( -0.75f, -.75f, 0.5f, 0.5f ) );
 #endif
@@ -683,9 +682,39 @@ void CRender::PrepareView()
 	GViewObject.m_enviroParticleWorldToScreen = Math::Mul( GViewObject.m_enviroParticleWorldToScreen, GEnvironmentParticleManager.GetViewToScreen() );
 }
 
+void CRender::PrepareGlobalConstBuffer()
+{
+	Matrix4x4 const scaleMatrix
+	( 
+		0.5f, 0.f, 0.f, 0.f,
+		0.f, -0.5f, 0.f, 0.f,
+		0.f, 0.f, 1.f, 0.f,
+		0.5f, 0.5f, 0.f, 1.f 
+	);
+
+	SCameraMatrices const& cameraMatrices = GViewObject.m_camera;
+	SGlobalBuffer globalCB;
+	globalCB.m_enviroProjection = Math::Mul( GViewObject.m_enviroParticleWorldToScreen, scaleMatrix );
+	globalCB.m_enviroProjection.Transpose();
+
+	globalCB.m_worldToScreen = GViewObject.m_camera.m_worldToScreen;
+	globalCB.m_worldToScreen.Transpose();
+
+	Matrix4x4 tViewToWorld = cameraMatrices.m_viewToWorld;
+	tViewToWorld.Transpose();
+	memcpy( globalCB.m_viewToWorld, &tViewToWorld, 3 * sizeof( Vec4 ) );
+
+	globalCB.m_perspectiveValues.Set(1.f / cameraMatrices.m_viewToScreen.m_a00, 1.f / cameraMatrices.m_viewToScreen.m_a11, cameraMatrices.m_viewToScreen.m_a32, -cameraMatrices.m_viewToScreen.m_a22 );
+	globalCB.m_cameraPositionWS = GComponentCameraManager.GetMainCameraPosition();
+	globalCB.m_deltaTime = GTimer.GameDelta();
+
+	GRender.SetConstBuffer( m_globalConstBufferAddress, (Byte*)&globalCB, sizeof( globalCB ) );
+}
+
 void CRender::PreDrawFrame()
 {
 	PrepareView();
+	PrepareGlobalConstBuffer();
 
 	GEnvironmentParticleManager.UpdateParticles();
 
@@ -711,7 +740,8 @@ void CRender::DrawFrame()
 	commandList->Reset( m_frameData[ m_frameID ].m_frameCA, nullptr );
 	commandList->SetDescriptorHeaps(1, &m_texturesDH.m_pDescriptorHeap);
 	commandList->SetGraphicsRootSignature(m_graphicsRS);
-	commandList->SetGraphicsRootShaderResourceView( 1, GEnvironmentParticleManager.GetParticlesBufferAddress() );
+	commandList->SetGraphicsRootConstantBufferView( 0, m_globalConstBufferAddress );
+	commandList->SetGraphicsRootShaderResourceView( 2, GEnvironmentParticleManager.GetParticlesBufferAddress() );
 
 	D3D12_RESOURCE_BARRIER barriers[ 6 ];
 	barriers[0].Type = D3D12_RESOURCE_BARRIER_TYPE_TRANSITION;
@@ -778,12 +808,12 @@ void CRender::DrawFrame()
 
 	DrawLights( commandList );
 
-	commandList->SetGraphicsRootDescriptorTable( 6, m_texturesDH.GetGPUDescriptor( m_globalBufferDescriptorsOffsets[ GBB_RAIN_DEPTH ].m_srvOffset ) );
+	commandList->SetGraphicsRootDescriptorTable( 7, m_texturesDH.GetGPUDescriptor( m_globalBufferDescriptorsOffsets[ GBB_RAIN_DEPTH ].m_srvOffset ) );
 
 	DrawRenderData( commandList, m_commonRenderData[RL_TRANSLUCENT] );
 	DrawRenderData( commandList, m_commonRenderData[RL_OVERLAY] );
 
-	//DrawDebug( commandList );
+	DrawDebug( commandList );
 	
 	barriers[0].Transition.StateAfter = D3D12_RESOURCE_STATE_PRESENT;
 	barriers[0].Transition.StateBefore = D3D12_RESOURCE_STATE_RENDER_TARGET;
@@ -928,7 +958,7 @@ void CRender::DrawRect( ID3D12GraphicsCommandList* commandList, Vec4 screenPosit
 	D3D12_GPU_VIRTUAL_ADDRESS constBufferAddress;
 	GRender.SetConstBuffer( constBufferAddress, (Byte*)&screenPositionSize, sizeof( screenPositionSize ) );
 
-	commandList->SetGraphicsRootConstantBufferView( 0, constBufferAddress );
+	commandList->SetGraphicsRootConstantBufferView( 1, constBufferAddress );
 	commandList->IASetPrimitiveTopology( D3D_PRIMITIVE_TOPOLOGY::D3D_PRIMITIVE_TOPOLOGY_TRIANGLESTRIP );
 	commandList->DrawInstanced( 4, 1, 0, 0 );
 }

@@ -6,21 +6,16 @@ LPCSTR ShaderParamsNames[] =
 {
 	"ObjectToScreen",
 	"ObjectToWorld",
-	"WorldToScreen",
-	"ViewToWorld",
-	"PerspectiveValues",
 	"LightPos",
 	"Attenuation",
 	"Color",
 	"Cutoff",
 	"AmbientColor",
 	"LightDirWS",
-	"CameraPositionWS",
 	"UVScale",
 	"Fade",
 	"Soft",
 	"Tiling",
-	"EnviroProjection",
 };
 CT_ASSERT( (ARRAYSIZE( ShaderParamsNames ) == ( UINT(EShaderParameters::SP_MAX) )) );
 
@@ -56,25 +51,29 @@ void CShaderRes::InitShader( LPCWSTR pFileName, D3D12_INPUT_ELEMENT_DESC const* 
 	ID3D12ShaderReflection* shaderRefl;
 	ID3D12ShaderReflectionConstantBuffer* shaderCBRefl = nullptr;
 	ID3D12ShaderReflectionVariable*	shaderVaribleRefl = nullptr;
+	D3D12_SHADER_DESC shaderDesc;
 	D3D12_SHADER_BUFFER_DESC bufferDesc;
 	D3D12_SHADER_VARIABLE_DESC variableDesc;
-
 	ID3DBlob* vsShader;
+
 	LoadShader(pFileName, pDefines, "vsMain", "vs_5_1", &vsShader);
 	descPSO.VS = { vsShader->GetBufferPointer(), vsShader->GetBufferSize() };
 	D3DReflect( vsShader->GetBufferPointer(), vsShader->GetBufferSize(), IID_PPV_ARGS( &shaderRefl ) );
-	shaderCBRefl = shaderRefl->GetConstantBufferByIndex( 0 );
-	shaderCBRefl->GetDesc( &bufferDesc );
-	if ( shaderCBRefl->GetDesc( &bufferDesc ) == S_OK )
+	if ( shaderRefl->GetDesc( &shaderDesc ) == S_OK )
 	{
-		m_bufferSize = UINT16( bufferDesc.Size );
-
-		for ( UINT i = 0; i < ARRAYSIZE( ShaderParamsNames ); ++i )
+		shaderCBRefl = shaderRefl->GetConstantBufferByName( "objectBuffer" );
+		shaderCBRefl->GetDesc( &bufferDesc );
+		if ( shaderCBRefl->GetDesc( &bufferDesc ) == S_OK )
 		{
-			shaderVaribleRefl = shaderCBRefl->GetVariableByName( ShaderParamsNames[ i ] );
-			if ( shaderVaribleRefl->GetDesc( &variableDesc ) == S_OK )
+			m_bufferSize = UINT16( bufferDesc.Size );
+
+			for ( UINT i = 0; i < ARRAYSIZE( ShaderParamsNames ); ++i )
 			{
-				m_paramOffsets[ i ] = UINT16(variableDesc.StartOffset);
+				shaderVaribleRefl = shaderCBRefl->GetVariableByName( ShaderParamsNames[ i ] );
+				if ( shaderVaribleRefl->GetDesc( &variableDesc ) == S_OK )
+				{
+					m_paramOffsets[ i ] = UINT16( variableDesc.StartOffset );
+				}
 			}
 		}
 	}
@@ -83,21 +82,23 @@ void CShaderRes::InitShader( LPCWSTR pFileName, D3D12_INPUT_ELEMENT_DESC const* 
 	LoadShader(pFileName, pDefines, "psMain", "ps_5_1", &psShader);
 	descPSO.PS = { psShader->GetBufferPointer(), psShader->GetBufferSize() };
 	D3DReflect( psShader->GetBufferPointer(), psShader->GetBufferSize(), IID_PPV_ARGS( &shaderRefl ) );
-	shaderCBRefl = shaderRefl->GetConstantBufferByIndex( 0 );
-	if ( shaderCBRefl->GetDesc( &bufferDesc ) == S_OK )
+	if ( shaderRefl->GetDesc( &shaderDesc ) == S_OK )
 	{
-		m_bufferSize = max( m_bufferSize, UINT16( bufferDesc.Size ) );
-
-		for ( UINT i = 0; i < ARRAYSIZE( ShaderParamsNames ); ++i )
+		shaderCBRefl = shaderRefl->GetConstantBufferByName( "objectBuffer" );
+		if ( shaderCBRefl->GetDesc( &bufferDesc ) == S_OK )
 		{
-			shaderVaribleRefl = shaderCBRefl->GetVariableByName( ShaderParamsNames[ i ] );
-			if ( shaderVaribleRefl->GetDesc( &variableDesc ) == S_OK )
+			m_bufferSize = max( m_bufferSize, UINT16( bufferDesc.Size ) );
+
+			for ( UINT i = 0; i < ARRAYSIZE( ShaderParamsNames ); ++i )
 			{
-				m_paramOffsets[ i ] = UINT16(variableDesc.StartOffset);
+				shaderVaribleRefl = shaderCBRefl->GetVariableByName( ShaderParamsNames[ i ] );
+				if ( shaderVaribleRefl->GetDesc( &variableDesc ) == S_OK )
+				{
+					m_paramOffsets[ i ] = UINT16( variableDesc.StartOffset );
+				}
 			}
 		}
 	}
-
 	m_bufferSize = (m_bufferSize + 255) & ~255;
 	CheckResult(GRender.GetDevice()->CreateGraphicsPipelineState(&descPSO, IID_PPV_ARGS(&m_pso)));
 
@@ -116,6 +117,7 @@ void CShaderRes::InitComputeShader( LPCWSTR pFileName, ID3D12RootSignature* pRoo
 	ID3D12ShaderReflection* shaderRefl;
 	ID3D12ShaderReflectionConstantBuffer* shaderCBRefl = nullptr;
 	ID3D12ShaderReflectionVariable*	shaderVaribleRefl = nullptr;
+	D3D12_SHADER_DESC shaderDesc;
 	D3D12_SHADER_BUFFER_DESC bufferDesc;
 	D3D12_SHADER_VARIABLE_DESC variableDesc;
 
@@ -123,18 +125,21 @@ void CShaderRes::InitComputeShader( LPCWSTR pFileName, ID3D12RootSignature* pRoo
 	LoadShader(pFileName, pDefines, "csMain", "cs_5_1", &csShader);
 	descPSO.CS = { csShader->GetBufferPointer(), csShader->GetBufferSize() };
 	D3DReflect( csShader->GetBufferPointer(), csShader->GetBufferSize(), IID_PPV_ARGS( &shaderRefl ) );
-	shaderCBRefl = shaderRefl->GetConstantBufferByIndex( 0 );
-	shaderCBRefl->GetDesc( &bufferDesc );
-	if ( shaderCBRefl->GetDesc( &bufferDesc ) == S_OK )
+	if ( shaderRefl->GetDesc( &shaderDesc ) == S_OK )
 	{
-		m_bufferSize = UINT16( bufferDesc.Size );
-
-		for ( UINT i = 0; i < ARRAYSIZE( ShaderParamsNames ); ++i )
+		shaderCBRefl = shaderRefl->GetConstantBufferByName( "objectBuffer" );
+		shaderCBRefl->GetDesc( &bufferDesc );
+		if ( shaderCBRefl->GetDesc( &bufferDesc ) == S_OK )
 		{
-			shaderVaribleRefl = shaderCBRefl->GetVariableByName( ShaderParamsNames[ i ] );
-			if ( shaderVaribleRefl->GetDesc( &variableDesc ) == S_OK )
+			m_bufferSize = UINT16( bufferDesc.Size );
+
+			for ( UINT i = 0; i < ARRAYSIZE( ShaderParamsNames ); ++i )
 			{
-				m_paramOffsets[ i ] = UINT16(variableDesc.StartOffset);
+				shaderVaribleRefl = shaderCBRefl->GetVariableByName( ShaderParamsNames[ i ] );
+				if ( shaderVaribleRefl->GetDesc( &variableDesc ) == S_OK )
+				{
+					m_paramOffsets[ i ] = UINT16( variableDesc.StartOffset );
+				}
 			}
 		}
 	}

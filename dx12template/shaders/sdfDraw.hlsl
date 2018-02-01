@@ -1,4 +1,5 @@
-cbuffer objectBuffer : register(b0)
+#include "common.hlsl"
+cbuffer objectBuffer : register(b1)
 {
 	float4 Color;
 	float2 Cutoff;

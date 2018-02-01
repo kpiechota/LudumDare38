@@ -1,4 +1,4 @@
-cbuffer objectBuffer : register(b0)
+cbuffer objectBuffer : register(b1)
 {
 	float4x3 ViewToWorld;
 	float4 PerspectiveValues;

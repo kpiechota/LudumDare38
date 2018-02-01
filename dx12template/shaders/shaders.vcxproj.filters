@@ -24,5 +24,6 @@
     <FxCompile Include="environmentParticleInit.hlsl" />
     <FxCompile Include="environmentParticleDraw.hlsl" />
     <FxCompile Include="rectDraw.hlsl" />
+    <FxCompile Include="common.hlsl" />
   </ItemGroup>
 </Project>
