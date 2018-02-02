@@ -71,6 +71,8 @@ void CEnvironmentParticleManager::AllocateBuffers()
 	particleResDesc.Flags = D3D12_RESOURCE_FLAG_ALLOW_UNORDERED_ACCESS;
 
 	CheckResult( device->CreateCommittedResource( &GHeapPropertiesGPUOnly, D3D12_HEAP_FLAG_NONE, &particleResDesc, D3D12_RESOURCE_STATE_UNORDERED_ACCESS, nullptr, IID_PPV_ARGS( &m_particlesGPU ) ) );
+
+	m_particlesGPU->SetName( L"Environment Particle Buffer" );
 }
 
 void CEnvironmentParticleManager::InitParticles(UINT const initParticleNum, UINT const boxesNum, float const boxesSize)

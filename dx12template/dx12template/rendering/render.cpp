@@ -12,13 +12,13 @@ void CRender::InitCommands()
 	descCQ.Flags = D3D12_COMMAND_QUEUE_FLAG_NONE;
 	descCQ.Type = D3D12_COMMAND_LIST_TYPE_DIRECT;
 	CheckResult(m_device->CreateCommandQueue(&descCQ, IID_PPV_ARGS(&m_graphicsCQ)));
-	m_graphicsCQ->SetName(L"MainCommandQueue");
+	m_graphicsCQ->SetName(L"GraphicsCommandQueue");
 
 	CheckResult(m_device->CreateCommandAllocator(D3D12_COMMAND_LIST_TYPE_DIRECT, IID_PPV_ARGS(&m_graphicsCA)));
-	m_graphicsCA->SetName(L"MainCommandAllocator");
+	m_graphicsCA->SetName(L"GraphicsCommandAllocator");
 
 	CheckResult(m_device->CreateCommandList(0, D3D12_COMMAND_LIST_TYPE_DIRECT, m_graphicsCA, nullptr, IID_PPV_ARGS(&m_graphicsCL)));
-	m_graphicsCL->SetName(L"MainCommandList");
+	m_graphicsCL->SetName(L"GraphicsCommandList");
 	CheckResult(m_graphicsCL->Close());
 
 	descCQ.Flags = D3D12_COMMAND_QUEUE_FLAG_NONE;
@@ -103,7 +103,6 @@ void CRender::InitRenderTargets()
 		std::wstring const rtvName = L"RenderTarget" + std::to_wstring(rtvID);
 		m_rederTarget[rtvID]->SetName(rtvName.c_str());
 	}
-	m_frameID = 0;
 
 	D3D12_RESOURCE_DESC gbufferDesc = {};
 	gbufferDesc.DepthOrArraySize = 1;
@@ -411,7 +410,8 @@ void CRender::Init()
 	m_scissorRect.left = 0;
 	m_scissorRect.top = 0;
 
-	m_fenceValue = 0;
+	memset( m_fenceValue, 0, sizeof( m_fenceValue ) );
+	m_frameID = 0;
 
 #ifdef _DEBUG
 	CheckResult(D3D12GetDebugInterface(IID_PPV_ARGS(&m_debugController)));
@@ -421,8 +421,8 @@ void CRender::Init()
 	CheckResult(CreateDXGIFactory1(IID_PPV_ARGS(&m_factor)));
 	CheckResult(D3D12CreateDevice(nullptr, D3D_FEATURE_LEVEL_11_0, IID_PPV_ARGS(&m_device)));
 
-	CheckResult(m_device->CreateFence(m_fenceValue, D3D12_FENCE_FLAG_NONE, IID_PPV_ARGS(&m_fence)));
-	++m_fenceValue;
+	CheckResult(m_device->CreateFence(m_fenceValue[m_frameID], D3D12_FENCE_FLAG_NONE, IID_PPV_ARGS(&m_fence)));
+	++m_fenceValue[m_frameID];
 	m_fenceEvent = CreateEventEx(nullptr, FALSE, FALSE, EVENT_ALL_ACCESS);
 
 	m_geometryResources.Add( SGeometry() );
@@ -705,6 +705,7 @@ void CRender::PreDrawFrame()
 	GTextRenderManager.FillRenderData();
 	GDynamicGeometryManager.PreDraw();
 
+	m_frameID = m_swapChain->GetCurrentBackBufferIndex();
 	WaitForGraphicsQueue();
 }
 
@@ -815,7 +816,6 @@ void CRender::DrawFrame()
 	m_graphicsCQ->ExecuteCommandLists(1, (ID3D12CommandList**)(&commandList));
 
 	CheckResult(m_swapChain->Present(0, 0));
-	m_frameID = (m_frameID + 1) % FRAME_NUM;
 
 	m_texturesIDs.Clear();
 	m_constBufferOffset = 0;
@@ -1218,10 +1218,10 @@ void CRender::WaitForResourcesLoad()
 	m_graphicsCL->ResourceBarrier(m_resourceBarrier.Size(), m_resourceBarrier.Data());
 	m_graphicsCL->Close();
 
-	m_copyCQ->Signal( m_fence, m_fenceValue );
-	m_graphicsCQ->Wait( m_fence, m_fenceValue );
+	m_copyCQ->Signal( m_fence, m_fenceValue[m_frameID] );
+	m_graphicsCQ->Wait( m_fence, m_fenceValue[m_frameID] );
 	m_graphicsCQ->ExecuteCommandLists(1, (ID3D12CommandList**)(&m_graphicsCL));
-	++m_fenceValue;
+	++m_fenceValue[m_frameID];
 
 	WaitForGraphicsQueue();
 
@@ -1272,23 +1272,23 @@ void CRender::SetConstBuffer( D3D12_GPU_VIRTUAL_ADDRESS& outConstBufferAddress, 
 
 void CRender::WaitForCopyQueue()
 {
-	CheckResult(m_copyCQ->Signal(m_fence, m_fenceValue));
-	CheckResult(m_fence->SetEventOnCompletion(m_fenceValue, m_fenceEvent));
-	++m_fenceValue;
+	CheckResult(m_copyCQ->Signal(m_fence, m_fenceValue[m_frameID]));
+	CheckResult(m_fence->SetEventOnCompletion(m_fenceValue[m_frameID], m_fenceEvent));
+	++m_fenceValue[m_frameID];
 	WaitForSingleObject(m_fenceEvent, INFINITE);
 }
 void CRender::WaitForGraphicsQueue()
 {
-	CheckResult(m_graphicsCQ->Signal(m_fence, m_fenceValue));
-	CheckResult(m_fence->SetEventOnCompletion(m_fenceValue, m_fenceEvent));
-	++m_fenceValue;
+	CheckResult(m_graphicsCQ->Signal(m_fence, m_fenceValue[m_frameID]));
+	CheckResult(m_fence->SetEventOnCompletion(m_fenceValue[m_frameID], m_fenceEvent));
+	++m_fenceValue[m_frameID];
 	WaitForSingleObject(m_fenceEvent, INFINITE);
 }
 void CRender::WaitForComputeQueue()
 {
-	CheckResult(m_computeCQ->Signal(m_fence, m_fenceValue));
-	CheckResult(m_fence->SetEventOnCompletion(m_fenceValue, m_fenceEvent));
-	++m_fenceValue;
+	CheckResult(m_computeCQ->Signal(m_fence, m_fenceValue[m_frameID]));
+	CheckResult(m_fence->SetEventOnCompletion(m_fenceValue[m_frameID], m_fenceEvent));
+	++m_fenceValue[m_frameID];
 	WaitForSingleObject(m_fenceEvent, INFINITE);
 }
 
