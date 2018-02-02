@@ -3,7 +3,6 @@
 cbuffer objectBuffer : register(b1)
 {
 	float4x3 ObjectToWorld;
-	float4 Color;
 	float2 UVScale;
 	float2 Fade;
 	float Soft;
