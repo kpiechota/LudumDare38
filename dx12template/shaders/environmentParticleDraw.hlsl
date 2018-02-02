@@ -30,7 +30,7 @@ struct VStoPS
 	float m_depth : TEXCOORD3;
 };
 
-VStoPS vsMain(uint vertexID : SV_VertexID ) 
+void vsMain(uint vertexID : SV_VertexID, out VStoPS output ) 
 {
 	uint instanceID = vertexID / 6;
 
@@ -65,14 +65,12 @@ VStoPS vsMain(uint vertexID : SV_VertexID )
 
 	float3 vertexPosition = positionWS + verticesPositions[ vertexID % 6 ];
 
-	VStoPS output;
 	output.m_position = mul( float4( vertexPosition, 1.f ), WorldToScreen );
 	output.m_projectionSpace = mul( float4( vertexPosition, 1.f ), EnviroProjection );
 	output.m_uv = UVScale * verticesUV[ vertexID % 6 ] + particle.m_uvPosition;
 	float3 axisDistance = abs( positionToCameraWS );
 	output.m_distance = max( max( axisDistance.x, axisDistance.y ), axisDistance.z );
 	output.m_depth = output.m_position.z;
-	return output;
 }
 
 [earlydepthstencil]

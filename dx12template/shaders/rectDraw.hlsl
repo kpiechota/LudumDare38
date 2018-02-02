@@ -15,16 +15,13 @@ struct VSToPS
 };
 
 
-VSToPS vsMain( uint vertexID : SV_VertexID )
+void vsMain( uint vertexID : SV_VertexID, out VSToPS output )
 {
 	float2 vertexOffset = float2( ( vertexID & 2 ) ? 1.f : -1.f, ( vertexID & 1 ) ? 1.f : -1.f );
 	float2 vertex = ScreenPosition + Size * vertexOffset;
 
-	VSToPS output;
 	output.m_position = float4( vertex, 1.f, 1.f );
 	output.m_uv = vertexOffset * float2( 0.5f, -0.5f ) + 0.5f;
-
-	return output;
 }
 
 float4 psMain( VSToPS input ) : SV_TARGET

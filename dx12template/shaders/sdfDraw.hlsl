@@ -20,13 +20,10 @@ struct PSInput
 	float2 m_uv			: TEXCOORD;
 };
 
-PSInput vsMain( VSInput input )
+void vsMain( VSInput input, out PSInput output )
 {
-	PSInput output;
 	output.m_position = float4( input.m_position, 1.f, 1.f );
 	output.m_uv = input.m_uv;
-
-	return output;
 }
 
 float4 psMain(PSInput input) : SV_TARGET0

@@ -42,13 +42,10 @@ struct VSToPS
 	float2 m_uv : TEXCOORD;
 };
 
-VSToPS vsMain( float2 position : POSITION )
+void vsMain( float2 position : POSITION, out VSToPS output )
 {
-	VSToPS output;
 	output.m_position = float4( position, 0.f, 1.f );
 	output.m_uv = position;
-
-	return output;
 }
 
 float4 psMain( VSToPS input ) : SV_TARGET

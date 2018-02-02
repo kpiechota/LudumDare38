@@ -41,9 +41,8 @@ struct PSOutput
 	float4 m_emissiveSpec	: SV_TARGET2;
 };
 
-PSInput vsMain( VSInput input )
+void vsMain( VSInput input, out PSInput output )
 {
-	PSInput output;
 #ifndef GEOMETRY_ONLY
 	float3 bitangent = cross( input.m_tangent, input.m_normal );
 
@@ -55,14 +54,11 @@ PSInput vsMain( VSInput input )
 #else
 	output.m_position = mul( float4( input.m_position, 1.f ), ObjectToScreen );
 #endif
-
-	return output;
 }
 
 #ifndef GEOMETRY_ONLY
-PSOutput psMain(PSInput input)
+void psMain(PSInput input, out PSOutput output )
 {
-	PSOutput output;
 	output.m_normalWS = NormTex.Sample( Sampler, float2(input.m_uv.x, 1.f - input.m_uv.y ) );
 	output.m_diffuse = DiffTex.Sample( Sampler, float2(input.m_uv.x, 1.f - input.m_uv.y ) );
 
@@ -72,8 +68,6 @@ PSOutput psMain(PSInput input)
 	output.m_normalWS.xyz = mad( output.m_normalWS, 0.5f, 0.5f );
 	output.m_emissiveSpec.rgb = EmissiveTex.Sample( Sampler, float2(input.m_uv.x, 1.f - input.m_uv.y ) ).rgb;
 	output.m_emissiveSpec.a = SpecularTex.Sample( Sampler, float2(input.m_uv.x, 1.f - input.m_uv.y ) ).r;
-
-	return output;
 #else
 void psMain(PSInput input)
 {
