@@ -529,25 +529,6 @@ void CRender::DrawLights( ID3D12GraphicsCommandList * commandList )
 
 	D3D12_GPU_VIRTUAL_ADDRESS const constBufferStart = m_constBufferResource->GetGPUVirtualAddress();
 
-	D3D12_GPU_VIRTUAL_ADDRESS dirCbOffset;
-	Byte dirLightFlags = Byte( LF_AMBIENT );
-	if ( m_directLightColor != Vec3( 0.f, 0.f, 0.f ) )
-	{
-		dirLightFlags |= Byte( LF_DIRECT );
-	}
-
-	CConstBufferCtx const cbCtx = GetLightConstBufferCtx( dirCbOffset, dirLightFlags );
-	if ( dirLightFlags & Byte( LF_DIRECT ) )
-	{
-		cbCtx.SetParam( &m_directLightDir,		sizeof( m_directLightDir ),		EShaderParameters::LightDirWS );
-		cbCtx.SetParam( &m_directLightColor,	sizeof( m_directLightColor ),	EShaderParameters::Color );
-	}
-	cbCtx.SetParam( &m_ambientLightColor,		sizeof( m_ambientLightColor ),	EShaderParameters::AmbientColor );
-
-	commandList->SetPipelineState( m_shaderLight[ dirLightFlags ].GetPSO() );
-	commandList->SetGraphicsRootConstantBufferView(1, constBufferStart + dirCbOffset );
-	DrawFullscreenTriangle( commandList );
-
 	UINT const lightNum = m_lightRenderData.Size();
 	UINT lightShader = LF_MAX;
 	for ( UINT lightID = 0; lightID < lightNum; ++lightID )
@@ -707,6 +688,7 @@ void CRender::PrepareGlobalConstBuffer()
 	globalCB.m_perspectiveValues.Set(1.f / cameraMatrices.m_viewToScreen.m_a00, 1.f / cameraMatrices.m_viewToScreen.m_a11, cameraMatrices.m_viewToScreen.m_a32, -cameraMatrices.m_viewToScreen.m_a22 );
 	globalCB.m_cameraPositionWS = GComponentCameraManager.GetMainCameraPosition();
 	globalCB.m_deltaTime = GTimer.GameDelta();
+	globalCB.m_time = GTimer.GetSeconds( GTimer.TimeFromStart() );
 
 	GRender.SetConstBuffer( m_globalConstBufferAddress, (Byte*)&globalCB, sizeof( globalCB ) );
 }
@@ -716,24 +698,18 @@ void CRender::PreDrawFrame()
 	PrepareView();
 	PrepareGlobalConstBuffer();
 
-	GEnvironmentParticleManager.UpdateParticles();
-
-	WaitForGraphicsQueue();
-
-	m_computeCQ->ExecuteCommandLists( m_computeCommandLists.Size(), m_computeCommandLists.Data() );
-	m_computeCQ->Signal( m_fence, m_fenceValue );
-	
-	m_computeCommandLists.Clear();
-
 	GComponentStaticMeshManager.FillRenderData();
 	GComponentStaticMeshManager.FillEnviroParticleRenderData();
 	GComponentLightManager.FillRenderData();
 	GEnvironmentParticleManager.FillRenderData();
+	GTextRenderManager.FillRenderData();
+	GDynamicGeometryManager.PreDraw();
+
+	WaitForGraphicsQueue();
 }
 
 void CRender::DrawFrame()
 {
-	GDynamicGeometryManager.PreDraw();
 	ID3D12GraphicsCommandList* commandList = m_frameData[m_frameID].m_frameCL;
 	D3D12_CPU_DESCRIPTOR_HANDLE const frameRT = m_renderTargetDH.GetCPUDescriptor( m_frameID );
 	m_frameData[m_frameID].m_frameCA->Reset();
@@ -813,7 +789,7 @@ void CRender::DrawFrame()
 	DrawRenderData( commandList, m_commonRenderData[RL_TRANSLUCENT] );
 	DrawRenderData( commandList, m_commonRenderData[RL_OVERLAY] );
 
-	DrawDebug( commandList );
+	//DrawDebug( commandList );
 	
 	barriers[0].Transition.StateAfter = D3D12_RESOURCE_STATE_PRESENT;
 	barriers[0].Transition.StateBefore = D3D12_RESOURCE_STATE_RENDER_TARGET;
@@ -836,8 +812,6 @@ void CRender::DrawFrame()
 	commandList->ResourceBarrier(6, barriers);
 
 	CheckResult(commandList->Close());
-	m_graphicsCQ->Wait( m_fence, m_fenceValue );
-	++m_fenceValue;
 	m_graphicsCQ->ExecuteCommandLists(1, (ID3D12CommandList**)(&commandList));
 
 	CheckResult(m_swapChain->Present(0, 0));
@@ -1318,12 +1292,9 @@ void CRender::WaitForComputeQueue()
 	WaitForSingleObject(m_fenceEvent, INFINITE);
 }
 
-void CRender::AddComputeCommandList( ID3D12CommandList* pCommandList )
-{
-	m_computeCommandLists.Add( pCommandList );
-}
-
 void CConstBufferCtx::SetParam( void const* pData, UINT16 const size, EShaderParameters const param ) const
 {
-	memcpy( m_pConstBuffer + m_shader->GetOffset( param ), pData, size );
+	UINT16 const paramOffset = m_shader->GetOffset( param );
+	ASSERT( paramOffset != 0xFFFF );
+	memcpy( m_pConstBuffer + paramOffset, pData, size );
 }

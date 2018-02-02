@@ -3,7 +3,6 @@
 class CEnvironmentParticleManager
 {
 private:
-	CShaderRes	m_particleShaderUpdate;
 	CShaderRes	m_particleShaderInit;
 
 	ID3D12Resource* m_particlesGPU;
@@ -30,7 +29,6 @@ public:
 	CEnvironmentParticleManager();
 
 	void Init( UINT const initParticleNum, UINT const boxesNum, float const boxesSize );
-	void UpdateParticles();
 	void FillRenderData();
 
 	Matrix4x4 GetViewToWorld() const { return m_viewToWorld; }

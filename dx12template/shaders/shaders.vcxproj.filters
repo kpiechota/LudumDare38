@@ -19,7 +19,6 @@
     <FxCompile Include="sdfDraw.hlsl" />
     <FxCompile Include="simpleLight.hlsl" />
     <FxCompile Include="deferredLight.hlsl" />
-    <FxCompile Include="environmentParticleUpdate.hlsl" />
     <FxCompile Include="environmentParticleCommon.hlsl" />
     <FxCompile Include="environmentParticleInit.hlsl" />
     <FxCompile Include="environmentParticleDraw.hlsl" />

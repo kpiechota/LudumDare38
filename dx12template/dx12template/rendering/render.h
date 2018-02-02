@@ -90,7 +90,6 @@ private:
 	ID3D12GraphicsCommandList*		m_graphicsCL;
 
 	ID3D12CommandQueue*				m_computeCQ;
-	TArray< ID3D12CommandList* >	m_computeCommandLists;
 
 	IDXGISwapChain3*				m_swapChain;
 
@@ -130,10 +129,6 @@ private:
 	ID3D12Resource*					m_constBufferResource;
 	Byte*							m_pConstBufferData;
 	UINT							m_constBufferOffset;
-
-	Vec3							m_directLightDir;
-	Vec3							m_directLightColor;
-	Vec3							m_ambientLightColor;
 
 	D3D12_GPU_VIRTUAL_ADDRESS		m_globalConstBufferAddress;
 
@@ -189,8 +184,6 @@ public:
 	void WaitForGraphicsQueue();
 	void WaitForComputeQueue();
 
-	void AddComputeCommandList( ID3D12CommandList* pCommandList );
-
 	UINT GetTexturesOffset() const { return m_texturesIDs.Size(); }
 	void AddTextureID( Byte const textureID ) { m_texturesIDs.Add(textureID); }
 
@@ -211,10 +204,6 @@ public: //Getters/setters
 
 	void SetHWND(HWND& hwnd) { m_hwnd = hwnd; }
 	HWND SetHWND() const { return m_hwnd; }
-
-	void SetDirectLightDir( Vec3 const dir ) { m_directLightDir = dir; }
-	void SetDirectLightColor( Vec3 const color ) { m_directLightColor = color; }
-	void SetAmbientLightColor( Vec3 const color ) { m_ambientLightColor = color; }
 
 	D3D12_GPU_VIRTUAL_ADDRESS GetGlobalConstBufferAddress() const { return m_globalConstBufferAddress; }
 };

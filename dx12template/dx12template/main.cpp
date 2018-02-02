@@ -201,9 +201,9 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, PSTR pCmdLine, 
 	CT_ASSERT( ARRAYSIZE( textures ) == T_MAX );
 
 	GRender.Init();
-	GRender.SetDirectLightColor( Vec3( 1.f, 1.f, 1.f ) );
-	GRender.SetDirectLightDir( Vec3( 0.f, 1.f, 1.f ).GetNormalized() );
-	GRender.SetAmbientLightColor( Vec3( 0.1f, 0.1f, 0.1f ) );
+	GComponentLightManager.SetDirectLightColor( Vec3( 1.f, 1.f, 1.f ) );
+	GComponentLightManager.SetDirectLightDir( Vec3( 0.f, 1.f, 1.f ).GetNormalized() );
+	GComponentLightManager.SetAmbientLightColor( Vec3( 0.1f, 0.1f, 0.1f ) );
 
 	GRender.BeginLoadResources(ARRAYSIZE(textures));
 
@@ -306,11 +306,9 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, PSTR pCmdLine, 
 
 		GComponentCameraManager.MainCameraTick();
 		GInputManager.Tick();
-
-		GRender.PreDrawFrame();
-
 		DrawDebugInfo();
 
+		GRender.PreDrawFrame();
 		GRender.DrawFrame();
 
 		GEntityManager.Tick();

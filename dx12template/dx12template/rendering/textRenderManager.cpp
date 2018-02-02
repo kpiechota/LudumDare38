@@ -160,17 +160,16 @@ void CTextRenderManager::Print( Vec4 const color, Vec2 position, float const siz
 {
 	position = 2.f * position - 1.f;
 
-	SCommonRenderData renderData;
-	renderData.m_drawType = EDrawType::DrawIndexedInstanced;
+	STextRenderInfo renderInfo;
 
 	SPosUvVertexFormat* vertices = nullptr;
 	UINT16* indices = nullptr;
 
 	UINT const charNum = UINT(strlen( msg ));
 
-	GDynamicGeometryManager.GetVerticesForWrite( 4 * charNum, m_dynGeometryID, reinterpret_cast< void*& >( vertices ), renderData.m_verticesStart );
+	GDynamicGeometryManager.GetVerticesForWrite( 4 * charNum, m_dynGeometryID, reinterpret_cast< void*& >( vertices ), renderInfo.m_verticesStart );
 	ASSERT( vertices );
-	GDynamicGeometryManager.GetIndicesForWrite( 6 * charNum, m_dynGeometryID, reinterpret_cast< void*& >( indices ), renderData.m_indicesStart );
+	GDynamicGeometryManager.GetIndicesForWrite( 6 * charNum, m_dynGeometryID, reinterpret_cast< void*& >( indices ), renderInfo.m_indicesStart );
 	ASSERT( indices );
 
 	UINT indicesToDraw = 0;
@@ -208,21 +207,41 @@ void CTextRenderManager::Print( Vec4 const color, Vec2 position, float const siz
 		position.x += 0.5f * size;
 	}
 
+	renderInfo.m_indicesNum = indicesToDraw;
+	renderInfo.m_color = color;
+
+	m_textRenderInfos.Add( renderInfo );
+}
+void CTextRenderManager::FillRenderData()
+{
+	SCommonRenderData renderData;
+	renderData.m_drawType = EDrawType::DrawIndexedInstanced;
 	renderData.m_shaderID = EShaderType::ST_SDF_DRAW;
 	renderData.m_texturesOffset = GRender.GetTexturesOffset();
 	renderData.m_texturesNum = 1;
 	GRender.AddTextureID( ETextures::T_SDF_FONT_512 );
 	renderData.m_topology = D3D_PRIMITIVE_TOPOLOGY::D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST;
-	renderData.m_indicesNum = indicesToDraw;
 	renderData.m_instancesNum = 1;
 	renderData.m_geometryID = GDynamicGeometryManager.GetGeometryID( m_dynGeometryID );
-
-	CConstBufferCtx const cbCtx = GRender.GetConstBufferCtx( renderData.m_cbOffset, EShaderType::ST_SDF_DRAW );
 	Vec2 const cutOff( 0.7f - 0.035f, 0.7f + 0.035f );
-	cbCtx.SetParam( &color,		sizeof( color ),	EShaderParameters::Color );
-	cbCtx.SetParam( &cutOff,	sizeof( cutOff ),	EShaderParameters::Cutoff );
 
-	GRender.AddCommonRenderData( renderData, RL_OVERLAY );
+	UINT const textRenderInfoNum = m_textRenderInfos.Size();
+	for ( UINT i = 0; i < textRenderInfoNum; ++i )
+	{
+		STextRenderInfo const& renderInfo = m_textRenderInfos[ i ];
+		renderData.m_verticesStart = renderInfo.m_verticesStart;
+		renderData.m_indicesStart = renderInfo.m_indicesStart;
+		renderData.m_indicesNum = renderInfo.m_indicesNum;
+
+		CConstBufferCtx const cbCtx = GRender.GetConstBufferCtx( renderData.m_cbOffset, EShaderType::ST_SDF_DRAW );
+		cbCtx.SetParam( &renderInfo.m_color,	sizeof( renderInfo.m_color ),	EShaderParameters::Color );
+		cbCtx.SetParam( &cutOff,				sizeof( cutOff ),				EShaderParameters::Cutoff );
+
+		GRender.AddCommonRenderData( renderData, RL_OVERLAY );
+	}
+
+	m_textRenderInfos.Clear();
 }
+
 
 CTextRenderManager GTextRenderManager;

@@ -5,6 +5,27 @@ void CComponentLightManager::FillRenderData() const
 {
 	SLightRenderData lightRenderData;
 
+	{
+		Byte dirLightFlags = Byte( LF_AMBIENT );
+		if ( m_directLightColor != Vec3( 0.f, 0.f, 0.f ) )
+		{
+			dirLightFlags |= Byte( LF_DIRECT );
+		}
+
+		SLightRenderData lightRenderData;
+		lightRenderData.m_lightShader = dirLightFlags;
+
+		CConstBufferCtx const cbCtx = GRender.GetLightConstBufferCtx( lightRenderData.m_cbOffset, dirLightFlags );
+		if ( dirLightFlags & Byte( LF_DIRECT ) )
+		{
+			cbCtx.SetParam( &m_directLightDir,		sizeof( m_directLightDir ),		EShaderParameters::LightDirWS );
+			cbCtx.SetParam( &m_directLightColor,	sizeof( m_directLightColor ),	EShaderParameters::Color );
+		}
+		cbCtx.SetParam( &m_ambientLightColor,		sizeof( m_ambientLightColor ),	EShaderParameters::AmbientColor );
+
+		GRender.AddLightRenderData( lightRenderData );
+	}
+
 	UINT const renderComponentsNum = m_renderComponents.Size();
 	GRender.LightRenderDataReserveNext( renderComponentsNum );
 

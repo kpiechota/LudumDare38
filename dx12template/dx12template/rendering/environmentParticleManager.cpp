@@ -45,7 +45,6 @@ void CEnvironmentParticleManager::Init( UINT const initParticleNum, UINT const b
 	m_particleCA->SetName( L"Environment Particle Command Allocator" );
 	m_particleCL->SetName( L"Environment Particle Command List" );
 
-	m_particleShaderUpdate.InitComputeShader( L"../shaders/environmentParticleUpdate.hlsl", m_particleRS );
 	m_particleShaderInit.InitComputeShader( L"../shaders/environmentParticleInit.hlsl", m_particleRS );
 
 	InitParticles( initParticleNum, boxesNum, boxesSize );
@@ -202,31 +201,6 @@ void CEnvironmentParticleManager::InitProjectionMatrix( Vec3 const forward )
 	m_positionOffset = forward * ( 1.f - 7.f * 2.f );
 }
 
-void CEnvironmentParticleManager::UpdateParticles()
-{
-	struct CBuffer
-	{
-		UINT m_particleNum;
-	} cbuffer;
-	cbuffer.m_particleNum = m_particlesNum;
-	D3D12_GPU_VIRTUAL_ADDRESS constBufferAddress;
-	GRender.SetConstBuffer( constBufferAddress, (Byte*)&cbuffer, sizeof( cbuffer ) );
-
-	m_particleCA->Reset();
-	m_particleCL->Reset( m_particleCA, m_particleShaderUpdate.GetPSO() );
-
-	m_particleCL->SetComputeRootSignature( m_particleRS );
-	m_particleCL->SetComputeRootConstantBufferView( 0, GRender.GetGlobalConstBufferAddress() );
-	m_particleCL->SetComputeRootConstantBufferView( 1, constBufferAddress );
-	m_particleCL->SetComputeRootUnorderedAccessView( 2, m_particlesGPU->GetGPUVirtualAddress() );
-
-	m_particleCL->Dispatch( ( m_particlesNum + 63 ) & ~63, 1, 1 );
-
-	m_particleCL->Close();
-
-	GRender.AddComputeCommandList( m_particleCL );
-}
-
 void CEnvironmentParticleManager::FillRenderData()
 {
 	Vec3 const cameraPosition = GComponentCameraManager.GetMainCameraPosition();
@@ -251,7 +225,6 @@ void CEnvironmentParticleManager::FillRenderData()
 	
 	Matrix4x4 objectToWorld = m_boxMatrix;
 
-	Vec4 const color( 0.1f, 0.1f, 0.1f, 1.f );
 	float const size = float( m_boxesNum ) * m_boxesSize;
 	Vec3 const boxesMin = startPosition + boxCenterOffset - size;
 	Vec3 const boxesMax = startPosition + boxCenterOffset + size;
@@ -277,7 +250,6 @@ void CEnvironmentParticleManager::FillRenderData()
 			
 				CConstBufferCtx const cbCtx = GRender.GetConstBufferCtx( renderData.m_cbOffset, renderData.m_shaderID );
 				cbCtx.SetParam( &tObjectToWorld,		3 * sizeof( Vec4 ),				EShaderParameters::ObjectToWorld );
-				cbCtx.SetParam( &color,					sizeof( color ),				EShaderParameters::Color );
 				cbCtx.SetParam( &uvScale,				sizeof( uvScale ),				EShaderParameters::UVScale );
 				cbCtx.SetParam( &fade,					sizeof( fade ),					EShaderParameters::Fade );
 				cbCtx.SetParam( &softFactor,			sizeof( softFactor ),			EShaderParameters::Soft );
@@ -295,7 +267,6 @@ void CEnvironmentParticleManager::Release()
 	m_particleCL->Release();
 
 	m_particleRS->Release();
-	m_particleShaderUpdate.Release();
 	m_particleShaderInit.Release();
 }
 

@@ -6,4 +6,5 @@ cbuffer globalBuffer : register( b0 )
 	float4 PerspectiveValues;
 	float3 CameraPositionWS;
 	float DeltaTime;
+	float Time;
 }

@@ -36,7 +36,8 @@ VStoPS vsMain(uint vertexID : SV_VertexID )
 
 	SEnvironmentParticle particle = Particles[ instanceID ];
 	float3 velocityOS = particle.m_velocity;
-	float3 positionWS = mul( float4( particle.m_position, 1.f ), ObjectToWorld ).xyz;
+	float3 positionOS = frac( particle.m_position + velocityOS * ( Time * particle.m_speed ) );
+	float3 positionWS = mul( float4( positionOS, 1.f ), ObjectToWorld ).xyz;
 	float3 positionToCameraWS = CameraPositionWS - positionWS;
 	float3 velocityWS = normalize( mul( float4( velocityOS, 0.f ), ObjectToWorld ).xyz );
 	float3 perpendicularVector = particle.m_size.x * cross( normalize( positionToCameraWS ), velocityWS );

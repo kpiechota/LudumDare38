@@ -7,4 +7,5 @@ struct SGlobalBuffer
 	Vec4 m_perspectiveValues;
 	Vec3 m_cameraPositionWS;
 	float m_deltaTime;
+	float m_time;
 };
