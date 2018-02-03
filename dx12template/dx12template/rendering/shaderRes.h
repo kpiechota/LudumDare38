@@ -14,6 +14,8 @@ enum class EShaderParameters : Byte
 	Fade,
 	Soft,
 	Tiling,
+	BoxesNum,
+	Size,
 
 	SP_MAX
 };

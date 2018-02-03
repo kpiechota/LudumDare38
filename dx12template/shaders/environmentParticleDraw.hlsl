@@ -5,6 +5,8 @@ cbuffer objectBuffer : register(b1)
 	float4x3 ObjectToWorld;
 	float2 UVScale;
 	float2 Fade;
+	uint2 BoxesNum;
+	float Size;
 	float Soft;
 }
 StructuredBuffer< SEnvironmentParticle > Particles : register( t0 );
@@ -30,16 +32,19 @@ struct VStoPS
 	float m_depth : TEXCOORD3;
 };
 
-void vsMain(uint vertexID : SV_VertexID, out VStoPS output ) 
+void vsMain(uint vertexID : SV_VertexID, uint instanceID : SV_InstanceID, out VStoPS output ) 
 {
-	uint instanceID = vertexID / 6;
+	uint particleID = vertexID / 6;
+	float3 boxPosition = Size * float3( instanceID % BoxesNum.x, ( instanceID % BoxesNum.y ) / BoxesNum.x, instanceID / BoxesNum.y );
+	float4x3 objectToWorld = ObjectToWorld;
+	objectToWorld[ 3 ].xyz += boxPosition;
 
-	SEnvironmentParticle particle = Particles[ instanceID ];
+	SEnvironmentParticle particle = Particles[ particleID ];
 	float3 velocityOS = particle.m_velocity;
 	float3 positionOS = frac( particle.m_position + velocityOS * ( Time * particle.m_speed ) );
-	float3 positionWS = mul( float4( positionOS, 1.f ), ObjectToWorld ).xyz;
+	float3 positionWS = mul( float4( positionOS, 1.f ), objectToWorld ).xyz;
 	float3 positionToCameraWS = CameraPositionWS - positionWS;
-	float3 velocityWS = normalize( mul( float4( velocityOS, 0.f ), ObjectToWorld ).xyz );
+	float3 velocityWS = normalize( mul( float4( velocityOS, 0.f ), objectToWorld ).xyz );
 	float3 perpendicularVector = particle.m_size.x * cross( normalize( positionToCameraWS ), velocityWS );
 	velocityWS *= particle.m_size.y;
 

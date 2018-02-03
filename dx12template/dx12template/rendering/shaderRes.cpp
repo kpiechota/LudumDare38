@@ -16,6 +16,8 @@ LPCSTR ShaderParamsNames[] =
 	"Fade",
 	"Soft",
 	"Tiling",
+	"BoxesNum",
+	"Size",
 };
 CT_ASSERT( (ARRAYSIZE( ShaderParamsNames ) == ( UINT(EShaderParameters::SP_MAX) )) );
 

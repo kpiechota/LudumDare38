@@ -209,12 +209,15 @@ void CEnvironmentParticleManager::FillRenderData()
 	Vec3 const boxCenterOffset = ( Vec3( 0.5f, -0.5f, 0.5f ) * m_boxesSize );
 	Vec3 const startPosition = Math::Snap( cameraPosition, m_boxesSize ) - boxCenterOffset;
 	Vec2 const fade( m_boxesSize * float( m_boxesNum ), m_boxesSize * float( m_boxesNum - 1 ) );
+	UINT boxesNum[2];
+	boxesNum[ 0 ] = ( 2 * m_boxesNum + 1 );
+	boxesNum[ 1 ] = boxesNum[ 0 ] * boxesNum[ 0 ];
 
 	SCommonRenderData renderData;
 	renderData.m_verticesStart = 0;
 	renderData.m_indicesStart = 0;
 	renderData.m_indicesNum = 6 * m_particlesNum;
-	renderData.m_instancesNum = 1;
+	renderData.m_instancesNum = boxesNum[ 0 ] * boxesNum[ 1 ];
 	renderData.m_geometryID = 0;
 		
 	renderData.m_topology = D3D_PRIMITIVE_TOPOLOGY::D3D10_PRIMITIVE_TOPOLOGY_TRIANGLELIST;
@@ -225,41 +228,26 @@ void CEnvironmentParticleManager::FillRenderData()
 	renderData.m_shaderID = EShaderType::ST_ENV_PARTICLE;
 	renderData.m_drawType = EDrawType::DrawInstanced;
 	
-	Matrix4x4 objectToWorld = m_boxMatrix;
-
 	float const size = float( m_boxesNum ) * m_boxesSize;
 	Vec3 const boxesMin = startPosition + boxCenterOffset - size;
-	Vec3 const boxesMax = startPosition + boxCenterOffset + size;
 	//Vec2 const uvScale( 1.f, 1.f );
 	Vec2 const uvScale( 1.f / 4.f, 1.f / 4.f );
 
 	float const softFactor = 0.5f;
 
-	UINT const boxesOnAxis = m_boxesNum * 2 + 1;
-	GRender.CommandRenderDataReserveNext( boxesOnAxis * boxesOnAxis * boxesOnAxis, ERenderLayer::RL_TRANSLUCENT );
-	for ( float x = boxesMin.x; x <= boxesMax.x; x += m_boxesSize )
-	{
-		for ( float y = boxesMin.y; y <= boxesMax.y; y += m_boxesSize )
-		{
-			for ( float z = boxesMin.z; z <= boxesMax.z; z += m_boxesSize )
-			{
-				objectToWorld.m_a30 = x;
-				objectToWorld.m_a31 = y;
-				objectToWorld.m_a32 = z;
+	Matrix4x4 tObjectToWorld = m_boxMatrix;
+	tObjectToWorld.m_w = boxesMin;
+	tObjectToWorld.Transpose();
 
-				Matrix4x4 tObjectToWorld = objectToWorld;
-				tObjectToWorld.Transpose();
-			
-				CConstBufferCtx const cbCtx = GRender.GetConstBufferCtx( renderData.m_cbOffset, renderData.m_shaderID );
-				cbCtx.SetParam( &tObjectToWorld,		3 * sizeof( Vec4 ),				EShaderParameters::ObjectToWorld );
-				cbCtx.SetParam( &uvScale,				sizeof( uvScale ),				EShaderParameters::UVScale );
-				cbCtx.SetParam( &fade,					sizeof( fade ),					EShaderParameters::Fade );
-				cbCtx.SetParam( &softFactor,			sizeof( softFactor ),			EShaderParameters::Soft );
+	CConstBufferCtx const cbCtx = GRender.GetConstBufferCtx( renderData.m_cbOffset, renderData.m_shaderID );
+	cbCtx.SetParam( &tObjectToWorld,		3 * sizeof( Vec4 ),				EShaderParameters::ObjectToWorld );
+	cbCtx.SetParam( &uvScale,				sizeof( uvScale ),				EShaderParameters::UVScale );
+	cbCtx.SetParam( &fade,					sizeof( fade ),					EShaderParameters::Fade );
+	cbCtx.SetParam( &boxesNum,				sizeof( boxesNum ),				EShaderParameters::BoxesNum );
+	cbCtx.SetParam( &m_boxesSize,			sizeof( m_boxesSize ),			EShaderParameters::Size );
+	cbCtx.SetParam( &softFactor,			sizeof( softFactor ),			EShaderParameters::Soft );
 
-				GRender.AddCommonRenderData( renderData, ERenderLayer::RL_TRANSLUCENT );
-			}
-		}
-	}
+	GRender.AddCommonRenderData( renderData, ERenderLayer::RL_TRANSLUCENT );
 }
 void CEnvironmentParticleManager::Release()
 {
