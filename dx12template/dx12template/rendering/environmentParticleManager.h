@@ -12,18 +12,22 @@ private:
 
 	ID3D12RootSignature*		m_particleRS;
 
+	SCommonRenderData m_renderData;
 	Matrix4x4 m_boxMatrix;
 	Matrix4x4 m_viewToWorld;
 	Matrix4x4 m_viewToScreen;
 	Vec3 m_positionOffset;
-	UINT m_boxesNum;
-	float m_boxesSize;
+	Vec3 m_boxCenterOffset;
+	Vec2 m_fade;
+	UINT m_boxesNum[2];
 	UINT m_particlesNum;
+	float m_boxesSize;
+	float m_size;
 
 private:
 	void AllocateBuffers();
 	void InitParticles(UINT const initParticleNum, UINT const boxesNum, float const boxesSize);
-	FORCE_INLINE void InitProjectionMatrix( Vec3 const forward );
+	FORCE_INLINE void InitProjectionMatrix( Vec3 const forward, UINT const boxesNum );
 
 public:
 	CEnvironmentParticleManager();

@@ -23,9 +23,9 @@ enum class EShaderParameters : Byte
 class CShaderRes
 {
 private:
+	ID3D12PipelineState* m_pso;
 	UINT16 m_paramOffsets[UINT(EShaderParameters::SP_MAX)];
 	UINT16 m_bufferSize;
-	ID3D12PipelineState* m_pso;
 
 private:
 	inline void LoadShader(LPCWSTR pFileName, D3D_SHADER_MACRO const* pDefines, LPCSTR pEmtryPoint, LPCSTR pTarget, ID3DBlob** ppCode) const;

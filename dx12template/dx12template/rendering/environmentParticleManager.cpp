@@ -78,9 +78,23 @@ void CEnvironmentParticleManager::AllocateBuffers()
 void CEnvironmentParticleManager::InitParticles(UINT const initParticleNum, UINT const boxesNum, float const boxesSize)
 {
 	m_particlesNum = initParticleNum;
-
 	m_boxesSize = boxesSize;
-	m_boxesNum = boxesNum;
+
+	m_boxCenterOffset = Vec3( 0.5f, -0.5f, 0.5f ) * m_boxesSize;
+	m_fade.Set( m_boxesSize * float( boxesNum ), m_boxesSize * float( boxesNum - 1 ) );
+	m_boxesNum[ 0 ] = ( 2 * boxesNum + 1 );
+	m_boxesNum[ 1 ] = m_boxesNum[ 0 ] * m_boxesNum[ 0 ];
+
+	m_renderData.m_verticesStart = 0;
+	m_renderData.m_indicesStart = 0;
+	m_renderData.m_indicesNum = 6 * m_particlesNum;
+	m_renderData.m_instancesNum = m_boxesNum[ 0 ] * m_boxesNum[ 1 ];
+	m_renderData.m_geometryID = 0;
+	m_renderData.m_topology = D3D_PRIMITIVE_TOPOLOGY::D3D10_PRIMITIVE_TOPOLOGY_TRIANGLELIST;
+	m_renderData.m_texturesNum = 1;
+	m_renderData.m_shaderID = EShaderType::ST_ENV_PARTICLE;
+	m_renderData.m_drawType = EDrawType::DrawInstanced;
+	m_size = float( boxesNum ) * m_boxesSize;
 
 	m_boxMatrix.m_a00 = m_boxesSize;
 	m_boxMatrix.m_a11 = m_boxesSize;
@@ -140,7 +154,7 @@ void CEnvironmentParticleManager::InitParticles(UINT const initParticleNum, UINT
 	( ( Vec3* )( &cbuffer.m_velocity[ 0 ] ) )->Normalize();
 	Vec3 const forward = *( ( Vec3* )( &cbuffer.m_velocity[ 0 ] ) );
 	
-	InitProjectionMatrix( forward );
+	InitProjectionMatrix( forward, boxesNum );
 
 	D3D12_GPU_VIRTUAL_ADDRESS constBufferAddress;
 	GRender.SetConstBuffer( constBufferAddress, (Byte*)&cbuffer, sizeof( cbuffer ) );
@@ -160,7 +174,7 @@ void CEnvironmentParticleManager::InitParticles(UINT const initParticleNum, UINT
 	GRender.WaitForComputeQueue();
 }
 
-void CEnvironmentParticleManager::InitProjectionMatrix( Vec3 const forward )
+void CEnvironmentParticleManager::InitProjectionMatrix( Vec3 const forward, UINT const boxesNum )
 {
 	Vec3 up = abs( Vec3::Dot( Vec3::UP, forward ) ) == 1.f ? Vec3::FORWARD : Vec3::UP;
 	Vec3 right = Vec3::Cross( up, forward );
@@ -175,7 +189,7 @@ void CEnvironmentParticleManager::InitProjectionMatrix( Vec3 const forward )
 
 	Matrix4x4 worldToView;
 	m_viewToWorld.Inverse( worldToView );
-	float const vertexPositionOffset = ( float( m_boxesNum ) + 0.5f ) * m_boxesSize;
+	float const vertexPositionOffset = ( float( boxesNum ) + 0.5f ) * m_boxesSize;
 
 	Vec4 vertices[]
 	{
@@ -205,49 +219,30 @@ void CEnvironmentParticleManager::InitProjectionMatrix( Vec3 const forward )
 
 void CEnvironmentParticleManager::FillRenderData()
 {
-	Vec3 const cameraPosition = GComponentCameraManager.GetMainCameraPosition();
-	Vec3 const boxCenterOffset = ( Vec3( 0.5f, -0.5f, 0.5f ) * m_boxesSize );
-	Vec3 const startPosition = Math::Snap( cameraPosition, m_boxesSize ) - boxCenterOffset;
-	Vec2 const fade( m_boxesSize * float( m_boxesNum ), m_boxesSize * float( m_boxesNum - 1 ) );
-	UINT boxesNum[2];
-	boxesNum[ 0 ] = ( 2 * m_boxesNum + 1 );
-	boxesNum[ 1 ] = boxesNum[ 0 ] * boxesNum[ 0 ];
-
-	SCommonRenderData renderData;
-	renderData.m_verticesStart = 0;
-	renderData.m_indicesStart = 0;
-	renderData.m_indicesNum = 6 * m_particlesNum;
-	renderData.m_instancesNum = boxesNum[ 0 ] * boxesNum[ 1 ];
-	renderData.m_geometryID = 0;
-		
-	renderData.m_topology = D3D_PRIMITIVE_TOPOLOGY::D3D10_PRIMITIVE_TOPOLOGY_TRIANGLELIST;
-	renderData.m_texturesOffset = GRender.GetTexturesOffset();
-	renderData.m_texturesNum = 1;
+	m_renderData.m_texturesOffset = GRender.GetTexturesOffset();
+	m_renderData.m_texturesNum = 1;
 	//GRender.AddTextureID( T_RAIN_DROP );
 	GRender.AddTextureID( T_SNOW );
-	renderData.m_shaderID = EShaderType::ST_ENV_PARTICLE;
-	renderData.m_drawType = EDrawType::DrawInstanced;
-	
-	float const size = float( m_boxesNum ) * m_boxesSize;
-	Vec3 const boxesMin = startPosition + boxCenterOffset - size;
 	//Vec2 const uvScale( 1.f, 1.f );
-	Vec2 const uvScale( 1.f / 4.f, 1.f / 4.f );
 
-	float const softFactor = 0.5f;
-
+	Vec3 const cameraPosition = GComponentCameraManager.GetMainCameraPosition();
+	Vec3 const startPosition = Math::Snap( cameraPosition, m_boxesSize ) - m_boxCenterOffset;
+	Vec3 const boxesMin = startPosition + m_boxCenterOffset - m_size;
 	Matrix4x4 tObjectToWorld = m_boxMatrix;
 	tObjectToWorld.m_w = boxesMin;
 	tObjectToWorld.Transpose();
 
-	CConstBufferCtx const cbCtx = GRender.GetConstBufferCtx( renderData.m_cbOffset, renderData.m_shaderID );
+	Vec2 const uvScale( 1.f / 4.f, 1.f / 4.f );
+	float const softFactor = 0.5f;
+	CConstBufferCtx const cbCtx = GRender.GetConstBufferCtx( m_renderData.m_cbOffset, m_renderData.m_shaderID );
 	cbCtx.SetParam( &tObjectToWorld,		3 * sizeof( Vec4 ),				EShaderParameters::ObjectToWorld );
 	cbCtx.SetParam( &uvScale,				sizeof( uvScale ),				EShaderParameters::UVScale );
-	cbCtx.SetParam( &fade,					sizeof( fade ),					EShaderParameters::Fade );
-	cbCtx.SetParam( &boxesNum,				sizeof( boxesNum ),				EShaderParameters::BoxesNum );
+	cbCtx.SetParam( &m_fade,				sizeof( m_fade ),				EShaderParameters::Fade );
+	cbCtx.SetParam( &m_boxesNum,			sizeof( m_boxesNum ),			EShaderParameters::BoxesNum );
 	cbCtx.SetParam( &m_boxesSize,			sizeof( m_boxesSize ),			EShaderParameters::Size );
 	cbCtx.SetParam( &softFactor,			sizeof( softFactor ),			EShaderParameters::Soft );
 
-	GRender.AddCommonRenderData( renderData, ERenderLayer::RL_TRANSLUCENT );
+	GRender.AddCommonRenderData( m_renderData, ERenderLayer::RL_TRANSLUCENT );
 }
 void CEnvironmentParticleManager::Release()
 {
