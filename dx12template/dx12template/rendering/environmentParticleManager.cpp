@@ -212,9 +212,9 @@ void CEnvironmentParticleManager::InitProjectionMatrix( Vec3 const forward, UINT
 
 	m_viewToScreen.m_x.x = 1.f/ maxAxis[ 0 ];
 	m_viewToScreen.m_y.y = 1.f/ maxAxis[ 1 ];
-	m_viewToScreen.m_z.z = 1.f/ ( 7.f * 2.f * maxAxis[ 2 ] );
+	m_viewToScreen.m_z.z = 1.f/ ( 500.f * 2.f * maxAxis[ 2 ] );
 
-	m_positionOffset = forward * ( 1.f - 7.f * 2.f );
+	m_positionOffset = forward * ( 1.f - 500.f * 2.f );
 }
 
 void CEnvironmentParticleManager::FillRenderData()
