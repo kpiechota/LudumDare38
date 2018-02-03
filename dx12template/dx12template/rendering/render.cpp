@@ -705,7 +705,6 @@ void CRender::PreDrawFrame()
 	GTextRenderManager.FillRenderData();
 	GDynamicGeometryManager.PreDraw();
 
-	m_frameID = m_swapChain->GetCurrentBackBufferIndex();
 	WaitForGraphicsQueue();
 }
 
@@ -826,11 +825,15 @@ void CRender::DrawFrame()
 	}
 	m_lightRenderData.Clear();
 	m_enviroParticleRenderData.Clear();
+	m_frameID = m_swapChain->GetCurrentBackBufferIndex();
 }
 
 void CRender::Release()
 {
-	WaitForGraphicsQueue();
+	UINT const endFenceValue = m_fence->GetCompletedValue() + 1;
+	CheckResult(m_graphicsCQ->Signal(m_fence, endFenceValue));
+	CheckResult(m_fence->SetEventOnCompletion(endFenceValue, m_fenceEvent));
+	WaitForSingleObject(m_fenceEvent, INFINITE);
 
 	GEnvironmentParticleManager.Release();
 
