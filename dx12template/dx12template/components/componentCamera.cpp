@@ -18,9 +18,9 @@ void CComponentCameraManager::MainCameraTick()
 		GInputManager.GetMousePosition( mouseDelta );
 		mouseDelta -= midPos;
 
-		float const factor = GTimer.Delta() * 45.f * 2.f * MathConsts::DegToRad;
-		mainCamera.m_rotation = Quaternion::FromAngleAxis( factor * ( float )( mouseDelta.x ), Vec3::UP.data ) * mainCamera.m_rotation;
-		mainCamera.m_rotation = mainCamera.m_rotation * Quaternion::FromAngleAxis(factor * ( float )( mouseDelta.y ), Vec3::RIGHT.data );
+		float const factor = .4f * MathConsts::DegToRad;
+		mainCamera.m_rotation = Quaternion::FromAngleAxis( factor * float( mouseDelta.x ), Vec3::UP.data ) * mainCamera.m_rotation;
+		mainCamera.m_rotation = mainCamera.m_rotation * Quaternion::FromAngleAxis(factor * float( mouseDelta.y ), Vec3::RIGHT.data );
 
 		GInputManager.SetMousePosition( midPos );
 	}

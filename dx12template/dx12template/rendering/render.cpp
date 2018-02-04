@@ -814,7 +814,7 @@ void CRender::DrawFrame()
 	CheckResult(commandList->Close());
 	m_graphicsCQ->ExecuteCommandLists(1, (ID3D12CommandList**)(&commandList));
 
-	CheckResult(m_swapChain->Present(0, 0));
+	CheckResult(m_swapChain->Present(1, 0));
 
 	m_texturesIDs.Clear();
 	m_constBufferOffset = 0;
