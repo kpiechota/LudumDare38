@@ -437,7 +437,7 @@ void CRender::Init()
 	InitShaders();
 
 	GTextRenderManager.Init();
-	GEnvironmentParticleManager.Init( 128, 3, 10.f );
+	GEnvironmentParticleManager.Init( 128, 2, 10.f );
 }
 
 void CRender::DrawRenderData( ID3D12GraphicsCommandList* commandList, TArray< SCommonRenderData > const& renderData )
@@ -657,7 +657,7 @@ void CRender::PrepareView()
 	cameraMatrices.m_worldToScreen = Math::Mul( cameraMatrices.m_worldToView, cameraMatrices.m_viewToScreen );
 
 	Matrix4x4 enviroParticleTranslate;
-	enviroParticleTranslate.m_w = mainCamera.m_position + GEnvironmentParticleManager.GetPositionOffset();
+	enviroParticleTranslate.m_w = mainCamera.m_position + GEnvironmentParticleManager.GetProjectPositionOffset() + ( mainCamera.m_rotation * Vec3::FORWARD ) * GEnvironmentParticleManager.GetPositionOffset();
 	GViewObject.m_enviroParticleWorldToScreen = Math::Mul( GEnvironmentParticleManager.GetViewToWorld(), enviroParticleTranslate );
 	GViewObject.m_enviroParticleWorldToScreen.Inverse();
 	GViewObject.m_enviroParticleWorldToScreen = Math::Mul( GViewObject.m_enviroParticleWorldToScreen, GEnvironmentParticleManager.GetViewToScreen() );

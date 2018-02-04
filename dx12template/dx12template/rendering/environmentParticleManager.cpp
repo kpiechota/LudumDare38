@@ -81,7 +81,7 @@ void CEnvironmentParticleManager::InitParticles(UINT const initParticleNum, UINT
 	m_boxesSize = boxesSize;
 
 	m_boxCenterOffset = Vec3( 0.5f, -0.5f, 0.5f ) * m_boxesSize;
-	m_fade.Set( m_boxesSize * float( boxesNum ), m_boxesSize * float( boxesNum - 1 ) );
+	m_fade.Set( m_boxesSize * float( 2 * boxesNum ), m_boxesSize * float( 2 * boxesNum - 1 ) );
 	m_boxesNum[ 0 ] = ( 2 * boxesNum + 1 );
 	m_boxesNum[ 1 ] = m_boxesNum[ 0 ] * m_boxesNum[ 0 ];
 
@@ -214,7 +214,8 @@ void CEnvironmentParticleManager::InitProjectionMatrix( Vec3 const forward, UINT
 	m_viewToScreen.m_y.y = 1.f/ maxAxis[ 1 ];
 	m_viewToScreen.m_z.z = 1.f/ ( 500.f * 2.f * maxAxis[ 2 ] );
 
-	m_positionOffset = forward * ( 1.f - 500.f * 2.f );
+	m_projectPositionOffset = forward * ( 1.f - 500.f * 2.f );
+	m_positionOffset = m_boxesSize * float( m_boxesNum[ 0 ] >> 1 );
 }
 
 void CEnvironmentParticleManager::FillRenderData()
@@ -226,7 +227,8 @@ void CEnvironmentParticleManager::FillRenderData()
 	//Vec2 const uvScale( 1.f, 1.f );
 
 	Vec3 const cameraPosition = GComponentCameraManager.GetMainCameraPosition();
-	Vec3 const startPosition = Math::Snap( cameraPosition, m_boxesSize ) - m_boxCenterOffset;
+	Vec3 const cameraForward = GComponentCameraManager.GetMainCameraForward();
+	Vec3 const startPosition = Math::Snap( cameraPosition + cameraForward * m_positionOffset, m_boxesSize ) - m_boxCenterOffset;
 	Vec3 const boxesMin = startPosition + m_boxCenterOffset - m_size;
 	Matrix4x4 tObjectToWorld = m_boxMatrix;
 	tObjectToWorld.m_w = boxesMin;
