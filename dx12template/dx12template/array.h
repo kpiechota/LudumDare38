@@ -68,6 +68,7 @@ struct IsPOD<T*>
 	}
 	static void Create( T** pointer, T* const* oldData )
 	{
+		memcpy( pointer, oldData, sizeof( T ) );
 	}
 	static void Create( T** pointer, T* const* oldData, UINT const num )
 	{
@@ -95,7 +96,10 @@ template<> struct IsPOD< T >											\
 {																		\
 enum { value = true };													\
 static void Create( T* pointer ){}										\
-static void Create( T* pointer, T const* oldData ){}					\
+static void Create( T* pointer, T const* oldData )						\
+{																		\
+	memcpy( pointer, oldData, sizeof( T ) );							\
+}																		\
 static void Create( T* pointer, T const* oldData, UINT const num )		\
 {																		\
 	memcpy( pointer, oldData, num * sizeof( T ) );						\
@@ -201,7 +205,7 @@ public:
 			Reallocate( ( m_allocSize + 1 ) << 1 );
 		}
 
-		m_data[ m_size ] = object;
+		IsPOD< T >::Create( &m_data[ m_size ], &object );
 		++m_size;
 	}
 	void Add()
